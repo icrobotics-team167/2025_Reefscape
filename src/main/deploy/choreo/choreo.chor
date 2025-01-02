@@ -1,0 +1,135 @@
+{
+ "name":"choreo",
+ "version":1,
+ "type":"Swerve",
+ "variables":{
+  "expressions":{},
+  "poses":{
+   "C2":{
+    "x":{
+     "exp":"C1.x()",
+     "val":3.5
+    },
+    "y":{
+     "exp":"speaker.y()",
+     "val":5.559
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "speaker":{
+    "x":{
+     "exp":"1.375 m",
+     "val":1.375
+    },
+    "y":{
+     "exp":"5.559 m",
+     "val":5.559
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "C1":{
+    "x":{
+     "exp":"3.5 m",
+     "val":3.5
+    },
+    "y":{
+     "exp":"7.025 m",
+     "val":7.025
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "C3":{
+    "x":{
+     "exp":"2.75 m",
+     "val":2.75
+    },
+    "y":{
+     "exp":"4.095 m",
+     "val":4.095
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   }
+  }
+ },
+ "config":{
+  "frontLeft":{
+   "x":{
+    "exp":"27.5 in / 2",
+    "val":0.34925
+   },
+   "y":{
+    "exp":"30.5 in / 2",
+    "val":0.38735
+   }
+  },
+  "backLeft":{
+   "x":{
+    "exp":"-27.5 in / 2",
+    "val":-0.34925
+   },
+   "y":{
+    "exp":"30.5 in / 2",
+    "val":0.38735
+   }
+  },
+  "mass":{
+   "exp":"80 lbs",
+   "val":36.2873896
+  },
+  "inertia":{
+   "exp":"3 kg m ^ 2",
+   "val":3.0
+  },
+  "gearing":{
+   "exp":"5.90277778",
+   "val":5.90277778
+  },
+  "radius":{
+   "exp":"2 in",
+   "val":0.0508
+  },
+  "vmax":{
+   "exp":"400 (rad / s)",
+   "val":400.0
+  },
+  "tmax":{
+   "exp":"1 N m",
+   "val":1.0
+  },
+  "cof":{
+   "exp":"1",
+   "val":1.0
+  },
+  "bumper":{
+   "front":{
+    "exp":"17.75 in",
+    "val":0.45085
+   },
+   "side":{
+    "exp":"19.25 in",
+    "val":0.48895
+   },
+   "back":{
+    "exp":"17.75 in",
+    "val":0.45085
+   }
+  },
+  "differentialTrackWidth":{
+   "exp":"22 in",
+   "val":0.5588
+  }
+ },
+ "generationFeatures":[]
+}
