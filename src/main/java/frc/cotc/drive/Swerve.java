@@ -258,6 +258,10 @@ public class Swerve extends SubsystemBase {
         for (int j = 0; j < visionInputs[i].poseEstimates.length; j++) {
           var poseEstimate = visionInputs[i].poseEstimates[j];
 
+          if (!MathUtil.isNear(0, poseEstimate.estimatedPose().getZ(), .25)) {
+            continue;
+          }
+
           var translationalStdDevs = getVisionStdDevs(poseEstimate, tunings.translational);
           var angularStdDevs = getVisionStdDevs(poseEstimate, tunings.angular);
           Logger.recordOutput(
