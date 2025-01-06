@@ -54,6 +54,7 @@ public class Autos {
 
   private String selectedCommandName = NONE_NAME;
   private Command selectedCommand = none();
+  private boolean selectedOnRed = false;
 
   private final Alert selectedNonexistentAuto =
       new Alert("Selected an auto that isn't an option!", Alert.AlertType.kError);
@@ -61,7 +62,7 @@ public class Autos {
   public void update() {
     if (DriverStation.isDSAttached() && DriverStation.getAlliance().isPresent()) {
       var selected = chooser.get();
-      if (selected.equals(selectedCommandName)) {
+      if (selected.equals(selectedCommandName) && selectedOnRed == Robot.isOnRed()) {
         return;
       }
       if (!routines.containsKey(selected)) {
@@ -72,6 +73,7 @@ public class Autos {
       }
       selectedCommandName = selected;
       selectedCommand = routines.get(selected).get();
+      selectedOnRed = Robot.isOnRed();
     }
   }
 
