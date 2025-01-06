@@ -26,6 +26,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -187,6 +188,10 @@ public class Swerve extends SubsystemBase {
   private final ArrayList<Pose3d> tagPoses = new ArrayList<>();
   private final ArrayList<Pose3d> poseEstimates = new ArrayList<>();
 
+  /** Whether to ignore vision inputs or cheat with the ground truth pose in sim. */
+  boolean useGroundTruth = true;
+
+  /** Whether to log vision data or not. */
   boolean visionLoggingEnabled = true;
 
   @Override
@@ -235,54 +240,64 @@ public class Swerve extends SubsystemBase {
         lastTimestamp = frame.timestamp();
       }
 
-      if (Robot.isSimulation() && !Logger.hasReplaySource()) {
-        FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().update();
-      }
-
-      for (int i = 0; i < visionIOs.length; i++) {
-        visionIOs[i].updateInputs(visionInputs[i]);
-        Logger.processInputs("Vision/" + i, visionInputs[i]);
-
-        if (!visionInputs[i].hasNewData) {
-          // If there's no new data, save some CPU
-          continue;
+      if (useGroundTruth && Robot.isSimulation()) {
+        if (Logger.hasReplaySource()) {
+          throw new IllegalStateException("Code determinism cannot be guaranteed!");
+        }
+        poseEstimator.addVisionMeasurement(
+            Robot.groundTruthPoseSupplier.get(),
+            RobotController.getFPGATime() / 1e6,
+            new double[] {.0001, .0001, .00001});
+      } else {
+        if (Robot.isSimulation() && !Logger.hasReplaySource()) {
+          FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().update();
         }
 
-        CameraTunings tunings;
-        if (i >= cameraTunings.length) {
-          tunings = CameraTunings.defaults;
-        } else {
-          tunings = cameraTunings[i];
-        }
+        for (int i = 0; i < visionIOs.length; i++) {
+          visionIOs[i].updateInputs(visionInputs[i]);
+          Logger.processInputs("Vision/" + i, visionInputs[i]);
 
-        for (int j = 0; j < visionInputs[i].poseEstimates.length; j++) {
-          var poseEstimate = visionInputs[i].poseEstimates[j];
-
-          if (!MathUtil.isNear(0, poseEstimate.estimatedPose().getZ(), .25)) {
+          if (!visionInputs[i].hasNewData) {
+            // If there's no new data, save some CPU
             continue;
           }
 
-          var translationalStdDevs = getVisionStdDevs(poseEstimate, tunings.translational);
-          var angularStdDevs = getVisionStdDevs(poseEstimate, tunings.angular);
-          Logger.recordOutput(
-              "Vision/Std Devs/" + i + "/" + j + "/Translational", translationalStdDevs);
-          Logger.recordOutput("Vision/Std Devs/" + i + "/" + j + "/Angular", angularStdDevs);
+          CameraTunings tunings;
+          if (i >= cameraTunings.length) {
+            tunings = CameraTunings.defaults;
+          } else {
+            tunings = cameraTunings[i];
+          }
 
-          poseEstimator.addVisionMeasurement(
-              poseEstimate.estimatedPose().toPose2d(),
-              poseEstimate.timestamp(),
-              new double[] {translationalStdDevs, translationalStdDevs, angularStdDevs});
+          for (int j = 0; j < visionInputs[i].poseEstimates.length; j++) {
+            var poseEstimate = visionInputs[i].poseEstimates[j];
 
-          if (visionLoggingEnabled) {
-            poseEstimates.add(poseEstimate.estimatedPose());
-            tagPoses.addAll(Arrays.asList(poseEstimate.tagsUsed()));
+            if (!MathUtil.isNear(0, poseEstimate.estimatedPose().getZ(), .25)) {
+              continue;
+            }
+
+            var translationalStdDevs = getVisionStdDevs(poseEstimate, tunings.translational);
+            var angularStdDevs = getVisionStdDevs(poseEstimate, tunings.angular);
+            Logger.recordOutput(
+                "Vision/Std Devs/" + i + "/" + j + "/Translational", translationalStdDevs);
+            Logger.recordOutput("Vision/Std Devs/" + i + "/" + j + "/Angular", angularStdDevs);
+
+            poseEstimator.addVisionMeasurement(
+                poseEstimate.estimatedPose().toPose2d(),
+                poseEstimate.timestamp(),
+                new double[] {translationalStdDevs, translationalStdDevs, angularStdDevs});
+
+            if (visionLoggingEnabled) {
+              poseEstimates.add(poseEstimate.estimatedPose());
+              tagPoses.addAll(Arrays.asList(poseEstimate.tagsUsed()));
+            }
           }
         }
+        Logger.recordOutput("Vision/All pose estimates", poseEstimates.toArray(new Pose3d[0]));
+        Logger.recordOutput("Vision/All tags used", tagPoses.toArray(new Pose3d[0]));
+        poseEstimates.clear();
+        tagPoses.clear();
       }
-      Logger.recordOutput("Vision/All pose estimates", poseEstimates.toArray(new Pose3d[0]));
-      Logger.recordOutput("Vision/All tags used", tagPoses.toArray(new Pose3d[0]));
-      poseEstimates.clear();
-      tagPoses.clear();
     } else {
       poseReset = false;
     }
