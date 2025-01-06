@@ -13,6 +13,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
 import static frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import static java.lang.Math.PI;
 
+import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -468,42 +469,41 @@ public class Swerve extends SubsystemBase {
     lastSetpoint = setpoint;
   }
 
-  //  public void followTrajectory(SwerveSample sample) {
-  //    var feedforward =
-  //        ChassisSpeeds.fromFieldRelativeSpeeds(
-  //            new ChassisSpeeds(sample.vx, sample.vy, sample.omega), new
-  // Rotation2d(sample.heading));
-  //
-  //    var targetPose = new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading));
-  //    var feedback =
-  //        ChassisSpeeds.fromFieldRelativeSpeeds(
-  //            new ChassisSpeeds(
-  //                xController.calculate(
-  //                    poseEstimator.getEstimatedPosition().getX(), targetPose.getX()),
-  //                yController.calculate(
-  //                    poseEstimator.getEstimatedPosition().getY(), targetPose.getY()),
-  //                yawController.calculate(
-  //                    poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-  //                    targetPose.getRotation().getRadians())),
-  //            swerveInputs.gyroYaw);
-  //
-  //    Logger.recordOutput("Choreo/Error", targetPose.minus(poseEstimator.getEstimatedPosition()));
-  //
-  //    var forceVectors = new Translation2d[4];
-  //    for (int i = 0; i < 4; i++) {
-  //      forceVectors[i] =
-  //          new Translation2d(sample.moduleForcesX()[i], sample.moduleForcesY()[i])
-  //              .rotateBy(new Rotation2d(-sample.heading));
-  //    }
-  //
-  //    Logger.recordOutput("Choreo/Target Pose", targetPose);
-  //    Logger.recordOutput("Choreo/Feedforward", feedforward);
-  //    Logger.recordOutput("Choreo/Feedback", feedback);
-  //
-  //    var output = feedforward.plus(feedback);
-  //    autoDrive(output, forceVectors);
-  //    Logger.recordOutput("Choreo/Output", output);
-  //  }
+  public void followTrajectory(SwerveSample sample) {
+    var feedforward =
+        ChassisSpeeds.fromFieldRelativeSpeeds(
+            new ChassisSpeeds(sample.vx, sample.vy, sample.omega), new Rotation2d(sample.heading));
+
+    var targetPose = new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading));
+    var feedback =
+        ChassisSpeeds.fromFieldRelativeSpeeds(
+            new ChassisSpeeds(
+                xController.calculate(
+                    poseEstimator.getEstimatedPosition().getX(), targetPose.getX()),
+                yController.calculate(
+                    poseEstimator.getEstimatedPosition().getY(), targetPose.getY()),
+                yawController.calculate(
+                    poseEstimator.getEstimatedPosition().getRotation().getRadians(),
+                    targetPose.getRotation().getRadians())),
+            swerveInputs.gyroYaw);
+
+    Logger.recordOutput("Choreo/Error", targetPose.minus(poseEstimator.getEstimatedPosition()));
+
+    var forceVectors = new Translation2d[4];
+    for (int i = 0; i < 4; i++) {
+      forceVectors[i] =
+          new Translation2d(sample.moduleForcesX()[i], sample.moduleForcesY()[i])
+              .rotateBy(new Rotation2d(-sample.heading));
+    }
+
+    Logger.recordOutput("Choreo/Target Pose", targetPose);
+    Logger.recordOutput("Choreo/Feedforward", feedforward);
+    Logger.recordOutput("Choreo/Feedback", feedback);
+
+    var output = feedforward.plus(feedback);
+    autoDrive(output, forceVectors);
+    Logger.recordOutput("Choreo/Output", output);
+  }
 
   public Command steerCharacterize() {
     var sysId =

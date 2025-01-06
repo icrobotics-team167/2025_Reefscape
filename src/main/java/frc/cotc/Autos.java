@@ -9,6 +9,9 @@ package frc.cotc;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
+import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.cotc.drive.Swerve;
 import java.util.HashMap;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class Autos {
@@ -29,27 +33,23 @@ public class Autos {
     chooser.addDefaultOption(NONE_NAME, NONE_NAME);
     routines.put(NONE_NAME, Commands::none);
 
-    //    var factory =
-    //        new AutoFactory(
-    //            swerve::getPose,
-    //            swerve::resetForAuto,
-    //            swerve::followTrajectory,
-    //            true,
-    //            swerve,
-    //            new AutoFactory.AutoBindings(),
-    //            (trajectory, starting) -> {
-    //              var poses = trajectory.getPoses();
-    //              if (Robot.isOnRed()) {
-    //                for (int i = 0; i < poses.length; i++) {
-    //                  poses[i] =
-    //                      new Pose2d(16.54 - poses[i].getX(), poses[i].getY(),
-    // poses[i].getRotation());
-    //                }
-    //              }
-    //              Logger.recordOutput("Swerve/Trajectory", poses);
-    //            });
-    //
-    //    addRoutine("Four Note Auto", () -> fourNoteAuto(factory));
+    var factory =
+        new AutoFactory(
+            swerve::getPose,
+            swerve::resetForAuto,
+            swerve::followTrajectory,
+            true,
+            swerve,
+            (trajectory, starting) -> {
+              var poses = trajectory.getPoses();
+              if (Robot.isOnRed()) {
+                for (int i = 0; i < poses.length; i++) {
+                  poses[i] =
+                      new Pose2d(16.54 - poses[i].getX(), poses[i].getY(), poses[i].getRotation());
+                }
+              }
+              Logger.recordOutput("Swerve/Trajectory", poses);
+            });
   }
 
   private String selectedCommandName = NONE_NAME;
@@ -79,8 +79,8 @@ public class Autos {
     return selectedCommand.withName(selectedCommandName);
   }
 
-  //  private void addRoutine(String name, Supplier<AutoRoutine> generator) {
-  //    chooser.addOption(name, name);
-  //    routines.put(name, () -> generator.get().cmd());
-  //  }
+  private void addRoutine(String name, Supplier<AutoRoutine> generator) {
+    chooser.addOption(name, name);
+    routines.put(name, () -> generator.get().cmd());
+  }
 }
