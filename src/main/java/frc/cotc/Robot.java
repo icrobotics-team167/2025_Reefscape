@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
+import frc.cotc.superstructure.AlgaeClaw;
+import frc.cotc.superstructure.AlgaeClawIO;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.Arrays;
@@ -93,7 +95,8 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
-    Swerve swerve = getSwerve(mode);
+    var swerve = getSwerve(mode);
+    var algaeClaw = new AlgaeClaw(new AlgaeClawIO() {});
 
     var primary = new CommandXboxController(0);
 
