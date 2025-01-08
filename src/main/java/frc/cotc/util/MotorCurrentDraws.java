@@ -15,6 +15,10 @@ public class MotorCurrentDraws {
   public double statorCurrent;
   public double supplyCurrent;
 
+  public MotorCurrentDraws() {
+    this(0, 0);
+  }
+
   public MotorCurrentDraws(double stator, double supply) {
     statorCurrent = stator;
     supplyCurrent = supply;
