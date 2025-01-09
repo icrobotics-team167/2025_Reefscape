@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
 import frc.cotc.util.MotorCurrentDraws;
+import frc.cotc.util.PhoenixBatchRefresher;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -122,6 +123,8 @@ public class SwerveIOPhoenix implements SwerveIO {
     signals[32] = gyro.getYaw(false);
     signals[33] = gyro.getAngularVelocityZWorld(false);
 
+    PhoenixBatchRefresher.register(signals);
+
     odometryThread = new OdometryThread(modules, gyro, 250);
 
     BaseStatusSignal.setUpdateFrequencyForAll(50, lowFreqSignals);
@@ -137,7 +140,6 @@ public class SwerveIOPhoenix implements SwerveIO {
 
   @Override
   public void updateInputs(SwerveIOInputs inputs) {
-    BaseStatusSignal.refreshAll(signals);
     for (int i = 0; i < 4; i++) {
       inputs.moduleStates[i] = getCurrentState(i);
 

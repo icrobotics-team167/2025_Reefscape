@@ -21,6 +21,7 @@ import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.AlgaeClaw;
 import frc.cotc.superstructure.AlgaeClawIO;
+import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.Arrays;
@@ -176,6 +177,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    PhoenixBatchRefresher.refresh();
     // Runs the Scheduler. This is responsible for polling buttons, adding newly-scheduled commands,
     // running already-scheduled commands, removing finished or interrupted commands, and running
     // subsystem periodic() methods. This must be called from the robot's periodic block in order
