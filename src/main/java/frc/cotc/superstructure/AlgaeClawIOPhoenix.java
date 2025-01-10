@@ -7,26 +7,44 @@
 
 package frc.cotc.superstructure;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.sim.CANcoderSimState;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Notifier;
 import frc.cotc.Robot;
+import frc.cotc.util.FOCArmSim;
+import frc.cotc.util.FOCMotorSim;
+import frc.cotc.util.PhoenixBatchRefresher;
 
 public class AlgaeClawIOPhoenix implements AlgaeClawIO {
   private final TalonFX pivotMotor;
-  private final CANcoder pivotEncoder;
   private final TalonFX intakeMotor;
+
+  private final BaseStatusSignal pivotAngle,
+      pivotVel,
+      wheelPos,
+      wheelVel,
+      pivotStator,
+      pivotSupply,
+      intakeStator,
+      intakeSupply;
+
+  private final double pivotGearRatio = 100;
 
   public AlgaeClawIOPhoenix() {
     pivotMotor = new TalonFX(16, Robot.CANIVORE_NAME);
-    pivotEncoder = new CANcoder(17, Robot.CANIVORE_NAME);
+    var pivotEncoder = new CANcoder(17, Robot.CANIVORE_NAME);
     intakeMotor = new TalonFX(18, Robot.CANIVORE_NAME);
-
-    final double pivotGearRatio = 100;
-    final var pivotMotor = DCMotor.getKrakenX60Foc(1).withReduction(pivotGearRatio);
 
     var pivotConfig = new TalonFXConfiguration();
     pivotConfig.CurrentLimits.StatorCurrentLimit = 80;
@@ -37,36 +55,146 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     pivotConfig.Feedback.SensorToMechanismRatio = 1;
     pivotConfig.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
     pivotConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
-    pivotConfig.Slot0.kV = 1 / Units.radiansToRotations(pivotMotor.KvRadPerSecPerVolt);
     pivotConfig.Audio.AllowMusicDurDisable = true;
-
-    final var intakeMotor = DCMotor.getKrakenX60Foc(1);
 
     var intakeConfig = new TalonFXConfiguration();
     intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
     intakeConfig.CurrentLimits.SupplyCurrentLimit = 40;
     intakeConfig.CurrentLimits.SupplyCurrentLowerLimit = 10;
     intakeConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
-    intakeConfig.Slot0.kV = 1 / Units.radiansToRotations(intakeMotor.KvRadPerSecPerVolt);
+
+    pivotAngle = pivotEncoder.getAbsolutePosition(false);
+    pivotVel = pivotMotor.getVelocity(false);
+    wheelPos = intakeMotor.getPosition(false);
+    wheelVel = intakeMotor.getVelocity(false);
+    pivotStator = pivotMotor.getStatorCurrent(false);
+    pivotSupply = pivotMotor.getSupplyCurrent(false);
+    intakeStator = intakeMotor.getStatorCurrent(false);
+    intakeSupply = intakeMotor.getSupplyCurrent(false);
+
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        50,
+        pivotAngle,
+        pivotVel,
+        wheelPos,
+        wheelVel,
+        pivotStator,
+        pivotSupply,
+        intakeStator,
+        intakeSupply);
+    ParentDevice.optimizeBusUtilizationForAll(4, pivotMotor, pivotEncoder, intakeMotor);
+    PhoenixBatchRefresher.register(
+        pivotAngle,
+        pivotVel,
+        wheelPos,
+        wheelVel,
+        pivotStator,
+        pivotSupply,
+        intakeStator,
+        intakeSupply);
+
+    if (Robot.isSimulation()) {
+      initSim(pivotMotor, pivotEncoder, intakeMotor);
+      simNotifier.startPeriodic(simDt);
+    }
   }
 
   @Override
   public void updateInputs(AlgaeClawIOInputs inputs) {
-    AlgaeClawIO.super.updateInputs(inputs);
+    inputs.pivotAngleRad = Units.rotationsToRadians(pivotAngle.getValueAsDouble());
+    inputs.pivotVelRadPerSec = Units.rotationsToRadians(pivotVel.getValueAsDouble());
+    inputs.wheelPosMeters = wheelPos.getValueAsDouble() * wheelCircumferenceMeters;
+    inputs.wheelVelMetersPerSec = wheelVel.getValueAsDouble() * wheelCircumferenceMeters;
+    inputs.pivotCurrentDraws.mutateFromSignals(pivotStator, pivotSupply);
+    inputs.wheelCurrentDraws.mutateFromSignals(intakeStator, intakeSupply);
   }
+
+  private final MotionMagicExpoTorqueCurrentFOC positionControl =
+      new MotionMagicExpoTorqueCurrentFOC(0);
 
   @Override
   public void setPivotPos(double angleRad) {
-    AlgaeClawIO.super.setPivotPos(angleRad);
+    pivotMotor.setControl(positionControl.withPosition(Units.radiansToRotations(angleRad)));
   }
 
-  @Override
-  public void setPivotVel(double velRadPerSec) {
-    AlgaeClawIO.super.setPivotVel(velRadPerSec);
-  }
+  private final double wheelCircumferenceMeters = Units.inchesToMeters(4) * Math.PI;
+  private final VelocityTorqueCurrentFOC velocityControl = new VelocityTorqueCurrentFOC(0);
 
   @Override
   public void runIntake(double speedMetersPerSec) {
-    AlgaeClawIO.super.runIntake(speedMetersPerSec);
+    intakeMotor.setControl(
+        velocityControl.withVelocity(speedMetersPerSec / wheelCircumferenceMeters));
+  }
+
+  private final TorqueCurrentFOC characterizationControl = new TorqueCurrentFOC(0);
+
+  @Override
+  public void characterizePivot(double amps) {
+    pivotMotor.setControl(characterizationControl.withOutput(amps));
+  }
+
+  @Override
+  public void characterizeIntake(double amps) {
+    intakeMotor.setControl(characterizationControl.withOutput(0));
+  }
+
+  @Override
+  public void initSysId() {
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        250,
+        pivotAngle,
+        pivotVel,
+        wheelPos,
+        wheelVel,
+        pivotMotor.getTorqueCurrent(false),
+        intakeMotor.getTorqueCurrent(false));
+  }
+
+  private FOCArmSim armSim;
+  private FOCMotorSim intakeSim;
+  private TalonFXSimState pivotMotorSim;
+  private CANcoderSimState pivotEncoderSim;
+  private TalonFXSimState intakeMotorSim;
+
+  private final double simDt = .001;
+  private Notifier simNotifier;
+
+  private void initSim(TalonFX pivotMotor, CANcoder pivotEncoder, TalonFX intakeMotor) {
+    armSim =
+        new FOCArmSim(
+            DCMotor.getKrakenX60Foc(1).withReduction(pivotGearRatio),
+            Units.lbsToKilograms(10),
+            .5,
+            Units.degreesToRadians(-90),
+            Units.degreesToRadians(90),
+            Units.degreesToRadians(-90));
+
+    intakeSim = new FOCMotorSim(DCMotor.getKrakenX60Foc(1), .005);
+
+    pivotMotorSim = pivotMotor.getSimState();
+    pivotEncoderSim = pivotEncoder.getSimState();
+    intakeMotorSim = intakeMotor.getSimState();
+
+    simNotifier = new Notifier(this::tickSim);
+  }
+
+  private void tickSim() {
+    armSim.tick(pivotMotorSim.getTorqueCurrent(), simDt);
+
+    intakeSim.tick(intakeMotorSim.getTorqueCurrent(), simDt);
+
+    pivotEncoderSim.setRawPosition(Units.radiansToRotations(armSim.getPosRad()));
+    pivotEncoderSim.setVelocity(Units.radiansToRotations(armSim.getVelRadPerSec()));
+
+    pivotMotorSim.setRawRotorPosition(
+        Units.radiansToRotations(armSim.getPosRad()) * pivotGearRatio);
+    pivotMotorSim.setRotorVelocity(
+        Units.radiansToRotations(armSim.getVelRadPerSec()) * pivotGearRatio);
+    pivotMotorSim.setRotorAcceleration(
+        Units.radiansToRotations(armSim.getAccelRadPerSecSquared()) * pivotGearRatio);
+
+    intakeMotorSim.setRawRotorPosition(Units.radiansToRotations(intakeSim.getPos()));
+    intakeMotorSim.setRotorVelocity(Units.radiansToRotations(intakeSim.getVel()));
+    intakeMotorSim.setRotorAcceleration(Units.radiansToRotations(intakeSim.getAccel()));
   }
 }

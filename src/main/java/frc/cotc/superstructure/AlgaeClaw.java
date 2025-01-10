@@ -7,12 +7,16 @@
 
 package frc.cotc.superstructure;
 
+import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj2.command.Commands.idle;
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -52,5 +56,22 @@ public class AlgaeClaw extends SubsystemBase {
 
   Command intake() {
     return idle();
+  }
+
+  public Command characterizePivot() {
+    var sysId =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                Volts.of(2).per(Second),
+                Volts.of(4),
+                Seconds.of(6),
+                state -> SignalLogger.writeString("SysIDState", state.toString())),
+            new SysIdRoutine.Mechanism(
+                voltage -> io.characterizePivot(voltage.baseUnitMagnitude()), null, this));
+    return sequence(
+        sysId.quasistatic(SysIdRoutine.Direction.kForward),
+        sysId.quasistatic(SysIdRoutine.Direction.kReverse),
+        sysId.dynamic(SysIdRoutine.Direction.kForward),
+        sysId.dynamic(SysIdRoutine.Direction.kReverse));
   }
 }

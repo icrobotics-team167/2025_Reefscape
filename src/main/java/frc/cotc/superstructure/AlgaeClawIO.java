@@ -49,7 +49,11 @@ public interface AlgaeClawIO {
 
   default void setPivotPos(double angleRad) {}
 
-  default void setPivotVel(double velRadPerSec) {}
-
   default void runIntake(double speedMetersPerSec) {}
+
+  default void characterizePivot(double amps) {}
+
+  default void characterizeIntake(double amps) {}
+
+  default void initSysId() {}
 }
