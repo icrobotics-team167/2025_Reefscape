@@ -18,9 +18,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
-import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.AlgaeClaw;
-import frc.cotc.superstructure.AlgaeClawIO;
+import frc.cotc.superstructure.AlgaeClawIOPhoenix;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
@@ -97,7 +96,7 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
-    var algaeClaw = new AlgaeClaw(new AlgaeClawIO() {});
+    var algaeClaw = new AlgaeClaw(new AlgaeClawIOPhoenix());
 
     var primary = new CommandXboxController(0);
 
@@ -114,6 +113,8 @@ public class Robot extends LoggedRobot {
             2));
     RobotModeTriggers.disabled().or(primary.povDown()).whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+
+    primary.y().onTrue(algaeClaw.goToPos(0));
 
     autos = new Autos(swerve);
   }
@@ -139,7 +140,7 @@ public class Robot extends LoggedRobot {
 
     switch (mode) {
       case REAL, SIM -> {
-        swerveIO = new SwerveIOPhoenix();
+        swerveIO = new SwerveIO() {};
         visionIOs =
             new FiducialPoseEstimatorIO[] {
               new FiducialPoseEstimatorIOPhoton(0),
@@ -205,7 +206,9 @@ public class Robot extends LoggedRobot {
         throw new RuntimeException("Voltage too low! Terminating program to simulate brownout.");
       }
       RoboRioSim.setVInVoltage(simVoltage);
-      Logger.recordOutput("Sim/Ground truth pose", groundTruthPoseSupplier.get());
+      if (groundTruthPoseSupplier != null) {
+        Logger.recordOutput("Sim/Ground truth pose", groundTruthPoseSupplier.get());
+      }
     }
   }
 

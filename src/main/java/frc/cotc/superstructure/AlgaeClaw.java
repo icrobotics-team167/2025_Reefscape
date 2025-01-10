@@ -8,7 +8,6 @@
 package frc.cotc.superstructure;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.wpilibj2.command.Commands.idle;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -54,21 +53,22 @@ public class AlgaeClaw extends SubsystemBase {
     Logger.recordOutput("AlgaeClaw/Visualization", visualization);
   }
 
-  Command intake() {
-    return idle();
+  public Command goToPos(double angleRad) {
+    return run(() -> io.setPivotPos(angleRad));
   }
 
   public Command characterizePivot() {
     var sysId =
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                Volts.of(2).per(Second),
-                Volts.of(4),
-                Seconds.of(6),
+                Volts.of(5).per(Second),
+                Volts.of(10),
+                Seconds.of(3),
                 state -> SignalLogger.writeString("SysIDState", state.toString())),
             new SysIdRoutine.Mechanism(
                 voltage -> io.characterizePivot(voltage.baseUnitMagnitude()), null, this));
     return sequence(
+        runOnce(io::initSysId),
         sysId.quasistatic(SysIdRoutine.Direction.kForward),
         sysId.quasistatic(SysIdRoutine.Direction.kReverse),
         sysId.dynamic(SysIdRoutine.Direction.kForward),

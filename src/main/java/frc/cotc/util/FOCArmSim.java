@@ -24,13 +24,13 @@ public class FOCArmSim {
   public FOCArmSim(
       DCMotor motor,
       double massKg,
-      double cogRadiusMeters,
+      double CoMRadiusMeters,
       double minAngleRad,
       double maxAngleRad,
       double initAngleRad) {
     this.motor = motor;
-    moi = SingleJointedArmSim.estimateMOI(cogRadiusMeters, massKg);
-    gravityTorque = massKg * 9.81 * cogRadiusMeters;
+    moi = SingleJointedArmSim.estimateMOI(CoMRadiusMeters, massKg);
+    gravityTorque = massKg * 9.81 * CoMRadiusMeters;
     this.minAngleRad = minAngleRad;
     this.maxAngleRad = maxAngleRad;
 

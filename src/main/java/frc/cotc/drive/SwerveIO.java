@@ -21,7 +21,13 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface SwerveIO {
   class SwerveIOInputs implements LoggableInputs {
-    SwerveModuleState[] moduleStates = new SwerveModuleState[4];
+    SwerveModuleState[] moduleStates =
+        new SwerveModuleState[] {
+          new SwerveModuleState(),
+          new SwerveModuleState(),
+          new SwerveModuleState(),
+          new SwerveModuleState()
+        };
     Rotation2d gyroYaw = Rotation2d.kZero;
 
     OdometryFrame[] odometryFrames =
@@ -37,8 +43,20 @@ public interface SwerveIO {
               -1.0)
         };
 
-    MotorCurrentDraws[] driveMotorCurrents = new MotorCurrentDraws[4];
-    MotorCurrentDraws[] steerMotorCurrents = new MotorCurrentDraws[4];
+    MotorCurrentDraws[] driveMotorCurrents =
+        new MotorCurrentDraws[] {
+          new MotorCurrentDraws(),
+          new MotorCurrentDraws(),
+          new MotorCurrentDraws(),
+          new MotorCurrentDraws()
+        };
+    MotorCurrentDraws[] steerMotorCurrents =
+        new MotorCurrentDraws[] {
+          new MotorCurrentDraws(),
+          new MotorCurrentDraws(),
+          new MotorCurrentDraws(),
+          new MotorCurrentDraws()
+        };
 
     @Override
     public void toLog(LogTable table) {

@@ -244,10 +244,12 @@ public class Swerve extends SubsystemBase {
         if (Logger.hasReplaySource()) {
           throw new IllegalStateException("Code determinism cannot be guaranteed!");
         }
-        poseEstimator.addVisionMeasurement(
-            Robot.groundTruthPoseSupplier.get(),
-            RobotController.getFPGATime() / 1e6,
-            new double[] {.0001, .0001, .00001});
+        if (Robot.groundTruthPoseSupplier != null) {
+          poseEstimator.addVisionMeasurement(
+              Robot.groundTruthPoseSupplier.get(),
+              RobotController.getFPGATime() / 1e6,
+              new double[] {.0001, .0001, .00001});
+        }
       } else {
         if (Robot.isSimulation() && !Logger.hasReplaySource()) {
           FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().update();

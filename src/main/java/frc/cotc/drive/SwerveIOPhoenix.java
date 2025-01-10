@@ -43,7 +43,6 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
-import frc.cotc.util.MotorCurrentDraws;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class SwerveIOPhoenix implements SwerveIO {
@@ -147,13 +146,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       var driveSupply = signals[i * 8 + 5];
       var steerStator = signals[i * 8 + 6];
       var steerSupply = signals[i * 8 + 7];
-      if (inputs.driveMotorCurrents[i] != null) {
-        inputs.driveMotorCurrents[i].mutateFromSignals(driveStator, driveSupply);
-        inputs.steerMotorCurrents[i].mutateFromSignals(steerStator, steerSupply);
-      } else {
-        inputs.driveMotorCurrents[i] = MotorCurrentDraws.fromSignals(driveStator, driveSupply);
-        inputs.steerMotorCurrents[i] = MotorCurrentDraws.fromSignals(steerStator, steerSupply);
-      }
+      inputs.driveMotorCurrents[i].mutateFromSignals(driveStator, driveSupply);
+      inputs.steerMotorCurrents[i].mutateFromSignals(steerStator, steerSupply);
     }
     inputs.gyroYaw =
         Rotation2d.fromDegrees(

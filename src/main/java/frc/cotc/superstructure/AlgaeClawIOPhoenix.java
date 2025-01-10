@@ -16,11 +16,13 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCArmSim;
 import frc.cotc.util.FOCMotorSim;
@@ -40,6 +42,10 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
       intakeSupply;
 
   private final double pivotGearRatio = 100;
+
+  private final DCMotor pivotMotorModel = DCMotor.getKrakenX60Foc(1).withReduction(pivotGearRatio);
+  private final double armMassKg = Units.lbsToKilograms(5);
+  private final double armCoMRadius = .5;
 
   public AlgaeClawIOPhoenix() {
     pivotMotor = new TalonFX(16, Robot.CANIVORE_NAME);
@@ -62,6 +68,23 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     intakeConfig.CurrentLimits.SupplyCurrentLimit = 40;
     intakeConfig.CurrentLimits.SupplyCurrentLowerLimit = 10;
     intakeConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
+
+    // TODO: See if this math makes sense?
+    pivotConfig.Slot0.kA =
+        pivotMotorModel.getCurrent(
+            Units.radiansToRotations(SingleJointedArmSim.estimateMOI(armCoMRadius, armMassKg)));
+    pivotConfig.Slot0.kG = pivotMotorModel.getCurrent(armMassKg * 9.81 * armCoMRadius);
+    pivotConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+    pivotConfig.MotionMagic.MotionMagicExpo_kV =
+        12 / Units.radiansToRotations(pivotMotorModel.freeSpeedRadPerSec);
+    if (Robot.isReal()) {
+      pivotConfig.Slot0.kP = 0;
+    } else {
+      pivotConfig.Slot0.kP = 1;
+      pivotConfig.MotionMagic.MotionMagicExpo_kA = .075;
+    }
+
+    pivotMotor.getConfigurator().apply(pivotConfig);
 
     pivotAngle = pivotEncoder.getAbsolutePosition(false);
     pivotVel = pivotMotor.getVelocity(false);
@@ -162,9 +185,9 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
   private void initSim(TalonFX pivotMotor, CANcoder pivotEncoder, TalonFX intakeMotor) {
     armSim =
         new FOCArmSim(
-            DCMotor.getKrakenX60Foc(1).withReduction(pivotGearRatio),
-            Units.lbsToKilograms(10),
-            .5,
+            pivotMotorModel,
+            armMassKg,
+            armCoMRadius,
             Units.degreesToRadians(-90),
             Units.degreesToRadians(90),
             Units.degreesToRadians(-90));
