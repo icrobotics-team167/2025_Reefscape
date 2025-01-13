@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 import frc.cotc.util.MotorCurrentDraws;
@@ -140,26 +141,27 @@ public interface SwerveIO {
   @AutoLog
   class SwerveModuleConstants {
     // Meters
-    double TRACK_WIDTH_METERS;
-    double TRACK_LENGTH_METERS;
-    double WHEEL_DIAMETER_METERS;
-    double WHEEL_COF;
+    double TRACK_WIDTH_METERS = 1;
+    double TRACK_LENGTH_METERS = 1;
+    double WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
+    double WHEEL_COF = 1;
 
     // Should have a gear reduction applied with .withReduction()
     DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60(1);
-    int DRIVE_STATOR_CURRENT_LIMIT_AMPS;
+    int DRIVE_STATOR_CURRENT_LIMIT_AMPS = 80;
 
-    double MASS_KG;
-    double MOI_KG_METERS_SQUARED;
+    double MASS_KG = 40;
+    double MOI_KG_METERS_SQUARED = 40;
 
     // Should already have a reduction applied
-    double MAX_STEER_SPEED_RAD_PER_SEC;
+    double MAX_STEER_SPEED_RAD_PER_SEC =
+        Units.rotationsPerMinuteToRadiansPerSecond(6000) / (150.0 / 7.0);
 
     // Due to kinematic limits, it may not be possible for the bot to stay moving straight when
     // spinning and moving at the same time. This fudge factor slows down the max angular speed
     // when the bot is translating, but doesn't affect the limit when the bot isn't translating.
     // Scalar
-    double ANGULAR_SPEED_FUDGING;
+    double ANGULAR_SPEED_FUDGING = .45;
   }
 
   /**
