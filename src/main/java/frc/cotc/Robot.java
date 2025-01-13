@@ -114,7 +114,8 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.disabled().or(primary.povDown()).whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
 
-    primary.y().onTrue(algaeClaw.goToPos(0));
+    algaeClaw.setDefaultCommand(algaeClaw.goToPos(0));
+    //    primary.y().onTrue(algaeClaw.goToPos(0));
 
     autos = new Autos(swerve);
   }
