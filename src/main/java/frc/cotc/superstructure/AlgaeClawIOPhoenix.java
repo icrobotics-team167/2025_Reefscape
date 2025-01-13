@@ -40,7 +40,7 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
       intakeStator,
       intakeSupply;
 
-  private final double pivotGearRatio = 150;
+  private final double pivotGearRatio = 100;
 
   private final DCMotor pivotMotorModel = DCMotor.getKrakenX60Foc(1).withReduction(pivotGearRatio);
 
@@ -73,9 +73,9 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     if (Robot.isReal()) {
       pivotConfig.Slot0.kP = 0;
     } else {
-      pivotConfig.Slot0.kP = 300;
-      pivotConfig.Slot0.kD = 150;
-      pivotConfig.Slot0.kG = 3.877;
+      pivotConfig.Slot0.kP = 6000;
+      pivotConfig.Slot0.kD = 250;
+      pivotConfig.Slot0.kG = 11.5;
     }
 
     pivotMotor.getConfigurator().apply(pivotConfig);
@@ -181,12 +181,13 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
         new SingleJointedArmSim(
             pivotMotorModel,
             1,
-            SingleJointedArmSim.estimateMOI(.5, Units.lbsToKilograms(10)),
+            SingleJointedArmSim.estimateMOI(.5, Units.lbsToKilograms(20)),
             .5,
             -Units.degreesToRadians(90),
             Units.degreesToRadians(90),
             true,
             -Units.degreesToRadians(90));
+    //            0);
 
     intakeSim = new FOCMotorSim(DCMotor.getKrakenX60Foc(1), .005);
 

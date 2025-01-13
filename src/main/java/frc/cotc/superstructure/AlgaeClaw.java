@@ -24,7 +24,7 @@ public class AlgaeClaw extends SubsystemBase {
   private final AlgaeClawIO io;
   private final AlgaeClawIO.AlgaeClawIOInputs inputs = new AlgaeClawIO.AlgaeClawIOInputs();
 
-  private final LoggedMechanism2d visualization = new LoggedMechanism2d(.9652, 1);
+  private final LoggedMechanism2d visualization = new LoggedMechanism2d(1, 1);
   private final LoggedMechanismLigament2d wristUpper =
       new LoggedMechanismLigament2d("WristUpper", .25, 0, 2, new Color8Bit(0, 255, 0));
   private final LoggedMechanismLigament2d wristLower =
@@ -32,7 +32,7 @@ public class AlgaeClaw extends SubsystemBase {
 
   public AlgaeClaw(AlgaeClawIO io) {
     this.io = io;
-    var root = visualization.getRoot("WristPivot", 0.2, .4);
+    var root = visualization.getRoot("WristPivot", 0.8, .4);
     root.append(wristUpper);
     root.append(wristLower);
   }
@@ -43,10 +43,8 @@ public class AlgaeClaw extends SubsystemBase {
     Logger.processInputs("AlgaeClaw", inputs);
 
     double wristOpeningAngle = 40;
-    double upperAngle =
-        180 - (Units.radiansToDegrees(inputs.pivotAngleRad) + (wristOpeningAngle / 2));
-    double lowerAngle =
-        180 - (Units.radiansToDegrees(inputs.pivotAngleRad) - (wristOpeningAngle / 2));
+    double upperAngle = Units.radiansToDegrees(inputs.pivotAngleRad) + (wristOpeningAngle / 2);
+    double lowerAngle = Units.radiansToDegrees(inputs.pivotAngleRad) - (wristOpeningAngle / 2);
     wristUpper.setAngle(upperAngle);
     wristLower.setAngle(lowerAngle);
 
