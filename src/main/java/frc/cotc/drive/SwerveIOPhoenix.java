@@ -117,7 +117,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       System.arraycopy(signals, i * 8 + 3, lowFreqSignals, i * 5, 5);
     }
-    gyro = new Pigeon2(4 * 3 + 3, Robot.CANIVORE_NAME);
+    gyro = new Pigeon2(12, Robot.CANIVORE_NAME);
     devices[12] = gyro;
     signals[32] = gyro.getYaw(false);
     signals[33] = gyro.getAngularVelocityZWorld(false);

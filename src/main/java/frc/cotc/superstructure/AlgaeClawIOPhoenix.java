@@ -45,9 +45,9 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
   private final DCMotor pivotMotorModel = DCMotor.getKrakenX60Foc(1).withReduction(pivotGearRatio);
 
   public AlgaeClawIOPhoenix() {
-    pivotMotor = new TalonFX(16, Robot.CANIVORE_NAME);
-    var pivotEncoder = new CANcoder(17, Robot.CANIVORE_NAME);
-    intakeMotor = new TalonFX(18, Robot.CANIVORE_NAME);
+    pivotMotor = new TalonFX(13, Robot.CANIVORE_NAME);
+    var pivotEncoder = new CANcoder(14, Robot.CANIVORE_NAME);
+    intakeMotor = new TalonFX(15, Robot.CANIVORE_NAME);
 
     var pivotConfig = new TalonFXConfiguration();
     pivotConfig.CurrentLimits.StatorCurrentLimit = 80;
