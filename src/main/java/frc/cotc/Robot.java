@@ -9,7 +9,6 @@ package frc.cotc;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -19,8 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
-import frc.cotc.superstructure.AlgaeClaw;
-import frc.cotc.superstructure.AlgaeClawIOPhoenix;
+import frc.cotc.superstructure.*;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
@@ -46,7 +44,7 @@ public class Robot extends LoggedRobot {
     REPLAY
   }
 
-  @SuppressWarnings({"DataFlowIssue", "UnreachableCode"})
+  @SuppressWarnings({"DataFlowIssue", "UnreachableCode", "ConstantValue"})
   public Robot() {
     // If this is erroring, hit build
     // Compiling auto-generates the BuildConstants file
@@ -97,8 +95,10 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
-    var algaeClaw = new AlgaeClaw(new AlgaeClawIOPhoenix());
-    //    var coralElevator = new CoralElevator(new CoralElevatorIOPhoenix());
+    var claw = new AlgaeClaw(mode != Mode.REPLAY ? new AlgaeClawIOPhoenix() : new AlgaeClawIO() {});
+    var elevator =
+        new CoralElevator(
+            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
 
     var primary = new CommandXboxController(0);
 
@@ -115,13 +115,6 @@ public class Robot extends LoggedRobot {
             2));
     RobotModeTriggers.disabled().or(primary.povDown()).whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-
-    algaeClaw.setDefaultCommand(algaeClaw.goToPos(Units.degreesToRadians(-90)));
-    primary.y().whileTrue(algaeClaw.goToPos(0));
-    //    RobotModeTriggers.teleop().onTrue(algaeClaw.characterizePivot());
-    //    coralElevator.setDefaultCommand(coralElevator.goToPos(0));
-    //    primary.y().whileTrue(coralElevator.goToPos(2));
-    //    RobotModeTriggers.teleop().onTrue(coralElevator.characterize());
 
     autos = new Autos(swerve);
   }
