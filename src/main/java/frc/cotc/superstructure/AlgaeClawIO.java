@@ -51,7 +51,7 @@ public interface AlgaeClawIO {
 
   default void runIntake(double speedMetersPerSec) {}
 
-  default void characterizePivot(double amps) {}
+  default void characterizePivot(double voltage) {}
 
   default void characterizeIntake(double amps) {}
 

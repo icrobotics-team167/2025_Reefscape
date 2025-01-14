@@ -59,8 +59,8 @@ public class AlgaeClaw extends SubsystemBase {
     var sysId =
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                Volts.of(2).per(Second),
-                Volts.of(2),
+                Volts.of(6).per(Second),
+                Volts.of(12),
                 Seconds.of(2),
                 state -> SignalLogger.writeString("SysIDState", state.toString())),
             new SysIdRoutine.Mechanism(

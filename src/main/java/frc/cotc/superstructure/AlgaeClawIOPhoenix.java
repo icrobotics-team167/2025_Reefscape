@@ -9,9 +9,7 @@ package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -60,8 +58,7 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     pivotConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
     pivotConfig.Audio.AllowMusicDurDisable = true;
     pivotConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-    pivotConfig.MotionMagic.MotionMagicExpo_kV =
-        12 / Units.radiansToRotations(pivotMotorModel.freeSpeedRadPerSec);
+    pivotConfig.Slot0.kV = 12 / Units.radiansToRotations(pivotMotorModel.freeSpeedRadPerSec);
 
     var intakeConfig = new TalonFXConfiguration();
     intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
@@ -73,10 +70,13 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     if (Robot.isReal()) {
       pivotConfig.Slot0.kP = 0;
     } else {
-      pivotConfig.Slot0.kP = 6000;
-      pivotConfig.Slot0.kD = 250;
-      pivotConfig.Slot0.kG = 11.5;
+      pivotConfig.Slot0.kA = 0.10198;
+      pivotConfig.Slot0.kG = 0.287523;
+      pivotConfig.Slot0.kP = 112.34;
+      pivotConfig.Slot0.kD = 0.52751;
     }
+    pivotConfig.MotionMagic.MotionMagicExpo_kV = pivotConfig.Slot0.kV;
+    pivotConfig.MotionMagic.MotionMagicExpo_kA = pivotConfig.Slot0.kA;
 
     pivotMotor.getConfigurator().apply(pivotConfig);
     intakeMotor.getConfigurator().apply(intakeConfig);
@@ -127,7 +127,7 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     inputs.wheelCurrentDraws.mutateFromSignals(intakeStator, intakeSupply);
   }
 
-  private final PositionTorqueCurrentFOC positionControl = new PositionTorqueCurrentFOC(0);
+  private final MotionMagicExpoVoltage positionControl = new MotionMagicExpoVoltage(0);
 
   @Override
   public void setPivotPos(double angleRad) {
@@ -135,7 +135,7 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
   }
 
   private final double wheelCircumferenceMeters = Units.inchesToMeters(4) * Math.PI;
-  private final VelocityTorqueCurrentFOC velocityControl = new VelocityTorqueCurrentFOC(0);
+  private final VelocityVoltage velocityControl = new VelocityVoltage(0);
 
   @Override
   public void runIntake(double speedMetersPerSec) {
@@ -143,11 +143,11 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
         velocityControl.withVelocity(speedMetersPerSec / wheelCircumferenceMeters));
   }
 
-  private final TorqueCurrentFOC characterizationControl = new TorqueCurrentFOC(0);
+  private final VoltageOut characterizationControl = new VoltageOut(0);
 
   @Override
-  public void characterizePivot(double amps) {
-    pivotMotor.setControl(characterizationControl.withOutput(amps));
+  public void characterizePivot(double voltage) {
+    pivotMotor.setControl(characterizationControl.withOutput(voltage));
   }
 
   @Override
@@ -163,8 +163,8 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
         pivotVel,
         wheelPos,
         wheelVel,
-        pivotMotor.getTorqueCurrent(false),
-        intakeMotor.getTorqueCurrent(false));
+        pivotMotor.getMotorVoltage(false),
+        intakeMotor.getMotorVoltage(false));
   }
 
   private SingleJointedArmSim armSim;
