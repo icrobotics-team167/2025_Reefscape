@@ -21,6 +21,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.cotc.Robot;
+import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class CoralElevatorIOPhoenix implements CoralElevatorIO {
@@ -39,6 +40,7 @@ public class CoralElevatorIOPhoenix implements CoralElevatorIO {
     var config = new TalonFXConfiguration();
     config.Audio.AllowMusicDurDisable = true;
     config.Slot0.kV = 12 / Units.radiansToRotations(motorModel.freeSpeedRadPerSec);
+    config.Slot0.kA = 0.0042829;
     config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
     config.Feedback.SensorToMechanismRatio = gearRatio;
     config.CurrentLimits.StatorCurrentLimit = 60;
@@ -48,10 +50,19 @@ public class CoralElevatorIOPhoenix implements CoralElevatorIO {
       config.Slot0.kG = 0;
     } else {
       config.Slot0.kG = 0.063845;
-      config.Slot0.kA = 0.0042829;
-      config.Slot0.kP = 80;
-      config.Slot0.kD = 1.5;
     }
+
+    var gains =
+        GainsCalculator.getPositionGains(
+            config.Slot0.kV,
+            config.Slot0.kA,
+            12,
+            .005 / metersPerRotation,
+            .1 / metersPerRotation,
+            1.0 / 1000,
+            0);
+    config.Slot0.kP = gains.kP();
+    config.Slot0.kD = gains.kD();
 
     config.MotionMagic.MotionMagicExpo_kV = config.Slot0.kV;
     config.MotionMagic.MotionMagicExpo_kA = config.Slot0.kA;
@@ -70,7 +81,7 @@ public class CoralElevatorIOPhoenix implements CoralElevatorIO {
     PhoenixBatchRefresher.register(posSignal, velSignal, statorSignal, supplySignal);
 
     if (Robot.isSimulation()) {
-      initSim();
+      initSim(config.Slot0.kV, config.Slot0.kA);
       simNotifier.startPeriodic(simDt);
     }
   }
@@ -108,18 +119,11 @@ public class CoralElevatorIOPhoenix implements CoralElevatorIO {
   private TalonFXSimState motorSim;
   private ElevatorSim elevatorSim;
 
-  private void initSim() {
+  private void initSim(double kV, double kA) {
     motorSim = motor.getSimState();
     elevatorSim =
         new ElevatorSim(
-            motorModel,
-            1,
-            Units.lbsToKilograms(10),
-            metersPerRotation / (2 * Math.PI),
-            0,
-            2.2,
-            true,
-            0);
+            kV / metersPerRotation, kA / metersPerRotation, motorModel, 0, 2.2, true, 0);
 
     simNotifier = new Notifier(this::tickSim);
   }
