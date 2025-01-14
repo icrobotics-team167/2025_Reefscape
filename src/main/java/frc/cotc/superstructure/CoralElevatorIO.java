@@ -37,5 +37,5 @@ public interface CoralElevatorIO {
 
   default void goToPos(double posMeters) {}
 
-  default void characterize(double current) {}
+  default void characterize(double output) {}
 }

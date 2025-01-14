@@ -7,9 +7,10 @@
 
 package frc.cotc;
 
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -19,9 +20,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
-import frc.cotc.drive.SwerveIOPhoenix;
-import frc.cotc.superstructure.AlgaeClaw;
-import frc.cotc.superstructure.AlgaeClawIOPhoenix;
+import frc.cotc.superstructure.CoralElevator;
+import frc.cotc.superstructure.CoralElevatorIOPhoenix;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
@@ -98,7 +98,8 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
-    var algaeClaw = new AlgaeClaw(new AlgaeClawIOPhoenix());
+    //    var algaeClaw = new AlgaeClaw(new AlgaeClawIOPhoenix());
+    var coralElevator = new CoralElevator(new CoralElevatorIOPhoenix());
 
     var primary = new CommandXboxController(0);
 
@@ -116,8 +117,12 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.disabled().or(primary.povDown()).whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
 
-    algaeClaw.setDefaultCommand(algaeClaw.goToPos(Units.degreesToRadians(-90)));
-    primary.y().whileTrue(algaeClaw.goToPos(0));
+    //    algaeClaw.setDefaultCommand(algaeClaw.goToPos(Units.degreesToRadians(-90)));
+    //    primary.y().whileTrue(algaeClaw.goToPos(0));
+    coralElevator.setDefaultCommand(
+        sequence(
+            coralElevator.goToPos(2.5).withTimeout(4), coralElevator.goToPos(0).withTimeout(4)));
+    //    primary.y().whileTrue(coralElevator.goToPos(2.5));
 
     autos = new Autos(swerve);
   }
