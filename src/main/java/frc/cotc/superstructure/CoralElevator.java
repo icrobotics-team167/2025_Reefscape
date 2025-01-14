@@ -39,9 +39,9 @@ public class CoralElevator extends SubsystemBase {
     var sysid =
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                Volts.of(.25).per(Second),
-                Volts.of(6),
-                Seconds.of(5),
+                Volts.of(1).per(Second),
+                Volts.of(12),
+                Seconds.of(6),
                 state -> SignalLogger.writeString("SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> io.characterize(voltage.baseUnitMagnitude()), null, this));
@@ -49,7 +49,7 @@ public class CoralElevator extends SubsystemBase {
     return sequence(
         sysid.quasistatic(SysIdRoutine.Direction.kForward),
         sysid.quasistatic(SysIdRoutine.Direction.kReverse),
-        sysid.dynamic(SysIdRoutine.Direction.kForward).withTimeout(1),
-        sysid.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(1));
+        sysid.dynamic(SysIdRoutine.Direction.kForward).withTimeout(.5),
+        sysid.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(.5));
   }
 }

@@ -7,8 +7,6 @@
 
 package frc.cotc;
 
-import static edu.wpi.first.wpilibj2.command.Commands.sequence;
-
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -119,10 +117,9 @@ public class Robot extends LoggedRobot {
 
     //    algaeClaw.setDefaultCommand(algaeClaw.goToPos(Units.degreesToRadians(-90)));
     //    primary.y().whileTrue(algaeClaw.goToPos(0));
-    coralElevator.setDefaultCommand(
-        sequence(
-            coralElevator.goToPos(2.5).withTimeout(4), coralElevator.goToPos(0).withTimeout(4)));
-    //    primary.y().whileTrue(coralElevator.goToPos(2.5));
+    coralElevator.setDefaultCommand(coralElevator.goToPos(0));
+    primary.y().whileTrue(coralElevator.goToPos(2));
+    //    RobotModeTriggers.teleop().onTrue(coralElevator.characterize());
 
     autos = new Autos(swerve);
   }
