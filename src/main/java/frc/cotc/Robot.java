@@ -116,6 +116,9 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.disabled().or(primary.povDown()).whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
 
+    elevator.setDefaultCommand(elevator.goToPos(0));
+    primary.y().whileTrue(elevator.goToPos(2));
+
     autos = new Autos(swerve);
   }
 
