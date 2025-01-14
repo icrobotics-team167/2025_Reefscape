@@ -10,10 +10,12 @@ package frc.cotc.superstructure;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
@@ -61,9 +63,7 @@ public class CoralElevatorIOPhoenix implements CoralElevatorIO {
     statorSignal = motor.getStatorCurrent(false);
     supplySignal = motor.getSupplyCurrent(false);
 
-    BaseStatusSignal.setUpdateFrequencyForAll(
-        250, posSignal, velSignal, motor.getMotorVoltage(false));
-    BaseStatusSignal.setUpdateFrequencyForAll(50, statorSignal, supplySignal);
+    BaseStatusSignal.setUpdateFrequencyForAll(50, posSignal, velSignal, statorSignal, supplySignal);
 
     motor.optimizeBusUtilization(4, .1);
 
@@ -84,10 +84,16 @@ public class CoralElevatorIOPhoenix implements CoralElevatorIO {
   }
 
   private final MotionMagicExpoVoltage positionControl = new MotionMagicExpoVoltage(0);
+  private final StaticBrake brakeControl = new StaticBrake();
 
   @Override
   public void goToPos(double posMeters) {
-    motor.setControl(positionControl.withPosition(posMeters / metersPerRotation));
+    if (MathUtil.isNear(0, posMeters, .01)
+        && MathUtil.isNear(0, posSignal.getValueAsDouble(), .01)) {
+      motor.setControl(brakeControl);
+    } else {
+      motor.setControl(positionControl.withPosition(posMeters / metersPerRotation));
+    }
   }
 
   private final VoltageOut characterizationControl = new VoltageOut(0);
