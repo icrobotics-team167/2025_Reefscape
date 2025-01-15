@@ -9,6 +9,7 @@ package frc.cotc;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -115,6 +116,9 @@ public class Robot extends LoggedRobot {
             2));
     RobotModeTriggers.disabled().or(primary.povDown()).whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+
+    claw.setDefaultCommand(claw.goToPos(Units.degreesToRadians(-90)));
+    primary.x().whileTrue(claw.goToPos(Units.degreesToRadians(0)));
 
     elevator.setDefaultCommand(elevator.goToPos(0));
     primary.y().whileTrue(elevator.goToPos(2));

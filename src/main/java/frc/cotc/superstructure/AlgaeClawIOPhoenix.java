@@ -18,11 +18,13 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
+import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class AlgaeClawIOPhoenix implements AlgaeClawIO {
@@ -59,6 +61,7 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     pivotConfig.Audio.AllowMusicDurDisable = true;
     pivotConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
     pivotConfig.Slot0.kV = 12 / Units.radiansToRotations(pivotMotorModel.freeSpeedRadPerSec);
+    pivotConfig.Slot0.kA = 0.10198;
 
     var intakeConfig = new TalonFXConfiguration();
     intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
@@ -68,15 +71,24 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     intakeConfig.Audio.AllowMusicDurDisable = true;
 
     if (Robot.isReal()) {
-      pivotConfig.Slot0.kP = 0;
+      pivotConfig.Slot0.kG = 0;
     } else {
-      pivotConfig.Slot0.kA = 0.10198;
-      pivotConfig.Slot0.kG = 0.287523;
-      pivotConfig.Slot0.kP = 112.34;
-      pivotConfig.Slot0.kD = 0.52751;
+      pivotConfig.Slot0.kG = 0.47815;
     }
     pivotConfig.MotionMagic.MotionMagicExpo_kV = pivotConfig.Slot0.kV;
     pivotConfig.MotionMagic.MotionMagicExpo_kA = pivotConfig.Slot0.kA;
+
+    var gains =
+        GainsCalculator.getPositionGains(
+            pivotConfig.Slot0.kV,
+            pivotConfig.Slot0.kA,
+            12,
+            .5 / 360,
+            10.0 / 360,
+            1.0 / 1000,
+            1.0 / 1000);
+    pivotConfig.Slot0.kP = gains.kP();
+    pivotConfig.Slot0.kD = gains.kD();
 
     pivotMotor.getConfigurator().apply(pivotConfig);
     intakeMotor.getConfigurator().apply(intakeConfig);
@@ -112,7 +124,7 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
         intakeSupply);
 
     if (Robot.isSimulation()) {
-      initSim(pivotMotor, pivotEncoder, intakeMotor);
+      initSim(pivotMotor, pivotEncoder, intakeMotor, pivotConfig.Slot0.kV, pivotConfig.Slot0.kA);
       simNotifier.startPeriodic(simDt);
     }
   }
@@ -176,18 +188,18 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
   private final double simDt = .001;
   private Notifier simNotifier;
 
-  private void initSim(TalonFX pivotMotor, CANcoder pivotEncoder, TalonFX intakeMotor) {
+  private void initSim(
+      TalonFX pivotMotor, CANcoder pivotEncoder, TalonFX intakeMotor, double kV, double kA) {
     armSim =
         new SingleJointedArmSim(
+            LinearSystemId.identifyPositionSystem(kV / (2 * Math.PI), kA / (2 * Math.PI)),
             pivotMotorModel,
             1,
-            SingleJointedArmSim.estimateMOI(.5, Units.lbsToKilograms(20)),
             .5,
-            -Units.degreesToRadians(90),
+            Units.degreesToRadians(-90),
             Units.degreesToRadians(90),
             true,
-            -Units.degreesToRadians(90));
-    //            0);
+            Units.degreesToRadians(-90));
 
     intakeSim = new FOCMotorSim(DCMotor.getKrakenX60Foc(1), .005);
 

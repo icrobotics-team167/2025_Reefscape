@@ -60,7 +60,7 @@ public class CoralElevatorIOPhoenix implements CoralElevatorIO {
             .005 / metersPerRotation,
             .1 / metersPerRotation,
             1.0 / 1000,
-            0);
+            1.0 / 1000);
     config.Slot0.kP = gains.kP();
     config.Slot0.kD = gains.kD();
 
