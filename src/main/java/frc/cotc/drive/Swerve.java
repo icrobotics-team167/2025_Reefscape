@@ -189,7 +189,7 @@ public class Swerve extends SubsystemBase {
   private final ArrayList<Pose3d> poseEstimates = new ArrayList<>();
 
   /** Whether to ignore vision inputs or cheat with the ground truth pose in sim. */
-  boolean useGroundTruth = true;
+  boolean useGroundTruth = false;
 
   /** Whether to log vision data or not. */
   boolean visionLoggingEnabled = true;
