@@ -22,6 +22,7 @@ import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.*;
 import frc.cotc.util.PhoenixBatchRefresher;
+import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.Arrays;
@@ -125,6 +126,9 @@ public class Robot extends LoggedRobot {
     primary.y().whileTrue(elevator.goToPos(2));
 
     autos = new Autos(swerve);
+
+    Logger.recordOutput("Reef Scoring Locations/Blue", ReefLocations.BLUE_POSES);
+    Logger.recordOutput("Reef Scoring Locations/Red", ReefLocations.RED_POSES);
   }
 
   private Swerve getSwerve(Mode mode) {
