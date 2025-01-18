@@ -57,7 +57,7 @@ public class Swerve extends SubsystemBase {
   private final FiducialPoseEstimatorIO[] visionIOs;
   private final FiducialPoseEstimatorIOInputs[] visionInputs;
 
-  private final PIDController xController, yController, yawController;
+  private final PIDController translationController, yawController;
 
   private record StdDevTunings(
       double distanceScalar, double heightScalar, double tagCountExponent) {}
@@ -161,8 +161,7 @@ public class Swerve extends SubsystemBase {
       visionInputs[i] = new FiducialPoseEstimatorIOInputs();
     }
 
-    xController = new PIDController(5, 0, 0);
-    yController = new PIDController(5, 0, 0);
+    translationController = new PIDController(10, 0, 0);
     yawController = new PIDController(5, 0, 0);
     yawController.enableContinuousInput(-PI, PI);
   }
@@ -492,13 +491,15 @@ public class Swerve extends SubsystemBase {
             new ChassisSpeeds(sample.vx, sample.vy, sample.omega), new Rotation2d(sample.heading));
 
     var targetPose = new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading));
+    var translationalError =
+        poseEstimator.getEstimatedPosition().getTranslation().minus(targetPose.getTranslation());
+    var translationalFeedback = translationController.calculate(translationalError.getNorm(), 0);
+    var errorAngle = translationalError.getAngle();
     var feedback =
         ChassisSpeeds.fromFieldRelativeSpeeds(
             new ChassisSpeeds(
-                xController.calculate(
-                    poseEstimator.getEstimatedPosition().getX(), targetPose.getX()),
-                yController.calculate(
-                    poseEstimator.getEstimatedPosition().getY(), targetPose.getY()),
+                errorAngle.getCos() * translationalFeedback,
+                errorAngle.getSin() * translationalFeedback,
                 yawController.calculate(
                     poseEstimator.getEstimatedPosition().getRotation().getRadians(),
                     targetPose.getRotation().getRadians())),
@@ -623,8 +624,7 @@ public class Swerve extends SubsystemBase {
     var gyroAngle =
         Robot.isOnRed() ? pose.getRotation().rotateBy(Rotation2d.kPi) : pose.getRotation();
     swerveIO.resetGyro(gyroAngle);
-    xController.reset();
-    yController.reset();
+    translationController.reset();
     yawController.reset();
     poseEstimator.resetPosition(gyroAngle, getLatestModulePositions(), pose);
     swerveIO.updateInputs(swerveInputs);
