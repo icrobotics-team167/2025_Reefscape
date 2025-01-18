@@ -11,7 +11,9 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -45,11 +47,25 @@ public class Autos {
               if (Robot.isOnRed()) {
                 for (int i = 0; i < poses.length; i++) {
                   poses[i] =
-                      new Pose2d(16.54 - poses[i].getX(), poses[i].getY(), poses[i].getRotation());
+                      new Pose2d(
+                          poses[i]
+                              .getTranslation()
+                              .rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi),
+                          poses[i].getRotation().rotateBy(Rotation2d.kPi));
                 }
               }
               Logger.recordOutput("Swerve/Trajectory", poses);
             });
+  }
+
+  private AutoRoutine scoreOne(AutoFactory factory) {
+    var routine = factory.newRoutine("scoreOne");
+
+    var startToG = routine.trajectory("StartToG");
+    var gToSource = getReefToSource(routine, ReefLoc.G, SourceLoc.R);
+    var sourceToC = getSourceToReef(routine, ReefLoc.C, SourceLoc.R);
+
+
   }
 
   private String selectedCommandName = NONE_NAME;
@@ -84,5 +100,35 @@ public class Autos {
   private void addRoutine(String name, Supplier<AutoRoutine> generator) {
     chooser.addOption(name, name);
     routines.put(name, () -> generator.get().cmd());
+  }
+
+  private enum ReefLoc {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L
+  }
+
+  private enum SourceLoc {
+    L,
+    R
+  }
+
+  private AutoTrajectory getReefToSource(
+      AutoRoutine routine, ReefLoc reefLoc, SourceLoc sourceLoc) {
+    return routine.trajectory(reefLoc.name() + "~S" + sourceLoc.name(), 0);
+  }
+
+  private AutoTrajectory getSourceToReef(
+      AutoRoutine routine, ReefLoc reefLoc, SourceLoc sourceLoc) {
+    return routine.trajectory(reefLoc.name() + "~S" + sourceLoc.name(), 1);
   }
 }
