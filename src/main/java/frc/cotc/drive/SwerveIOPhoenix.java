@@ -54,8 +54,8 @@ public class SwerveIOPhoenix implements SwerveIO {
   static {
     CONSTANTS = new SwerveModuleConstantsAutoLogged();
 
-    CONSTANTS.TRACK_WIDTH_METERS = Units.inchesToMeters(30.5);
-    CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(27.5);
+    CONSTANTS.TRACK_WIDTH_METERS = Units.inchesToMeters(22.5);
+    CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(22.5);
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
     CONSTANTS.WHEEL_COF = 1.5;

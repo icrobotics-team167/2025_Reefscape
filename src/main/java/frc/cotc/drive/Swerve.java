@@ -64,7 +64,7 @@ public class Swerve extends SubsystemBase {
 
   private record CameraTunings(StdDevTunings translational, StdDevTunings angular) {
     static final CameraTunings defaults =
-        new CameraTunings(new StdDevTunings(1.5, 1, 2), new StdDevTunings(.2, 1, 1.5));
+        new CameraTunings(new StdDevTunings(1, 1, 2), new StdDevTunings(.2, 1, 1.5));
   }
 
   private final double wheelRadiusMeters;
@@ -502,7 +502,7 @@ public class Swerve extends SubsystemBase {
                 yawController.calculate(
                     poseEstimator.getEstimatedPosition().getRotation().getRadians(),
                     targetPose.getRotation().getRadians())),
-            swerveInputs.gyroYaw);
+            poseEstimator.getEstimatedPosition().getRotation());
 
     Logger.recordOutput("Choreo/Error", targetPose.minus(poseEstimator.getEstimatedPosition()));
 
@@ -612,10 +612,13 @@ public class Swerve extends SubsystemBase {
 
   public void resetForAuto(Pose2d pose) {
     DriverStation.reportWarning("Reset For Auto run", true);
-    if (Robot.isSimulation()
-        && !Logger.hasReplaySource()
-        && swerveIO instanceof SwerveIOPhoenix phoenix) {
-      phoenix.resetGroundTruth(pose);
+    if (Robot.isSimulation() && !Logger.hasReplaySource()) {
+      if (swerveIO instanceof SwerveIOPhoenix phoenix) {
+        phoenix.resetGroundTruth(pose);
+      }
+      if (visionIOs instanceof FiducialPoseEstimatorIOPhoton[]) {
+        FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().reset();
+      }
     }
     var gyroAngle =
         Robot.isOnRed() ? pose.getRotation().rotateBy(Rotation2d.kPi) : pose.getRotation();

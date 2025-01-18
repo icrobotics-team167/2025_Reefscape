@@ -56,6 +56,8 @@ public class Autos {
               }
               Logger.recordOutput("Swerve/Trajectory", poses);
             });
+
+    addRoutine("ScoreOne", () -> scoreOne(factory));
   }
 
   private AutoRoutine scoreOne(AutoFactory factory) {
@@ -64,11 +66,15 @@ public class Autos {
     var startToG = routine.trajectory("StartToG");
     var gToSource = getReefToSource(routine, ReefLoc.G, SourceLoc.R);
     var sourceToC = getSourceToReef(routine, ReefLoc.C, SourceLoc.R);
+    var cToSource = getReefToSource(routine, ReefLoc.C, SourceLoc.R);
+    var sourceToD = getSourceToReef(routine, ReefLoc.D, SourceLoc.R);
 
-    routine.active().onTrue(startToG.cmd());
+    routine.active().onTrue(startToG.resetOdometry().andThen(startToG.cmd()));
 
     startToG.done().onTrue(gToSource.cmd());
     gToSource.done().onTrue(sourceToC.cmd());
+    sourceToC.done().onTrue(cToSource.cmd());
+    cToSource.done().onTrue(sourceToD.cmd());
 
     return routine;
   }

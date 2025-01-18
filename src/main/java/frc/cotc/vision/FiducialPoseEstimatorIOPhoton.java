@@ -95,6 +95,11 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
   public void updateInputs(FiducialPoseEstimatorIOInputs inputs) {
     inputs.hasNewData = false;
 
+    if (Robot.isSimulation() && VisionSim.getInstance().resetCount > 0) {
+      VisionSim.getInstance().resetCount--;
+      return;
+    }
+
     var results = camera.getAllUnreadResults();
     if (results.isEmpty()) {
       return;
@@ -143,6 +148,12 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
       cameraSim.enableProcessedStream(false);
       cameraSim.enableRawStream(false);
       systemSim.addCamera(cameraSim, cameraPosition);
+    }
+
+    int resetCount;
+
+    public void reset() {
+      resetCount = 5;
     }
 
     public void update() {
