@@ -65,7 +65,12 @@ public class Autos {
     var gToSource = getReefToSource(routine, ReefLoc.G, SourceLoc.R);
     var sourceToC = getSourceToReef(routine, ReefLoc.C, SourceLoc.R);
 
+    routine.active().onTrue(startToG.cmd());
 
+    startToG.done().onTrue(gToSource.cmd());
+    gToSource.done().onTrue(sourceToC.cmd());
+
+    return routine;
   }
 
   private String selectedCommandName = NONE_NAME;
