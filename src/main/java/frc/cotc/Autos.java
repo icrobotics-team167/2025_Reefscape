@@ -85,6 +85,7 @@ public class Autos {
 
   private final Alert selectedNonexistentAuto =
       new Alert("Selected an auto that isn't an option!", Alert.AlertType.kError);
+  private final Alert loadedAutoAlert = new Alert("", Alert.AlertType.kInfo);
 
   public void update() {
     if (DriverStation.isDSAttached() && DriverStation.getAlliance().isPresent()) {
@@ -99,13 +100,21 @@ public class Autos {
         selectedNonexistentAuto.set(false);
       }
       selectedCommandName = selected;
-      selectedCommand = routines.get(selected).get();
+      selectedCommand = routines.get(selected).get().withName(selectedCommandName);
       selectedOnRed = Robot.isOnRed();
+      loadedAutoAlert.setText("Loaded Auto: " + selectedCommandName);
+      loadedAutoAlert.set(true);
     }
   }
 
+  public void clear() {
+    selectedCommandName = NONE_NAME;
+    selectedCommand = none();
+    selectedOnRed = false;
+  }
+
   public Command getSelectedCommand() {
-    return selectedCommand.withName(selectedCommandName);
+    return selectedCommand;
   }
 
   private void addRoutine(String name, Supplier<AutoRoutine> generator) {

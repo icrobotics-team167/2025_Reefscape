@@ -186,6 +186,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousExit() {
     autoCommand.cancel();
+    autos.clear();
   }
 
   @Override

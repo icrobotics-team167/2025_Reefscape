@@ -96,7 +96,6 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
     inputs.hasNewData = false;
 
     if (Robot.isSimulation() && VisionSim.getInstance().resetCount > 0) {
-      VisionSim.getInstance().resetCount--;
       return;
     }
 
@@ -153,10 +152,13 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
     int resetCount;
 
     public void reset() {
-      resetCount = 5;
+      resetCount = 10;
     }
 
     public void update() {
+      if (resetCount > 0) {
+        resetCount--;
+      }
       if (Robot.groundTruthPoseSupplier != null) {
         systemSim.update(Robot.groundTruthPoseSupplier.get());
       } else {

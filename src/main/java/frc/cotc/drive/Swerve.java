@@ -617,9 +617,8 @@ public class Swerve extends SubsystemBase {
       if (swerveIO instanceof SwerveIOPhoenix phoenix) {
         phoenix.resetGroundTruth(pose);
       }
-      if (visionIOs instanceof FiducialPoseEstimatorIOPhoton[]) {
-        FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().reset();
-      }
+
+      FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().reset();
     }
     var gyroAngle =
         Robot.isOnRed() ? pose.getRotation().rotateBy(Rotation2d.kPi) : pose.getRotation();
