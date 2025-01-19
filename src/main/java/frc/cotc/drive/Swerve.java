@@ -64,7 +64,7 @@ public class Swerve extends SubsystemBase {
 
   private record CameraTunings(StdDevTunings translational, StdDevTunings angular) {
     static final CameraTunings defaults =
-        new CameraTunings(new StdDevTunings(1, 1, 2), new StdDevTunings(.2, 1, 1.5));
+        new CameraTunings(new StdDevTunings(.75, 1, 3), new StdDevTunings(.05, 1, 3));
   }
 
   private final double wheelRadiusMeters;
