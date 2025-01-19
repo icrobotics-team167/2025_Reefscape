@@ -147,15 +147,20 @@ public interface SwerveIO {
     double WHEEL_COF = 1;
 
     // Should have a gear reduction applied with .withReduction()
-    DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60(1);
+    DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60(1).withReduction(6.75);
     int DRIVE_STATOR_CURRENT_LIMIT_AMPS = 80;
 
     double MASS_KG = 40;
     double MOI_KG_METERS_SQUARED = 40;
 
     // Should already have a reduction applied
-    double MAX_STEER_SPEED_RAD_PER_SEC =
-        Units.rotationsPerMinuteToRadiansPerSecond(6000) / (150.0 / 7.0);
+    double[] MAX_STEER_SPEEDS_RAD_PER_SEC =
+        new double[] {
+          Units.rotationsPerMinuteToRadiansPerSecond(6000) / (150.0 / 7.0),
+          Units.rotationsPerMinuteToRadiansPerSecond(6000) / (150.0 / 7.0),
+          Units.rotationsPerMinuteToRadiansPerSecond(6000) / (150.0 / 7.0),
+          Units.rotationsPerMinuteToRadiansPerSecond(6000) / (150.0 / 7.0)
+        };
 
     // Due to kinematic limits, it may not be possible for the bot to stay moving straight when
     // spinning and moving at the same time. This fudge factor slows down the max angular speed

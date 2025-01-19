@@ -48,7 +48,7 @@ import frc.cotc.util.PhoenixBatchRefresher;
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
   private static final double DRIVE_GEAR_RATIO;
-  private static final double STEER_GEAR_RATIO;
+  private static final double[] STEER_GEAR_RATIOS;
   private static final double WHEEL_CIRCUMFERENCE_METERS;
 
   static {
@@ -63,9 +63,22 @@ public class SwerveIOPhoenix implements SwerveIO {
     DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
 
-    STEER_GEAR_RATIO = 18.75;
-    CONSTANTS.MAX_STEER_SPEED_RAD_PER_SEC =
-        Units.rotationsPerMinuteToRadiansPerSecond(6000) / STEER_GEAR_RATIO;
+    var MK4N_STEER_GEAR_RATIO = 18.75;
+    var MK4I_STEER_GEAR_RATIO = 150.0 / 7;
+    STEER_GEAR_RATIOS =
+        new double[] {
+          MK4N_STEER_GEAR_RATIO, MK4I_STEER_GEAR_RATIO, MK4N_STEER_GEAR_RATIO, MK4I_STEER_GEAR_RATIO
+        };
+
+    var STEER_MOTOR_MAX_SPEED = Units.rotationsPerMinuteToRadiansPerSecond(6000);
+
+    CONSTANTS.MAX_STEER_SPEEDS_RAD_PER_SEC =
+        new double[] {
+          STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[0],
+          STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[1],
+          STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[2],
+          STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
+        };
 
     CONSTANTS.MASS_KG = Units.lbsToKilograms(98);
 
@@ -253,7 +266,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerConfig.Feedback.SensorToMechanismRatio = 1;
       steerConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
       steerConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-      steerConfig.Feedback.RotorToSensorRatio = STEER_GEAR_RATIO;
+      steerConfig.Feedback.RotorToSensorRatio = STEER_GEAR_RATIOS[id];
       steerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       steerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
       steerConfig.ClosedLoopGeneral.ContinuousWrap = true;
@@ -262,7 +275,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerConfig.CurrentLimits.SupplyCurrentLowerLimit = 10;
       steerConfig.CurrentLimits.SupplyCurrentLowerTime = .5;
       steerConfig.Audio.AllowMusicDurDisable = true;
-      steerConfig.Slot0.kV = 12 / Units.radiansToRotations(CONSTANTS.MAX_STEER_SPEED_RAD_PER_SEC);
+      steerConfig.Slot0.kV =
+          12 / Units.radiansToRotations(CONSTANTS.MAX_STEER_SPEEDS_RAD_PER_SEC[id]);
 
       var encoderConfig = new CANcoderConfiguration();
 
@@ -455,7 +469,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     SimThread(Module[] modules, Pigeon2 gyro) {
       for (int i = 0; i < 4; i++) {
-        simModules[i] = new SimModule(modules[i]);
+        simModules[i] = new SimModule(modules[i], STEER_GEAR_RATIOS[i]);
       }
       gyroSimState = gyro.getSimState();
 
@@ -471,10 +485,11 @@ public class SwerveIOPhoenix implements SwerveIO {
     }
 
     void start() {
-      for (SimModule module : simModules) {
+      for (int i = 0; i < 4; i++) {
+        var module = simModules[i];
         module.steerSim.setState((Math.random() * 2 - 1) * PI, 0);
         module.steerMotorSim.setRawRotorPosition(
-            module.steerSim.getAngularPositionRotations() * STEER_GEAR_RATIO);
+            module.steerSim.getAngularPositionRotations() * STEER_GEAR_RATIOS[i]);
         module.encoderSim.setRawPosition(module.steerSim.getAngularPositionRotations());
       }
 
@@ -559,7 +574,9 @@ public class SwerveIOPhoenix implements SwerveIO {
       final FOCMotorSim driveWheelSim;
       final DCMotorSim steerSim;
 
-      SimModule(Module module) {
+      final double STEER_GEAR_RATIO;
+
+      SimModule(Module module, double STEER_GEAR_RATIO) {
         driveMotorSim = module.driveMotor.getSimState();
         steerMotorSim = module.steerMotor.getSimState();
         encoderSim = module.encoder.getSimState();
@@ -575,6 +592,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                     * (CONSTANTS.WHEEL_DIAMETER_METERS / 2)
                     * (CONSTANTS.WHEEL_DIAMETER_METERS / 2)
                     / 4);
+        this.STEER_GEAR_RATIO = STEER_GEAR_RATIO;
         steerSim =
             new DCMotorSim(
                 LinearSystemId.createDCMotorSystem(
