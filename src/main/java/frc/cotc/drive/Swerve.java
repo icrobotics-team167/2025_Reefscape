@@ -31,11 +31,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.cotc.Robot;
-import frc.cotc.vision.FiducialPoseEstimatorIO;
-import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs;
-import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -54,26 +50,13 @@ public class Swerve extends SubsystemBase {
 
   private final SwervePoseEstimator poseEstimator;
 
-  private final FiducialPoseEstimatorIO[] visionIOs;
-  private final FiducialPoseEstimatorIOInputs[] visionInputs;
-
   private final PIDController translationController, yawController;
-
-  private record StdDevTunings(
-      double distanceScalar, double heightScalar, double tagCountExponent) {}
-
-  private record CameraTunings(StdDevTunings translational, StdDevTunings angular) {
-    static final CameraTunings defaults =
-        new CameraTunings(new StdDevTunings(.75, 1, 3), new StdDevTunings(.05, 1, 3));
-  }
 
   private final double wheelRadiusMeters;
   private final double kTNewtonMetersPerAmp;
   private final double currentVisualizationScalar;
 
-  private final CameraTunings[] cameraTunings = new CameraTunings[0];
-
-  public Swerve(SwerveIO driveIO, FiducialPoseEstimatorIO[] visionIOs) {
+  public Swerve(SwerveIO driveIO) {
     this.swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
     swerveInputs = new SwerveIO.SwerveIOInputs();
@@ -155,11 +138,6 @@ public class Swerve extends SubsystemBase {
             new Rotation2d(),
             getLatestModulePositions(),
             new Pose2d());
-    this.visionIOs = visionIOs;
-    visionInputs = new FiducialPoseEstimatorIOInputs[visionIOs.length];
-    for (int i = 0; i < visionIOs.length; i++) {
-      visionInputs[i] = new FiducialPoseEstimatorIOInputs();
-    }
 
     translationController = new PIDController(10, 0, 0);
     yawController = new PIDController(5, 0, 0);
@@ -238,67 +216,6 @@ public class Swerve extends SubsystemBase {
         poseEstimator.updateWithTime(frame.timestamp(), frame.gyroYaw(), frame.positions());
         lastTimestamp = frame.timestamp();
       }
-
-      if (useGroundTruth && Robot.isSimulation()) {
-        if (Logger.hasReplaySource()) {
-          throw new IllegalStateException("Code determinism cannot be guaranteed!");
-        }
-        if (Robot.groundTruthPoseSupplier != null) {
-          poseEstimator.addVisionMeasurement(
-              Robot.groundTruthPoseSupplier.get(),
-              RobotController.getFPGATime() / 1e6,
-              new double[] {.0001, .0001, .00001});
-        }
-      } else {
-        if (Robot.isSimulation() && !Logger.hasReplaySource()) {
-          FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().update();
-        }
-
-        for (int i = 0; i < visionIOs.length; i++) {
-          visionIOs[i].updateInputs(visionInputs[i]);
-          Logger.processInputs("Vision/" + i, visionInputs[i]);
-
-          if (!visionInputs[i].hasNewData) {
-            // If there's no new data, save some CPU
-            continue;
-          }
-
-          CameraTunings tunings;
-          if (i >= cameraTunings.length) {
-            tunings = CameraTunings.defaults;
-          } else {
-            tunings = cameraTunings[i];
-          }
-
-          for (int j = 0; j < visionInputs[i].poseEstimates.length; j++) {
-            var poseEstimate = visionInputs[i].poseEstimates[j];
-
-            if (!MathUtil.isNear(0, poseEstimate.estimatedPose().getZ(), .25)) {
-              continue;
-            }
-
-            var translationalStdDevs = getVisionStdDevs(poseEstimate, tunings.translational);
-            var angularStdDevs = getVisionStdDevs(poseEstimate, tunings.angular);
-            Logger.recordOutput(
-                "Vision/Std Devs/" + i + "/" + j + "/Translational", translationalStdDevs);
-            Logger.recordOutput("Vision/Std Devs/" + i + "/" + j + "/Angular", angularStdDevs);
-
-            poseEstimator.addVisionMeasurement(
-                poseEstimate.estimatedPose().toPose2d(),
-                poseEstimate.timestamp(),
-                new double[] {translationalStdDevs, translationalStdDevs, angularStdDevs});
-
-            if (visionLoggingEnabled) {
-              poseEstimates.add(poseEstimate.estimatedPose());
-              tagPoses.addAll(Arrays.asList(poseEstimate.tagsUsed()));
-            }
-          }
-        }
-        Logger.recordOutput("Vision/All pose estimates", poseEstimates.toArray(new Pose3d[0]));
-        Logger.recordOutput("Vision/All tags used", tagPoses.toArray(new Pose3d[0]));
-        poseEstimates.clear();
-        tagPoses.clear();
-      }
     } else {
       poseReset = false;
     }
@@ -364,26 +281,6 @@ public class Swerve extends SubsystemBase {
       Math.abs(stdDevs.getY()) + Math.abs(scaledSpeed.getY()) + .1,
       .0005
     };
-  }
-
-  private double getVisionStdDevs(
-      FiducialPoseEstimatorIO.PoseEstimate poseEstimate, StdDevTunings tunings) {
-    double distanceScoreSum = 0;
-    for (var tagPose : poseEstimate.tagsUsed()) {
-      var distanceMeters =
-          tagPose.getTranslation().getDistance(poseEstimate.estimatedPose().getTranslation());
-      distanceScoreSum += tunings.distanceScalar * distanceMeters * distanceMeters;
-    }
-
-    var tagCountDivisor = Math.pow(poseEstimate.tagsUsed().length, tunings.tagCountExponent);
-
-    var translationalHeightScalar =
-        1
-            + tunings.heightScalar
-                * poseEstimate.estimatedPose().getZ()
-                * poseEstimate.estimatedPose().getZ();
-
-    return (distanceScoreSum / tagCountDivisor) * translationalHeightScalar;
   }
 
   public Command teleopDrive(
@@ -617,8 +514,6 @@ public class Swerve extends SubsystemBase {
       if (swerveIO instanceof SwerveIOPhoenix phoenix) {
         phoenix.resetGroundTruth(pose);
       }
-
-      FiducialPoseEstimatorIOPhoton.VisionSim.getInstance().reset();
     }
     var gyroAngle =
         Robot.isOnRed() ? pose.getRotation().rotateBy(Rotation2d.kPi) : pose.getRotation();

@@ -23,13 +23,9 @@ import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.*;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
-import frc.cotc.vision.FiducialPoseEstimatorIO;
-import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.*;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
@@ -133,46 +129,17 @@ public class Robot extends LoggedRobot {
 
   private Swerve getSwerve(Mode mode) {
     SwerveIO swerveIO;
-    FiducialPoseEstimatorIO[] visionIOs;
-
-    var count =
-        new LoggableInputs() {
-          int cameraCount = 0;
-
-          @Override
-          public void toLog(LogTable table) {
-            table.put("cameraCount", cameraCount);
-          }
-
-          @Override
-          public void fromLog(LogTable table) {
-            cameraCount = table.get("cameraCount", 0);
-          }
-        };
 
     switch (mode) {
       case REAL, SIM -> {
         swerveIO = new SwerveIOPhoenix();
-        visionIOs =
-            new FiducialPoseEstimatorIO[] {
-              new FiducialPoseEstimatorIOPhoton(0),
-              new FiducialPoseEstimatorIOPhoton(1),
-              new FiducialPoseEstimatorIOPhoton(2),
-              new FiducialPoseEstimatorIOPhoton(3)
-            };
-        count.cameraCount = visionIOs.length;
-        Logger.processInputs("Vision", count);
       }
       default -> {
-        Logger.processInputs("Vision", count);
-
         swerveIO = new SwerveIO() {};
-        visionIOs = new FiducialPoseEstimatorIO[count.cameraCount];
-        Arrays.fill(visionIOs, new FiducialPoseEstimatorIO() {});
       }
     }
 
-    return new Swerve(swerveIO, visionIOs);
+    return new Swerve(swerveIO);
   }
 
   private Command autoCommand;
