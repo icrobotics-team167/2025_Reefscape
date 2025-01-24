@@ -15,7 +15,7 @@ public final class Constants {
 
   public static final double FIELD_LENGTH_METERS =
       Units.feetToMeters(57) + Units.inchesToMeters(6.875);
-  public static final double FIELD_WIDTH_METERS = Units.feetToMeters(26) + Units.inchesToMeters(5);
+  public static final double FIELD_WIDTH_METERS = 8.025;
   public static final Translation2d FIELD_CENTER =
       new Translation2d(FIELD_LENGTH_METERS / 2, FIELD_WIDTH_METERS / 2);
 }
