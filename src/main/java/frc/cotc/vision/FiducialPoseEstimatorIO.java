@@ -8,15 +8,22 @@
 package frc.cotc.vision;
 
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.util.struct.Struct;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface FiducialPoseEstimatorIO {
+  @AutoLog
+  class FiducialPoseEstimatorIOConstants {
+    Transform3d robotToCameraTransform = Transform3d.kZero;
+  }
+
   class FiducialPoseEstimatorIOInputs implements LoggableInputs {
-    PoseEstimate[] poseEstimates = new PoseEstimate[0];
+    FiducialPoseEstimate[] poseEstimates = new FiducialPoseEstimate[0];
 
     @Override
     public void toLog(LogTable table) {
@@ -27,36 +34,42 @@ public interface FiducialPoseEstimatorIO {
 
     @Override
     public void fromLog(LogTable table) {
-      var list = new ArrayList<PoseEstimate>();
+      var list = new ArrayList<FiducialPoseEstimate>();
       int i = 0;
       while (true) {
-        var estimate = PoseEstimate.fromLog(table.getSubtable(String.valueOf(i)));
+        var estimate = FiducialPoseEstimate.fromLog(table.getSubtable(String.valueOf(i)));
         if (estimate.timestamp <= 0) {
           break;
         }
         list.add(estimate);
         i++;
       }
-      poseEstimates = list.toArray(new PoseEstimate[i]);
+      poseEstimates = list.toArray(new FiducialPoseEstimate[i]);
     }
 
-    public record PoseEstimate(Pose3d robotPoseEstimate, double timestamp, AprilTag[] tagsUsed) {
+    public record FiducialPoseEstimate(
+        Pose3d robotPoseEstimate, double timestamp, AprilTag[] tagsUsed) {
       public void toLog(LogTable table) {
         table.put("robotPoseEstimate", robotPoseEstimate);
         table.put("timestamp", timestamp);
         table.put("tagsUsed", AprilTag.struct, tagsUsed);
       }
 
-      public static PoseEstimate fromLog(LogTable table) {
-        return new PoseEstimate(
+      public static FiducialPoseEstimate fromLog(LogTable table) {
+        return new FiducialPoseEstimate(
             table.get("robotPoseEstimate", Pose3d.kZero),
             table.get("timestamp", -1),
             table.get("tagsUsed", AprilTag.struct, new AprilTag[] {AprilTag.invalid}));
       }
 
       public record AprilTag(
-          Pose3d location, int id, double distanceToCamera, double tx, double ty) {
-        static final AprilTag invalid = new AprilTag(Pose3d.kZero, -1, -1, -1, -1);
+          Pose3d location,
+          int id,
+          double distanceToCamera,
+          double tx,
+          double ty,
+          double ambiguity) {
+        static final AprilTag invalid = new AprilTag(Pose3d.kZero, -1, -1, -1, -1, -1);
 
         public static final Struct<AprilTag> struct =
             new Struct<>() {
@@ -72,12 +85,13 @@ public interface FiducialPoseEstimatorIO {
 
               @Override
               public int getSize() {
-                return Pose3d.struct.getSize() + kSizeInt32 + kSizeDouble * 3;
+                return Pose3d.struct.getSize() + kSizeInt32 + kSizeDouble * 4;
               }
 
               @Override
               public String getSchema() {
-                return "Pose3d location;int32 id;double distanceToCamera;double tx;double ty";
+                return "Pose3d location;int32 id;double distanceToCamera;double tx;"
+                    + "double ty;double ambiguity";
               }
 
               @Override
@@ -87,7 +101,8 @@ public interface FiducialPoseEstimatorIO {
                 var distanceToCamera = bb.getDouble();
                 var tx = bb.getDouble();
                 var ty = bb.getDouble();
-                return new AprilTag(location, id, distanceToCamera, tx, ty);
+                var ambiguity = bb.getDouble();
+                return new AprilTag(location, id, distanceToCamera, tx, ty, ambiguity);
               }
 
               @Override
@@ -97,6 +112,7 @@ public interface FiducialPoseEstimatorIO {
                 bb.putDouble(value.distanceToCamera);
                 bb.putDouble(value.tx);
                 bb.putDouble(value.ty);
+                bb.putDouble(value.ambiguity);
               }
 
               @Override
@@ -109,4 +125,8 @@ public interface FiducialPoseEstimatorIO {
   }
 
   default void updateInputs(FiducialPoseEstimatorIOInputs inputs) {}
+
+  default FiducialPoseEstimatorIOConstantsAutoLogged getConstants() {
+    return new FiducialPoseEstimatorIOConstantsAutoLogged();
+  }
 }
