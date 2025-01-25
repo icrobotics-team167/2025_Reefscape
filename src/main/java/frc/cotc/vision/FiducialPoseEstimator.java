@@ -119,16 +119,26 @@ public class FiducialPoseEstimator {
             continue;
           }
 
-          var tagTranslationalStdDevs = new double[estimate.tagsUsed().length];
-          var tagAngularStdDevs = new double[estimate.tagsUsed().length];
-          for (int j = 0; j < tagTranslationalStdDevs.length; j++) {
+          double translationalScoresSum = 0;
+          double angularScoresSum = 0;
+          for (int j = 0; j < estimate.tagsUsed().length; j++) {
             var tag = estimate.tagsUsed()[i];
-            
+
+            var tagDistance = tag.distanceToCamera();
+
+            translationalScoresSum += .1 * tagDistance * tagDistance;
+            angularScoresSum += .05 * tagDistance * tagDistance;
           }
+
+          var translationalDivisor = Math.pow(estimate.tagsUsed().length, 2);
+          var angularDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
 
           estimatesList.add(
               new PoseEstimate(
-                  estimate.robotPoseEstimate().toPose2d(), estimate.timestamp(), .1, .1));
+                  estimate.robotPoseEstimate().toPose2d(),
+                  estimate.timestamp(),
+                  translationalScoresSum /  translationalDivisor,
+                  angularScoresSum /  angularDivisor));
         }
       }
     }
