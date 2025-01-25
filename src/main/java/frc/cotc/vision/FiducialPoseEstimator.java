@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.cotc.Constants;
+import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs;
 import java.util.ArrayList;
 import org.littletonrobotics.junction.Logger;
 
@@ -21,8 +22,7 @@ public class FiducialPoseEstimator {
       AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
 
   private final FiducialPoseEstimatorIO io;
-  private final FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs inputs =
-      new FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs();
+  private final FiducialPoseEstimatorIOInputs inputs = new FiducialPoseEstimatorIOInputs();
   private final FiducialPoseEstimatorIOConstantsAutoLogged constants;
 
   private final String name;
@@ -97,9 +97,13 @@ public class FiducialPoseEstimator {
                   tagPosition.plus(new Translation2d(-translationalDistance, worldYaw)),
                   robotGyroYaw);
 
-          // TODO: Implement heuristics for std dev scaling
-
-          estimatesList.add(new PoseEstimate(robotPose, estimate.timestamp(), .1, .1));
+          // Scales with the cube of distance (translational sensor noise scales with the square
+          // and angular sensor noise scales proportionally, and we use both)
+          var translationalStdDev =
+              .1 * tag.distanceToCamera() * tag.distanceToCamera() * tag.distanceToCamera();
+          // Yaw std dev is constant as we use the gyro measurement.
+          estimatesList.add(
+              new PoseEstimate(robotPose, estimate.timestamp(), translationalStdDev, 2));
         }
         default -> {
           // Filter out obviously bad data
@@ -114,7 +118,13 @@ public class FiducialPoseEstimator {
               || estimate.robotPoseEstimate().getY() > Constants.FIELD_WIDTH_METERS) {
             continue;
           }
-          // TODO: Implement heuristics for std devs
+
+          var tagTranslationalStdDevs = new double[estimate.tagsUsed().length];
+          var tagAngularStdDevs = new double[estimate.tagsUsed().length];
+          for (int j = 0; j < tagTranslationalStdDevs.length; j++) {
+            var tag = estimate.tagsUsed()[i];
+            
+          }
 
           estimatesList.add(
               new PoseEstimate(
