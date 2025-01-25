@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
+import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class SwerveIOPhoenix implements SwerveIO {
@@ -280,7 +281,6 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       var encoderConfig = new CANcoderConfiguration();
 
-      double driveKpMultiplier;
       if (Robot.isReal()) {
         driveConfig.Slot0.kV = 0;
 
@@ -293,15 +293,21 @@ public class SwerveIOPhoenix implements SwerveIO {
           case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.3212890625;
           case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.252685546875;
         }
-
-        driveKpMultiplier = 1;
       } else {
-        driveKpMultiplier = 2;
-
         steerConfig.Slot0.kP = 600;
         steerConfig.Slot0.kD = 2.5;
       }
-      driveConfig.Slot0.kP = driveKpMultiplier * CONSTANTS.MASS_KG;
+      driveConfig.Slot0.kP =
+          GainsCalculator.getVelocityPGain(
+              0,
+              WHEEL_CIRCUMFERENCE_METERS
+                  / (4
+                      * (CONSTANTS.DRIVE_MOTOR.KtNMPerAmp / (CONSTANTS.WHEEL_DIAMETER_METERS / 2))
+                      / CONSTANTS.MASS_KG),
+              driveConfig.CurrentLimits.StatorCurrentLimit,
+              .01 / WHEEL_CIRCUMFERENCE_METERS,
+              1.0 / 1000,
+              1.0 / 1000);
 
       driveMotor.getConfigurator().apply(driveConfig);
       steerMotor.getConfigurator().apply(steerConfig);
