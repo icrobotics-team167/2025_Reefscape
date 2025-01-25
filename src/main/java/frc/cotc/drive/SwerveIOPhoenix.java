@@ -54,11 +54,11 @@ public class SwerveIOPhoenix implements SwerveIO {
   static {
     CONSTANTS = new SwerveModuleConstantsAutoLogged();
 
-    CONSTANTS.TRACK_WIDTH_METERS = Units.inchesToMeters(22.5);
-    CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(22.5);
+    CONSTANTS.TRACK_WIDTH_METERS = Units.inchesToMeters(22.75);
+    CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(22.75);
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
-    CONSTANTS.WHEEL_COF = 1.5;
+    CONSTANTS.WHEEL_COF = .8;
 
     DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
@@ -80,7 +80,7 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG = Units.lbsToKilograms(98);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(40);
 
     double linearKa = 1;
     double angularKa = 1;
@@ -288,10 +288,10 @@ public class SwerveIOPhoenix implements SwerveIO {
         steerConfig.Slot0.kD = 0;
 
         switch (id) {
-          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.478271484375;
+          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.46826171875;
           case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.00634765625;
-          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.306884765625;
-          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.086181640625;
+          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.3212890625;
+          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.252685546875;
         }
 
         driveKpMultiplier = 1;

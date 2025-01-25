@@ -9,7 +9,6 @@ package frc.cotc;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -24,7 +23,6 @@ import frc.cotc.superstructure.*;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
-import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
@@ -36,7 +34,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
-  public static final String CANIVORE_NAME = "Canivore";
+  public static final String CANIVORE_NAME = "CANivore";
 
   private final Autos autos;
 
@@ -98,10 +96,11 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
-    var claw = new AlgaeClaw(mode != Mode.REPLAY ? new AlgaeClawIOPhoenix() : new AlgaeClawIO() {});
-    var elevator =
-        new CoralElevator(
-            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
+    //    var claw = new AlgaeClaw(mode != Mode.REPLAY ? new AlgaeClawIOPhoenix() : new
+    // AlgaeClawIO() {});
+    //    var elevator =
+    //        new CoralElevator(
+    //            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
 
     var primary = new CommandXboxController(0);
 
@@ -119,11 +118,11 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.disabled().or(primary.povDown()).whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
 
-    claw.setDefaultCommand(claw.goToPos(Units.degreesToRadians(-90)));
-    primary.x().whileTrue(claw.goToPos(Units.degreesToRadians(0)));
-
-    elevator.setDefaultCommand(elevator.goToPos(0));
-    primary.y().whileTrue(elevator.goToPos(2));
+    //    claw.setDefaultCommand(claw.goToPos(Units.degreesToRadians(-90)));
+    //    primary.x().whileTrue(claw.goToPos(Units.degreesToRadians(0)));
+    //
+    //    elevator.setDefaultCommand(elevator.goToPos(0));
+    //    primary.y().whileTrue(elevator.goToPos(2));
 
     autos = new Autos(swerve);
 
@@ -155,10 +154,10 @@ public class Robot extends LoggedRobot {
         swerveIO = new SwerveIOPhoenix();
         visionIOs =
             new FiducialPoseEstimatorIO[] {
-              new FiducialPoseEstimatorIOPhoton(0),
-              new FiducialPoseEstimatorIOPhoton(1),
-              new FiducialPoseEstimatorIOPhoton(2),
-              new FiducialPoseEstimatorIOPhoton(3)
+              new FiducialPoseEstimatorIO() {},
+              new FiducialPoseEstimatorIO() {},
+              new FiducialPoseEstimatorIO() {},
+              new FiducialPoseEstimatorIO() {}
             };
         count.cameraCount = visionIOs.length;
         Logger.processInputs("Vision", count);
