@@ -137,8 +137,8 @@ public class FiducialPoseEstimator {
               new PoseEstimate(
                   estimate.robotPoseEstimate().toPose2d(),
                   estimate.timestamp(),
-                  translationalScoresSum /  translationalDivisor,
-                  angularScoresSum /  angularDivisor));
+                  translationalScoresSum / translationalDivisor,
+                  angularScoresSum / angularDivisor));
         }
       }
     }
