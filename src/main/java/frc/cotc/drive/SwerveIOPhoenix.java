@@ -93,11 +93,10 @@ public class SwerveIOPhoenix implements SwerveIO {
             (int)
                 Math.round(
                     CONSTANTS.DRIVE_MOTOR.getCurrent(
-                            CONSTANTS.WHEEL_COF
-                                * ((CONSTANTS.MASS_KG / 4) * 9.81)
-                                * CONSTANTS.WHEEL_DIAMETER_METERS
-                                / 2)
-                        + 10),
+                        CONSTANTS.WHEEL_COF
+                            * ((CONSTANTS.MASS_KG / 4) * 9.81)
+                            * CONSTANTS.WHEEL_DIAMETER_METERS
+                            / 2)),
             100);
   }
 
@@ -255,7 +254,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-      driveConfig.CurrentLimits.StatorCurrentLimit = CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS;
+      driveConfig.CurrentLimits.StatorCurrentLimit = CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + 20;
       driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
       driveConfig.Audio.AllowMusicDurDisable = true;
 
@@ -280,10 +279,11 @@ public class SwerveIOPhoenix implements SwerveIO {
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
       if (Robot.isReal()) {
-        driveConfig.Slot0.kV = 0;
+        driveConfig.Slot0.kV = 1;
+        driveConfig.Slot0.kP = 20;
 
-        steerConfig.Slot0.kP = 12;
-        steerConfig.Slot0.kD = 0;
+        steerConfig.Slot0.kP = 100;
+        steerConfig.Slot0.kD = 1;
 
         switch (id) {
           case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.465087890625;
@@ -294,8 +294,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       } else {
         steerConfig.Slot0.kP = 600;
         steerConfig.Slot0.kD = 2.5;
+        driveConfig.Slot0.kP = 50;
       }
-      driveConfig.Slot0.kP = 10;
 
       driveMotor.getConfigurator().apply(driveConfig);
       steerMotor.getConfigurator().apply(steerConfig);
