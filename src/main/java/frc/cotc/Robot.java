@@ -9,6 +9,8 @@ package frc.cotc;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -24,9 +26,13 @@ import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.*;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
+import frc.cotc.vision.FiducialPoseEstimator;
+import frc.cotc.vision.FiducialPoseEstimatorIO;
+import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.*;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
@@ -95,10 +101,11 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
-    var claw = new AlgaeClaw(mode != Mode.REPLAY ? new AlgaeClawIOPhoenix() : new AlgaeClawIO() {});
-    var elevator =
-        new CoralElevator(
-            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
+    //    var claw = new AlgaeClaw(mode != Mode.REPLAY ? new AlgaeClawIOPhoenix() : new
+    // AlgaeClawIO() {});
+    //    var elevator =
+    //        new CoralElevator(
+    //            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
 
     var primary = new CommandXboxController(0);
 
@@ -125,11 +132,11 @@ public class Robot extends LoggedRobot {
                     && DriverStation.getMatchTime() <= 0)
         .onTrue(swerve.stopInX());
 
-    claw.setDefaultCommand(claw.goToPos(Units.degreesToRadians(-90)));
-    primary.x().whileTrue(claw.goToPos(Units.degreesToRadians(0)));
-
-    elevator.setDefaultCommand(elevator.goToPos(0));
-    primary.y().whileTrue(elevator.goToPos(2));
+    //    claw.setDefaultCommand(claw.goToPos(Units.degreesToRadians(-90)));
+    //    primary.x().whileTrue(claw.goToPos(Units.degreesToRadians(0)));
+    //
+    //    elevator.setDefaultCommand(elevator.goToPos(0));
+    //    primary.y().whileTrue(elevator.goToPos(2));
 
     autos = new Autos(swerve);
 
@@ -139,17 +146,88 @@ public class Robot extends LoggedRobot {
 
   private Swerve getSwerve(Mode mode) {
     SwerveIO swerveIO;
+    FiducialPoseEstimator.IO[] visionIOs;
+
+    var cameraNames =
+        new LoggableInputs() {
+          String[] names;
+
+          @Override
+          public void toLog(LogTable table) {
+            table.put("Names", names);
+          }
+
+          @Override
+          public void fromLog(LogTable table) {
+            names = table.get("Names", new String[0]);
+          }
+        };
 
     switch (mode) {
       case REAL, SIM -> {
         swerveIO = new SwerveIOPhoenix();
+        visionIOs =
+            new FiducialPoseEstimator.IO[] {
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      "FrontLeftCamera",
+                      new Transform3d(
+                          Units.inchesToMeters(22.75 / 2),
+                          Units.inchesToMeters(22.75 / 2),
+                          .1,
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-20), Units.degreesToRadians(-45)))),
+                  "FrontLeft"),
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      "FrontRightCamera",
+                      new Transform3d(
+                          Units.inchesToMeters(22.75 / 2),
+                          -Units.inchesToMeters(22.75 / 2),
+                          .1,
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-20), Units.degreesToRadians(45)))),
+                  "FrontRight"),
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      "BackLeftCamera",
+                      new Transform3d(
+                          -Units.inchesToMeters(22.75 / 2),
+                          Units.inchesToMeters(22.75 / 2),
+                          .1,
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-20), Units.degreesToRadians(135)))),
+                  "BackLeft"),
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      "BackRightCamera",
+                      new Transform3d(
+                          -Units.inchesToMeters(22.75 / 2),
+                          -Units.inchesToMeters(22.75 / 2),
+                          .1,
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-20), Units.degreesToRadians(-135)))),
+                  "BackRight")
+            };
+
+        cameraNames.names = new String[visionIOs.length];
+        for (int i = 0; i < visionIOs.length; i++) {
+          cameraNames.names[i] = visionIOs[i].name();
+        }
+        Logger.processInputs("Vision", cameraNames);
       }
       default -> {
         swerveIO = new SwerveIO() {};
+        Logger.processInputs("Vision", cameraNames);
+        visionIOs = new FiducialPoseEstimator.IO[cameraNames.names.length];
+        for (int i = 0; i < cameraNames.names.length; i++) {
+          visionIOs[i] =
+              new FiducialPoseEstimator.IO(new FiducialPoseEstimatorIO() {}, cameraNames.names[i]);
+        }
       }
     }
 
-    return new Swerve(swerveIO);
+    return new Swerve(swerveIO, visionIOs);
   }
 
   private Command autoCommand;

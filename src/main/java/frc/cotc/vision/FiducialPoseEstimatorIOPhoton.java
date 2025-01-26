@@ -7,14 +7,19 @@
 
 package frc.cotc.vision;
 
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import frc.cotc.Robot;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate.AprilTag;
 import java.util.ArrayList;
+import java.util.HashMap;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.simulation.VisionSystemSim;
 
 public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
   private final PhotonCamera camera;
@@ -31,6 +36,10 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
 
     constants = new FiducialPoseEstimatorIOConstantsAutoLogged();
     constants.robotToCameraTransform = robotToCameraTransform;
+
+    if (Robot.isSimulation()) {
+      Sim.addCamera(camera, robotToCameraTransform);
+    }
   }
 
   private final ArrayList<FiducialPoseEstimate> estimatesList = new ArrayList<>();
@@ -49,7 +58,10 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
                   var tag = estimate.targetsUsed.get(i);
                   tagsUsed[i] =
                       new AprilTag(
-                          Pose3d.kZero,
+                          estimate
+                              .estimatedPose
+                              .plus(constants.robotToCameraTransform)
+                              .plus(tag.bestCameraToTarget),
                           tag.fiducialId,
                           tag.bestCameraToTarget.getTranslation().getNorm(),
                           Units.degreesToRadians(-tag.pitch), // Photon is up+, we need down+
@@ -63,10 +75,53 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
     }
 
     inputs.poseEstimates = estimatesList.toArray(new FiducialPoseEstimate[0]);
+    estimatesList.clear();
   }
 
   @Override
   public FiducialPoseEstimatorIOConstantsAutoLogged getConstants() {
     return constants;
+  }
+
+  public static class Sim {
+    private static VisionSystemSim visionSystemSim;
+
+    static void addCamera(PhotonCamera camera, Transform3d transform) {
+      if (visionSystemSim == null) {
+        visionSystemSim = new VisionSystemSim("main");
+        visionSystemSim.addAprilTags(FiducialPoseEstimator.tagLayout);
+      }
+
+      var name = camera.getName();
+      SimCameraProperties properties;
+      if (propertiesHashMap.containsKey(name)) {
+        properties = propertiesHashMap.get(name);
+      } else {
+        properties = propertiesHashMap.get("None");
+      }
+
+      var cameraSim = new PhotonCameraSim(camera, properties);
+      cameraSim.enableProcessedStream(false);
+      cameraSim.enableRawStream(false);
+      cameraSim.enableDrawWireframe(false);
+      visionSystemSim.addCamera(cameraSim, transform);
+    }
+
+    public static void update() {
+      visionSystemSim.update(Robot.groundTruthPoseSupplier.get());
+    }
+
+    private static final HashMap<String, SimCameraProperties> propertiesHashMap = new HashMap<>();
+
+    static {
+      var none = new SimCameraProperties();
+      none.setCalibration(1280, 800, Rotation2d.fromDegrees(90));
+      none.setCalibError(.1, .1);
+      none.setFPS(40);
+      none.setExposureTimeMs(10);
+      none.setAvgLatencyMs(5);
+      none.setLatencyStdDevMs(2);
+      propertiesHashMap.put("None", none);
+    }
   }
 }

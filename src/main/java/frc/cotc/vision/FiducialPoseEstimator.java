@@ -10,8 +10,7 @@ package frc.cotc.vision;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import frc.cotc.Constants;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs;
 import java.util.ArrayList;
@@ -27,83 +26,34 @@ public class FiducialPoseEstimator {
 
   private final String name;
 
-  @FunctionalInterface
-  public interface GyroYawGetter {
-    Rotation2d getYawAtTime(double time);
-  }
+  public record IO(FiducialPoseEstimatorIO io, String name) {}
 
-  private final GyroYawGetter gyroYawGetter;
-
-  public FiducialPoseEstimator(
-      FiducialPoseEstimatorIO io, String name, GyroYawGetter gyroYawGetter) {
+  public FiducialPoseEstimator(FiducialPoseEstimatorIO io, String name) {
     this.io = io;
     this.name = name;
 
     constants = io.getConstants();
     Logger.processInputs("Vision/" + name + "/CONSTANTS", constants);
-
-    this.gyroYawGetter = gyroYawGetter;
   }
 
   private final ArrayList<PoseEstimate> estimatesList = new ArrayList<>();
+  private final ArrayList<Pose3d> posesUsed = new ArrayList<>();
+  private final ArrayList<Pose3d> tagsUsed = new ArrayList<>();
 
   public PoseEstimate[] poll() {
     io.updateInputs(inputs);
     Logger.processInputs("Vision/" + name, inputs);
 
     estimatesList.clear();
+    posesUsed.clear();
+    tagsUsed.clear();
     for (int i = 0; i < inputs.poseEstimates.length; i++) {
       var estimate = inputs.poseEstimates[i];
 
       switch (estimate.tagsUsed().length) {
         case 0 -> {} // Do nothing
         case 1 -> {
-          var robotGyroYaw = gyroYawGetter.getYawAtTime(estimate.timestamp());
-          if (robotGyroYaw == null) {
-            continue;
-          }
-
-          var tag = estimate.tagsUsed()[0];
-          // Filter out ambiguous data
-          if (tag.ambiguity() > .3) {
-            continue;
-          }
-
-          var optional = tagLayout.getTagPose(tag.id());
-          if (optional.isEmpty()) {
-            continue;
-          }
-
-          var tagPosition = optional.get().getTranslation().toTranslation2d();
-
-          // Tx pitch is relative to camera so add camera pitch to make it world pitch
-          var worldPitchRad = constants.robotToCameraTransform.getRotation().getY() + tag.tx();
-
-          // Filter out the data if it results in a z height that's too high/too low
-          if (Math.abs(tag.distanceToCamera() * Math.sin(worldPitchRad)) > .05) {
-            continue;
-          }
-
-          // Ty yaw is relative to camera so add camera yaw and robot yaw to make it world yaw
-          var worldYaw =
-              robotGyroYaw.plus(
-                  new Rotation2d(constants.robotToCameraTransform.getRotation().getZ() + tag.ty()));
-
-          // Solve for translational distance (we know hypotenuse length and angle)
-          var translationalDistance = tag.distanceToCamera() * Math.cos(worldPitchRad);
-
-          var robotPose =
-              new Pose2d(
-                  tagPosition.plus(new Translation2d(-translationalDistance, worldYaw)),
-                  robotGyroYaw);
-
-          // Scales with the cube of distance (translational sensor noise scales with the square
-          // and angular sensor noise scales proportionally, and we use both)
-          var translationalStdDev =
-              .1 * tag.distanceToCamera() * tag.distanceToCamera() * tag.distanceToCamera();
-          // Yaw std dev is constant as we use the gyro measurement.
-          estimatesList.add(
-              new PoseEstimate(robotPose, estimate.timestamp(), translationalStdDev, 2));
+          // TODO: Implement
         }
         default -> {
           // Filter out obviously bad data
@@ -121,9 +71,8 @@ public class FiducialPoseEstimator {
 
           double translationalScoresSum = 0;
           double angularScoresSum = 0;
-          for (int j = 0; j < estimate.tagsUsed().length; j++) {
-            var tag = estimate.tagsUsed()[i];
-
+          for (var tag : estimate.tagsUsed()) {
+            tagsUsed.add(tag.location());
             var tagDistance = tag.distanceToCamera();
 
             translationalScoresSum += .1 * tagDistance * tagDistance;
@@ -142,6 +91,9 @@ public class FiducialPoseEstimator {
         }
       }
     }
+
+    Logger.recordOutput("Vision/" + name + "/Filtered Poses", posesUsed.toArray(new Pose3d[0]));
+    Logger.recordOutput("Vision/" + name + "/Tags Used", tagsUsed.toArray(new Pose3d[0]));
     return estimatesList.toArray(new PoseEstimate[0]);
   }
 

@@ -20,7 +20,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -31,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.cotc.Robot;
 import frc.cotc.vision.FiducialPoseEstimator;
+import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -48,8 +48,6 @@ public class Swerve extends SubsystemBase {
   private final double angularSpeedFudgeFactor;
 
   private final SwervePoseEstimator poseEstimator;
-  private final TimeInterpolatableBuffer<Rotation2d> yawBuffer =
-      TimeInterpolatableBuffer.createBuffer(1);
 
   private final PIDController translationController, yawController;
 
@@ -59,7 +57,7 @@ public class Swerve extends SubsystemBase {
 
   private final FiducialPoseEstimator[] fiducialPoseEstimators;
 
-  public Swerve(SwerveIO driveIO) {
+  public Swerve(SwerveIO driveIO, FiducialPoseEstimator.IO[] visionIOs) {
     this.swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
     swerveInputs = new SwerveIO.SwerveIOInputs();
@@ -142,6 +140,11 @@ public class Swerve extends SubsystemBase {
             getLatestModulePositions(),
             new Pose2d());
 
+    fiducialPoseEstimators = new FiducialPoseEstimator[visionIOs.length];
+    for (int i = 0; i < visionIOs.length; i++) {
+      fiducialPoseEstimators[i] = new FiducialPoseEstimator(visionIOs[i].io(), visionIOs[i].name());
+    }
+
     translationController = new PIDController(10, 0, 0);
     yawController = new PIDController(5, 0, 0);
     yawController.enableContinuousInput(-PI, PI);
@@ -190,6 +193,10 @@ public class Swerve extends SubsystemBase {
     fieldRelativeSpeeds =
         ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, swerveInputs.gyroYaw);
 
+    if (Robot.isSimulation() && !Logger.hasReplaySource()) {
+      FiducialPoseEstimatorIOPhoton.Sim.update();
+    }
+
     if (!poseReset) {
       var driveStdDevs = getDriveStdDevs();
       Logger.recordOutput("Swerve/Odometry/Drive Std Devs", driveStdDevs);
@@ -208,7 +215,6 @@ public class Swerve extends SubsystemBase {
         }
         outOfOrderOdometryWarning.set(false);
         poseEstimator.updateWithTime(frame.timestamp(), frame.gyroYaw(), frame.positions());
-        yawBuffer.addSample(frame.timestamp(), frame.gyroYaw());
         lastTimestamp = frame.timestamp();
       }
       for (var fiducialPoseEstimator : fiducialPoseEstimators) {
