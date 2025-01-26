@@ -14,9 +14,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -103,30 +102,22 @@ public class Robot extends LoggedRobot {
     //        new CoralElevator(
     //            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
 
-    var primary = new CommandXboxController(0);
+    var primaryLeft = new CommandJoystick(0);
+    var primaryRight = new CommandJoystick(1);
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
     swerve.setDefaultCommand(
         swerve.teleopDrive(
-            () -> -primary.getLeftY(),
-            () -> -primary.getLeftX(),
+            () -> -primaryLeft.getY(),
+            () -> -primaryLeft.getX(),
             .06,
             2,
-            () -> -primary.getRightX(),
+            () -> -primaryRight.getX(),
             .05,
             2));
-    primary.povDown().whileTrue(swerve.stopInX());
+    //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-    new Trigger(
-            () ->
-                // There's about a 300 ms delay between match time going to zero and the FMS
-                // actually sending the disable packet, in which time we can apply a brake by
-                // aligning wheels in an x.
-                Robot.isReal()
-                    && DriverStation.isFMSAttached()
-                    && DriverStation.getMatchTime() <= 0)
-        .onTrue(swerve.stopInX());
 
     //    claw.setDefaultCommand(claw.goToPos(Units.degreesToRadians(-90)));
     //    primary.x().whileTrue(claw.goToPos(Units.degreesToRadians(0)));

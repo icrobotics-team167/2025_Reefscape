@@ -19,10 +19,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
+import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
@@ -43,7 +40,6 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
-import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class SwerveIOPhoenix implements SwerveIO {
@@ -265,9 +261,10 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       var steerConfig = new TalonFXConfiguration();
       steerConfig.Feedback.SensorToMechanismRatio = 1;
-      steerConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
+      steerConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
       steerConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
       steerConfig.Feedback.RotorToSensorRatio = STEER_GEAR_RATIOS[id];
+      steerConfig.Feedback.SensorToMechanismRatio = 1;
       steerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       steerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
       steerConfig.ClosedLoopGeneral.ContinuousWrap = true;
@@ -280,34 +277,25 @@ public class SwerveIOPhoenix implements SwerveIO {
           12 / Units.radiansToRotations(CONSTANTS.MAX_STEER_SPEEDS_RAD_PER_SEC[id]);
 
       var encoderConfig = new CANcoderConfiguration();
+      encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
       if (Robot.isReal()) {
         driveConfig.Slot0.kV = 0;
 
-        steerConfig.Slot0.kP = 48;
+        steerConfig.Slot0.kP = 12;
         steerConfig.Slot0.kD = 0;
 
         switch (id) {
-          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.46826171875;
-          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.00634765625;
-          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.3212890625;
-          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.252685546875;
+          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.465087890625;
+          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.30615234375;
+          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.330322265625;
+          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.260009765625;
         }
       } else {
         steerConfig.Slot0.kP = 600;
         steerConfig.Slot0.kD = 2.5;
       }
-      driveConfig.Slot0.kP =
-          GainsCalculator.getVelocityPGain(
-              0,
-              WHEEL_CIRCUMFERENCE_METERS
-                  / (4
-                      * (CONSTANTS.DRIVE_MOTOR.KtNMPerAmp / (CONSTANTS.WHEEL_DIAMETER_METERS / 2))
-                      / CONSTANTS.MASS_KG),
-              driveConfig.CurrentLimits.StatorCurrentLimit,
-              .01 / WHEEL_CIRCUMFERENCE_METERS,
-              1.0 / 1000,
-              1.0 / 1000);
+      driveConfig.Slot0.kP = 10;
 
       driveMotor.getConfigurator().apply(driveConfig);
       steerMotor.getConfigurator().apply(steerConfig);
