@@ -64,10 +64,10 @@ public class Autos {
     var routine = factory.newRoutine("scoreOne");
 
     var startToG = routine.trajectory("StartToG");
-    var gToSource = getReefToSource(routine, ReefLoc.G, SourceLoc.R);
-    var sourceToC = getSourceToReef(routine, ReefLoc.C, SourceLoc.R);
-    var cToSource = getReefToSource(routine, ReefLoc.C, SourceLoc.R);
-    var sourceToD = getSourceToReef(routine, ReefLoc.D, SourceLoc.R);
+    var gToSource = getTrajectory(routine, ReefLoc.G, SourceLoc.R);
+    var sourceToC = getTrajectory(routine, SourceLoc.R, ReefLoc.C);
+    var cToSource = getTrajectory(routine, ReefLoc.C, SourceLoc.R);
+    var sourceToD = getTrajectory(routine, SourceLoc.R, ReefLoc.D);
 
     routine.active().onTrue(startToG.resetOdometry().andThen(startToG.cmd()));
 
@@ -142,13 +142,11 @@ public class Autos {
     R
   }
 
-  private AutoTrajectory getReefToSource(
-      AutoRoutine routine, ReefLoc reefLoc, SourceLoc sourceLoc) {
+  private AutoTrajectory getTrajectory(AutoRoutine routine, ReefLoc reefLoc, SourceLoc sourceLoc) {
     return routine.trajectory(reefLoc.name() + "~S" + sourceLoc.name(), 0);
   }
 
-  private AutoTrajectory getSourceToReef(
-      AutoRoutine routine, ReefLoc reefLoc, SourceLoc sourceLoc) {
+  private AutoTrajectory getTrajectory(AutoRoutine routine, SourceLoc sourceLoc, ReefLoc reefLoc) {
     return routine.trajectory(reefLoc.name() + "~S" + sourceLoc.name(), 1);
   }
 }
