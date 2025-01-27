@@ -397,41 +397,7 @@ public class Swerve extends SubsystemBase {
   }
 
   public void followTrajectory(SwerveSample sample) {
-    var feedforward =
-        ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(sample.vx, sample.vy, sample.omega), new Rotation2d(sample.heading));
-
-    var targetPose = new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading));
-    var translationalError =
-        poseEstimator.getEstimatedPosition().getTranslation().minus(targetPose.getTranslation());
-    var translationalFeedback = translationController.calculate(translationalError.getNorm(), 0);
-    var errorAngle = translationalError.getAngle();
-    var feedback =
-        ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(
-                errorAngle.getCos() * translationalFeedback,
-                errorAngle.getSin() * translationalFeedback,
-                yawController.calculate(
-                    poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-                    targetPose.getRotation().getRadians())),
-            poseEstimator.getEstimatedPosition().getRotation());
-
-    Logger.recordOutput("Choreo/Error", targetPose.minus(poseEstimator.getEstimatedPosition()));
-
-    var forceVectors = new Translation2d[4];
-    for (int i = 0; i < 4; i++) {
-      forceVectors[i] =
-          new Translation2d(sample.moduleForcesX()[i], sample.moduleForcesY()[i])
-              .rotateBy(new Rotation2d(-sample.heading));
-    }
-
-    Logger.recordOutput("Choreo/Target Pose", targetPose);
-    Logger.recordOutput("Choreo/Feedforward", feedforward);
-    Logger.recordOutput("Choreo/Feedback", feedback);
-
-    var output = feedforward.plus(feedback);
-    autoDrive(output, forceVectors);
-    Logger.recordOutput("Choreo/Output", output);
+    // TODO: Implement
   }
 
   public Command steerCharacterize() {
