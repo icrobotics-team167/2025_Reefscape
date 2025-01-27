@@ -89,7 +89,7 @@ public class Swerve extends SubsystemBase {
             },
             CONSTANTS.DRIVE_MOTOR,
             CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS,
-            CONSTANTS.MAX_STEER_SPEED_RAD_PER_SEC,
+            CONSTANTS.MAX_STEER_SPEEDS_RAD_PER_SEC,
             CONSTANTS.MASS_KG,
             CONSTANTS.MOI_KG_METERS_SQUARED,
             CONSTANTS.WHEEL_DIAMETER_METERS,

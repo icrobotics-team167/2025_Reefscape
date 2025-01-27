@@ -38,19 +38,19 @@ public class SwerveSetpointGenerator {
   private final DCMotor driveMotor;
   private final double statorCurrentLimitAmps,
       maxDriveVelocity,
-      maxSteerSpeedRadPerSec,
       massKg,
       moiKgMetersSquared,
       wheelRadiusMeters,
       wheelFrictionForce,
       maxTorqueFriction;
+  private final double[] maxSteerSpeedRadPerSec;
   private final SimpleMatrix forceKinematics;
 
   public SwerveSetpointGenerator(
       final Translation2d[] moduleLocations,
       final DCMotor driveMotor,
       final double statorCurrentLimitAmps,
-      final double maxSteerSpeedRadPerSec,
+      final double[] maxSteerSpeedRadPerSec,
       final double massKg,
       final double moiKgMetersSquared,
       final double wheelDiameterMeters,
@@ -347,7 +347,7 @@ public class SwerveSetpointGenerator {
         overrideSteering.add(Optional.of(prevSetpoint.moduleStates()[i].angle));
         continue;
       }
-      double max_theta_step = dt * maxSteerSpeedRadPerSec;
+      double max_theta_step = dt * maxSteerSpeedRadPerSec[i];
       overrideSteering.add(Optional.empty());
       if (epsilonEquals(prevSetpoint.moduleStates()[i].speedMetersPerSecond, 0.0)) {
         // If module is stopped, we know that we will need to move straight to the final steering
