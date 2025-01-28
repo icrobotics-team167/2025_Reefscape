@@ -7,6 +7,8 @@
 
 package frc.cotc.vision;
 
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
@@ -116,12 +118,46 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
     static {
       var none = new SimCameraProperties();
       none.setCalibration(1280, 800, Rotation2d.fromDegrees(90));
-      none.setCalibError(.1, .1);
+      none.setCalibError(.3, .1);
       none.setFPS(40);
       none.setExposureTimeMs(10);
       none.setAvgLatencyMs(5);
       none.setLatencyStdDevMs(2);
       propertiesHashMap.put("None", none);
+
+      var frontLeft = new SimCameraProperties();
+      frontLeft.setCalibration(
+          1280,
+          800,
+          MatBuilder.fill(
+              Nat.N3(),
+              Nat.N3(),
+              917.7435751,
+              0.0,
+              916.4687196,
+              0.0,
+              645.1229926,
+              438.7684688,
+              0.0,
+              0.0,
+              1.0),
+          MatBuilder.fill(
+              Nat.N8(),
+              Nat.N1(),
+              0.04160394239,
+              -0.05934898907,
+              -0.0002104558183,
+              -0.001798832851,
+              0.005054943256,
+              -0.001768082509,
+              0.005583424767,
+              0.0009199079055));
+      frontLeft.setCalibError(.2, .01);
+      frontLeft.setFPS(40);
+      frontLeft.setExposureTimeMs(10);
+      frontLeft.setAvgLatencyMs(5);
+      frontLeft.setLatencyStdDevMs(2);
+      propertiesHashMap.put("FrontLeftCamera", frontLeft);
     }
   }
 }
