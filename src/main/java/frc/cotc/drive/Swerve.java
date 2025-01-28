@@ -49,7 +49,7 @@ public class Swerve extends SubsystemBase {
 
   private final SwervePoseEstimator poseEstimator;
 
-  private final PIDController translationController, yawController;
+  private final PIDController xController, yController, yawController;
 
   private final double wheelRadiusMeters;
   private final double kTNewtonMetersPerAmp;
@@ -145,7 +145,8 @@ public class Swerve extends SubsystemBase {
       fiducialPoseEstimators[i] = new FiducialPoseEstimator(visionIOs[i].io(), visionIOs[i].name());
     }
 
-    translationController = new PIDController(10, 0, 0);
+    xController = new PIDController(5, 0, 1);
+    yController = new PIDController(5, 0, 1);
     yawController = new PIDController(5, 0, 0);
     yawController.enableContinuousInput(-PI, PI);
   }
@@ -326,13 +327,35 @@ public class Swerve extends SubsystemBase {
           omegaControl =
               Math.pow(Math.abs(omegaControl), omegaExponent) * Math.signum(omegaControl);
 
-          teleopDrive(
+          var commandedRobotSpeeds =
               ChassisSpeeds.fromFieldRelativeSpeeds(
                   new ChassisSpeeds(
                       xControl * maxLinearSpeedMetersPerSec,
                       yControl * maxLinearSpeedMetersPerSec,
                       omegaControl * maxAngularSpeedRadPerSec),
-                  swerveInputs.gyroYaw));
+                  swerveInputs.gyroYaw);
+
+          var translationalMagnitude =
+              Math.hypot(
+                  commandedRobotSpeeds.vxMetersPerSecond, commandedRobotSpeeds.vyMetersPerSecond);
+          if (translationalMagnitude > maxLinearSpeedMetersPerSec) {
+            commandedRobotSpeeds.vxMetersPerSecond *=
+                maxLinearSpeedMetersPerSec / translationalMagnitude;
+            commandedRobotSpeeds.vyMetersPerSecond *=
+                maxLinearSpeedMetersPerSec / translationalMagnitude;
+
+            translationalMagnitude = maxLinearSpeedMetersPerSec;
+          }
+          commandedRobotSpeeds.omegaRadiansPerSecond *=
+              MathUtil.interpolate(
+                  1,
+                  angularSpeedFudgeFactor,
+                  MathUtil.inverseInterpolate(
+                      0, maxLinearSpeedMetersPerSec, translationalMagnitude));
+
+          var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
+          swerveIO.drive(setpoint);
+          lastSetpoint = setpoint;
         });
   }
 
@@ -357,47 +380,25 @@ public class Swerve extends SubsystemBase {
         });
   }
 
-  private void teleopDrive(ChassisSpeeds robotRelativeSpeeds) {
-    var translationalMagnitude =
-        Math.hypot(robotRelativeSpeeds.vxMetersPerSecond, robotRelativeSpeeds.vyMetersPerSecond);
-    if (translationalMagnitude > maxLinearSpeedMetersPerSec) {
-      robotRelativeSpeeds.vxMetersPerSecond *= maxLinearSpeedMetersPerSec / translationalMagnitude;
-      robotRelativeSpeeds.vyMetersPerSecond *= maxLinearSpeedMetersPerSec / translationalMagnitude;
+  public void followChoreoTrajectory(SwerveSample sample) {
+    Logger.recordOutput(
+        "Choreo/Target pose", new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading)));
 
-      translationalMagnitude = maxLinearSpeedMetersPerSec;
-    }
-    robotRelativeSpeeds.omegaRadiansPerSecond *=
-        MathUtil.interpolate(
-            1,
-            angularSpeedFudgeFactor,
-            MathUtil.inverseInterpolate(0, maxLinearSpeedMetersPerSec, translationalMagnitude));
+    var feedforward = new ChassisSpeeds(sample.vx, sample.vy, sample.omega);
+    var feedback =
+        new ChassisSpeeds(
+            xController.calculate(poseEstimator.getEstimatedPosition().getX(), sample.x),
+            yController.calculate(poseEstimator.getEstimatedPosition().getY(), sample.y),
+            yawController.calculate(
+                poseEstimator.getEstimatedPosition().getRotation().getRadians(), sample.heading));
 
-    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, robotRelativeSpeeds);
+    var outputFieldRelative = feedforward.plus(feedback);
+    var outputRobotRelative =
+        ChassisSpeeds.fromFieldRelativeSpeeds(outputFieldRelative, new Rotation2d(sample.heading));
+
+    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
     swerveIO.drive(setpoint);
     lastSetpoint = setpoint;
-  }
-
-  private void autoDrive(ChassisSpeeds speeds, Translation2d[] forceVectors) {
-    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, speeds);
-
-    for (int i = 0; i < 4; i++) {
-      if (forceVectors[i].getNorm() < 1e-6) {
-        setpoint.driveFeedforwardsAmps()[i] = 0;
-      } else {
-        setpoint.driveFeedforwardsAmps()[i] =
-            forceVectors[i].getNorm()
-                * forceVectors[i].getAngle().minus(setpoint.moduleStates()[i].angle).getCos()
-                * wheelRadiusMeters
-                / kTNewtonMetersPerAmp;
-      }
-    }
-
-    swerveIO.drive(setpoint);
-    lastSetpoint = setpoint;
-  }
-
-  public void followTrajectory(SwerveSample sample) {
-    // TODO: Implement
   }
 
   public Command steerCharacterize() {
@@ -498,7 +499,8 @@ public class Swerve extends SubsystemBase {
     var gyroAngle =
         Robot.isOnRed() ? pose.getRotation().rotateBy(Rotation2d.kPi) : pose.getRotation();
     swerveIO.resetGyro(gyroAngle);
-    translationController.reset();
+    xController.reset();
+    yController.reset();
     yawController.reset();
     poseEstimator.resetPosition(gyroAngle, getLatestModulePositions(), pose);
     swerveIO.updateInputs(swerveInputs);

@@ -39,7 +39,7 @@ public class Autos {
         new AutoFactory(
             swerve::getPose,
             swerve::resetForAuto,
-            swerve::followTrajectory,
+            swerve::followChoreoTrajectory,
             true,
             swerve,
             (trajectory, starting) -> {

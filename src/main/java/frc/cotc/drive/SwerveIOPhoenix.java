@@ -55,7 +55,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(22.75);
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
-    CONSTANTS.WHEEL_COF = .8;
+    CONSTANTS.WHEEL_COF = 1.5;
 
     DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
@@ -77,7 +77,7 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG = Units.lbsToKilograms(40);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(80);
 
     double linearKa = 1;
     double angularKa = 1;
