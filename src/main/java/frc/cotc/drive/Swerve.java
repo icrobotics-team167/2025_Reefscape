@@ -51,8 +51,6 @@ public class Swerve extends SubsystemBase {
 
   private final PIDController xController, yController, yawController;
 
-  private final double wheelRadiusMeters;
-  private final double kTNewtonMetersPerAmp;
   private final double currentVisualizationScalar;
 
   private final FiducialPoseEstimator[] fiducialPoseEstimators;
@@ -125,8 +123,6 @@ public class Swerve extends SubsystemBase {
         new SwerveSetpoint(
             new ChassisSpeeds(), swerveInputs.moduleStates, new double[4], new double[4]);
 
-    wheelRadiusMeters = CONSTANTS.WHEEL_DIAMETER_METERS / 2;
-    kTNewtonMetersPerAmp = CONSTANTS.DRIVE_MOTOR.KtNMPerAmp;
     currentVisualizationScalar =
         CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS / maxLinearSpeedMetersPerSec;
     Logger.recordOutput(
@@ -145,8 +141,8 @@ public class Swerve extends SubsystemBase {
       fiducialPoseEstimators[i] = new FiducialPoseEstimator(visionIOs[i].io(), visionIOs[i].name());
     }
 
-    xController = new PIDController(5, 0, 1);
-    yController = new PIDController(5, 0, 1);
+    xController = new PIDController(10, 0, 1);
+    yController = new PIDController(10, 0, 1);
     yawController = new PIDController(5, 0, 0);
     yawController.enableContinuousInput(-PI, PI);
   }
@@ -294,7 +290,7 @@ public class Swerve extends SubsystemBase {
     return new double[] {
       Math.abs(stdDevs.getX()) + Math.abs(scaledSpeed.getX()) + .1,
       Math.abs(stdDevs.getY()) + Math.abs(scaledSpeed.getY()) + .1,
-      .0005
+      .001
     };
   }
 

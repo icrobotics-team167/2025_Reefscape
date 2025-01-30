@@ -75,11 +75,11 @@ public class FiducialPoseEstimator {
             tagsUsed.add(tag.location());
             var tagDistance = tag.distanceToCamera();
 
-            translationalScoresSum += .1 * tagDistance * tagDistance;
-            angularScoresSum += .05 * tagDistance * tagDistance;
+            translationalScoresSum += .2 * tagDistance * tagDistance;
+            angularScoresSum += .01 * tagDistance * tagDistance;
           }
 
-          var translationalDivisor = Math.pow(estimate.tagsUsed().length, 2);
+          var translationalDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
           var angularDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
 
           estimatesList.add(

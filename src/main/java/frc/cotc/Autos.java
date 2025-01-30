@@ -54,7 +54,7 @@ public class Autos {
                           poses[i].getRotation().rotateBy(Rotation2d.kPi));
                 }
               }
-              Logger.recordOutput("Swerve/Trajectory", poses);
+              Logger.recordOutput("Choreo/Trajectory", poses);
             });
 
     addRoutine("ScoreOne", () -> scoreOne(factory));
