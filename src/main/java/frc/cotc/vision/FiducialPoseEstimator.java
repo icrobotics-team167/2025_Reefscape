@@ -92,7 +92,7 @@ public class FiducialPoseEstimator {
       }
     }
 
-    Logger.recordOutput("Vision/" + name + "/Filtered Poses", posesUsed.toArray(new Pose3d[0]));
+    Logger.recordOutput("Vision/" + name + "/Poses Used", posesUsed.toArray(new Pose3d[0]));
     Logger.recordOutput("Vision/" + name + "/Tags Used", tagsUsed.toArray(new Pose3d[0]));
     return estimatesList.toArray(new PoseEstimate[0]);
   }
