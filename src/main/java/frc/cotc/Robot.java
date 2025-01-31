@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
@@ -68,6 +68,7 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         LoggedPowerDistribution.getInstance(); // Enables power distribution logging
+
         SignalLogger.start(); // Start logging Phoenix CAN signals
       }
       case SIM -> {
@@ -105,18 +106,17 @@ public class Robot extends LoggedRobot {
     //        new CoralElevator(
     //            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
 
-    var primaryLeft = new CommandJoystick(0);
-    var primaryRight = new CommandJoystick(1);
+    var primary = new CommandXboxController(0);
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
     swerve.setDefaultCommand(
         swerve.teleopDrive(
-            () -> -primaryLeft.getY(),
-            () -> -primaryLeft.getX(),
+            () -> -primary.getLeftY(),
+            () -> -primary.getLeftX(),
             .06,
             2,
-            () -> -primaryRight.getX(),
+            () -> -primary.getRightX(),
             .05,
             2));
     //    primary.povDown().whileTrue(swerve.stopInX());

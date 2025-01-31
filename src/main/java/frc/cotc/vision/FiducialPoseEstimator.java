@@ -9,11 +9,12 @@ package frc.cotc.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.util.Units;
 import frc.cotc.Constants;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs;
 import java.util.ArrayList;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class FiducialPoseEstimator {
@@ -22,18 +23,39 @@ public class FiducialPoseEstimator {
 
   private final FiducialPoseEstimatorIO io;
   private final FiducialPoseEstimatorIOInputs inputs = new FiducialPoseEstimatorIOInputs();
-  private final FiducialPoseEstimatorIOConstantsAutoLogged constants;
+  private final Transform3d robotToCameraTransform;
+  private final Transform2d cameraToRobotTransform2d;
+
+  private final GyroYawGetter gyroYawGetter;
+  private final Supplier<Pose2d> currentPoseEstimateSupplier;
 
   private final String name;
 
   public record IO(FiducialPoseEstimatorIO io, String name) {}
 
-  public FiducialPoseEstimator(FiducialPoseEstimatorIO io, String name) {
+  @FunctionalInterface
+  public interface GyroYawGetter {
+    Rotation2d get(double timestamp);
+  }
+
+  public FiducialPoseEstimator(
+      FiducialPoseEstimatorIO io,
+      String name,
+      GyroYawGetter gyroYawGetter,
+      Supplier<Pose2d> currentPoseEstimateSupplier) {
     this.io = io;
     this.name = name;
 
-    constants = io.getConstants();
+    var constants = io.getConstants();
     Logger.processInputs("Vision/" + name + "/CONSTANTS", constants);
+    robotToCameraTransform = constants.robotToCameraTransform;
+    var cameraToRobotTransform3d = constants.robotToCameraTransform.inverse();
+    cameraToRobotTransform2d =
+        new Transform2d(
+            cameraToRobotTransform3d.getTranslation().toTranslation2d(),
+            cameraToRobotTransform3d.getRotation().toRotation2d());
+    this.gyroYawGetter = gyroYawGetter;
+    this.currentPoseEstimateSupplier = currentPoseEstimateSupplier;
   }
 
   private final ArrayList<PoseEstimate> estimatesList = new ArrayList<>();
@@ -53,7 +75,78 @@ public class FiducialPoseEstimator {
       switch (estimate.tagsUsed().length) {
         case 0 -> {} // Do nothing
         case 1 -> {
-          // TODO: Implement
+          var tag = estimate.tagsUsed()[0];
+
+          // Discard if key data is missing (position of tag and gyro yaw)
+          var tagPoseOptional = tagLayout.getTagPose(tag.id());
+          if (tagPoseOptional.isEmpty()) {
+            continue;
+          }
+          var gyroYaw = gyroYawGetter.get(estimate.timestamp());
+          if (gyroYaw == null) {
+            continue;
+          }
+          var tagPose = tagPoseOptional.get();
+
+          // Algorithm adapted from 6328 Mechanical Advantage
+          // https://www.chiefdelphi.com/t/frc-6328-mechanical-advantage-2025-build-thread/477314/85
+          var cameraToTagTranslation =
+              new Pose3d(
+                      Translation3d.kZero,
+                      new Rotation3d(
+                          0, Units.degreesToRadians(-tag.ty()), Units.degreesToRadians(-tag.tx())))
+                  .transformBy(
+                      new Transform3d(
+                          new Translation3d(tag.distanceToCamera(), 0, 0), Rotation3d.kZero))
+                  .getTranslation()
+                  .rotateBy(new Rotation3d(0, robotToCameraTransform.getRotation().getY(), 0))
+                  .toTranslation2d();
+          var cameraToTagRotation =
+              gyroYaw.plus(
+                  robotToCameraTransform
+                      .getRotation()
+                      .toRotation2d()
+                      .plus(cameraToTagTranslation.getAngle()));
+
+          var cameraTranslation =
+              new Pose2d(
+                      tagPose.getTranslation().toTranslation2d(),
+                      cameraToTagRotation.plus(Rotation2d.kPi))
+                  .transformBy(
+                      new Transform2d(cameraToTagTranslation.getNorm(), 0, Rotation2d.kZero))
+                  .getTranslation();
+          var robotPose =
+              new Pose2d(
+                      cameraTranslation,
+                      gyroYaw.plus(robotToCameraTransform.getRotation().toRotation2d()))
+                  .transformBy(cameraToRobotTransform2d);
+          robotPose = new Pose2d(robotPose.getTranslation(), gyroYaw);
+
+          // Filter out obviously bad data
+          if (robotPose.getX() < 0 || robotPose.getX() > Constants.FIELD_LENGTH_METERS) {
+            continue;
+          }
+          if (robotPose.getY() < 0 || robotPose.getY() > Constants.FIELD_WIDTH_METERS) {
+            continue;
+          }
+
+          // If it's too far off the pose estimate that's already in, discard
+          // Prevents bad data from bad initial conditions from affecting estimates
+          var delta = robotPose.minus(currentPoseEstimateSupplier.get());
+          if (delta.getTranslation().getNorm() > .025) {
+            continue;
+          }
+          if (delta.getRotation().getDegrees() > 2) {
+            continue;
+          }
+
+          tagsUsed.add(tagPose);
+          posesUsed.add(new Pose3d(robotPose));
+
+          var stdDev =
+              .5 * tag.distanceToCamera() * tag.distanceToCamera() * tag.distanceToCamera();
+
+          estimatesList.add(new PoseEstimate(robotPose, estimate.timestamp(), stdDev, .001));
         }
         default -> {
           // Filter out obviously bad data
@@ -75,12 +168,14 @@ public class FiducialPoseEstimator {
             tagsUsed.add(tag.location());
             var tagDistance = tag.distanceToCamera();
 
-            translationalScoresSum += .2 * tagDistance * tagDistance;
-            angularScoresSum += .01 * tagDistance * tagDistance;
+            translationalScoresSum += .3 * tagDistance * tagDistance;
+            angularScoresSum += .025 * tagDistance * tagDistance;
           }
 
           var translationalDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
           var angularDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
+
+          posesUsed.add(estimate.robotPoseEstimate());
 
           estimatesList.add(
               new PoseEstimate(

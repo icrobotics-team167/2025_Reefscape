@@ -28,7 +28,7 @@ public interface FiducialPoseEstimatorIO {
     @Override
     public void toLog(LogTable table) {
       for (int i = 0; i < poseEstimates.length; i++) {
-        poseEstimates[i].toLog(table.getSubtable(String.valueOf(i)));
+        poseEstimates[i].toLog(table, String.valueOf(i));
       }
     }
 
@@ -37,7 +37,7 @@ public interface FiducialPoseEstimatorIO {
       var list = new ArrayList<FiducialPoseEstimate>();
       int i = 0;
       while (true) {
-        var estimate = FiducialPoseEstimate.fromLog(table.getSubtable(String.valueOf(i)));
+        var estimate = FiducialPoseEstimate.fromLog(table, String.valueOf(i));
         if (estimate.timestamp <= 0) {
           break;
         }
@@ -49,17 +49,17 @@ public interface FiducialPoseEstimatorIO {
 
     public record FiducialPoseEstimate(
         Pose3d robotPoseEstimate, double timestamp, AprilTag[] tagsUsed) {
-      public void toLog(LogTable table) {
-        table.put("robotPoseEstimate", robotPoseEstimate);
-        table.put("timestamp", timestamp);
-        table.put("tagsUsed", AprilTag.struct, tagsUsed);
+      public void toLog(LogTable table, String subtable) {
+        table.put(subtable + "/robotPoseEstimate", robotPoseEstimate);
+        table.put(subtable + "/timestamp", timestamp);
+        table.put(subtable + "/tagsUsed", AprilTag.struct, tagsUsed);
       }
 
-      public static FiducialPoseEstimate fromLog(LogTable table) {
+      public static FiducialPoseEstimate fromLog(LogTable table, String subtable) {
         return new FiducialPoseEstimate(
-            table.get("robotPoseEstimate", Pose3d.kZero),
-            table.get("timestamp", -1),
-            table.get("tagsUsed", AprilTag.struct, new AprilTag[] {AprilTag.invalid}));
+            table.get(subtable + "/robotPoseEstimate", Pose3d.kZero),
+            table.get(subtable + "/timestamp", -1.0),
+            table.get(subtable + "/tagsUsed", AprilTag.struct, new AprilTag[] {AprilTag.invalid}));
       }
 
       public record AprilTag(

@@ -11,7 +11,6 @@ import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.util.Units;
 import frc.cotc.Robot;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate.AprilTag;
@@ -66,8 +65,8 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
                               .plus(tag.bestCameraToTarget),
                           tag.fiducialId,
                           tag.bestCameraToTarget.getTranslation().getNorm(),
-                          Units.degreesToRadians(-tag.pitch), // Photon is up+, we need down+
-                          Units.degreesToRadians(-tag.yaw), // Photon is right+, we need left+
+                          tag.yaw,
+                          tag.pitch,
                           tag.poseAmbiguity);
                 }
                 estimatesList.add(

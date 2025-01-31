@@ -20,6 +20,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -48,6 +49,8 @@ public class Swerve extends SubsystemBase {
   private final double angularSpeedFudgeFactor;
 
   private final SwervePoseEstimator poseEstimator;
+  private final TimeInterpolatableBuffer<Rotation2d> yawBuffer =
+      TimeInterpolatableBuffer.createBuffer(.5);
 
   private final PIDController xController, yController, yawController;
 
@@ -138,7 +141,13 @@ public class Swerve extends SubsystemBase {
 
     fiducialPoseEstimators = new FiducialPoseEstimator[visionIOs.length];
     for (int i = 0; i < visionIOs.length; i++) {
-      fiducialPoseEstimators[i] = new FiducialPoseEstimator(visionIOs[i].io(), visionIOs[i].name());
+      fiducialPoseEstimators[i] =
+          new FiducialPoseEstimator(
+              visionIOs[i].io(),
+              visionIOs[i].name(),
+              timestamp ->
+                  DriverStation.isEnabled() ? yawBuffer.getSample(timestamp).orElse(null) : null,
+              poseEstimator::getEstimatedPosition);
     }
 
     xController = new PIDController(10, 0, 1);
@@ -212,6 +221,7 @@ public class Swerve extends SubsystemBase {
         }
         outOfOrderOdometryWarning.set(false);
         poseEstimator.updateWithTime(frame.timestamp(), frame.gyroYaw(), frame.positions());
+        yawBuffer.addSample(frame.timestamp(), frame.gyroYaw());
         lastTimestamp = frame.timestamp();
       }
       for (var fiducialPoseEstimator : fiducialPoseEstimators) {
