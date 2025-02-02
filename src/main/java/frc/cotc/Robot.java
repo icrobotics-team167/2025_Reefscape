@@ -100,12 +100,6 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
-    //    var claw = new AlgaeClaw(mode != Mode.REPLAY ? new AlgaeClawIOPhoenix() : new
-    // AlgaeClawIO() {});
-    //    var elevator =
-    //        new CoralElevator(
-    //            mode != Mode.REPLAY ? new CoralElevatorIOPhoenix() : new CoralElevatorIO() {});
-
     var primary = new CommandXboxController(0);
 
     // Robot wants +X fwd, +Y left
@@ -121,12 +115,6 @@ public class Robot extends LoggedRobot {
             2));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-
-    //    claw.setDefaultCommand(claw.goToPos(Units.degreesToRadians(-90)));
-    //    primary.x().whileTrue(claw.goToPos(Units.degreesToRadians(0)));
-    //
-    //    elevator.setDefaultCommand(elevator.goToPos(0));
-    //    primary.y().whileTrue(elevator.goToPos(2));
 
     autos = new Autos(swerve);
 
