@@ -157,6 +157,40 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
       frontLeft.setAvgLatencyMs(5);
       frontLeft.setLatencyStdDevMs(2);
       propertiesHashMap.put("FrontLeftCamera", frontLeft);
+
+      var frontRight = new SimCameraProperties();
+      frontLeft.setCalibration(
+          1280,
+          800,
+          MatBuilder.fill(
+              Nat.N3(),
+              Nat.N3(),
+              913.4991235,
+              0.0,
+              912.2663355,
+              0.0,
+              656.9013349,
+              380.7381692,
+              0.0,
+              0.0,
+              1.0),
+          MatBuilder.fill(
+              Nat.N8(),
+              Nat.N1(),
+              0.04363956086,
+              -0.06962515596,
+              -0.0004791594092,
+              -0.001254755397,
+              0.007056855264,
+              -0.001138138589,
+              -0.0003849712931,
+              -0.001715779282));
+      frontLeft.setCalibError(.3, .01);
+      frontLeft.setFPS(20);
+      frontLeft.setExposureTimeMs(10);
+      frontLeft.setAvgLatencyMs(5);
+      frontLeft.setLatencyStdDevMs(2);
+      propertiesHashMap.put("FrontRightCamera", frontRight);
     }
   }
 }

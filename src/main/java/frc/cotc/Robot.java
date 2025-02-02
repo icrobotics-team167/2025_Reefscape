@@ -164,9 +164,9 @@ public class Robot extends LoggedRobot {
                       new Transform3d(
                           Units.inchesToMeters(22.75 / 2),
                           Units.inchesToMeters(22.75 / 2),
-                          .1,
+                          Units.inchesToMeters(8.25),
                           new Rotation3d(
-                              0, Units.degreesToRadians(-20), Units.degreesToRadians(-45)))),
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
                   "FrontLeft"),
               new FiducialPoseEstimator.IO(
                   new FiducialPoseEstimatorIOPhoton(
@@ -174,9 +174,9 @@ public class Robot extends LoggedRobot {
                       new Transform3d(
                           Units.inchesToMeters(22.75 / 2),
                           -Units.inchesToMeters(22.75 / 2),
-                          .1,
+                          Units.inchesToMeters(8.25),
                           new Rotation3d(
-                              0, Units.degreesToRadians(-20), Units.degreesToRadians(45)))),
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
                   "FrontRight"),
               new FiducialPoseEstimator.IO(
                   new FiducialPoseEstimatorIOPhoton(
@@ -184,9 +184,9 @@ public class Robot extends LoggedRobot {
                       new Transform3d(
                           -Units.inchesToMeters(22.75 / 2),
                           Units.inchesToMeters(22.75 / 2),
-                          .1,
+                          Units.inchesToMeters(8.25),
                           new Rotation3d(
-                              0, Units.degreesToRadians(-20), Units.degreesToRadians(135)))),
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(135)))),
                   "BackLeft"),
               new FiducialPoseEstimator.IO(
                   new FiducialPoseEstimatorIOPhoton(
@@ -194,9 +194,9 @@ public class Robot extends LoggedRobot {
                       new Transform3d(
                           -Units.inchesToMeters(22.75 / 2),
                           -Units.inchesToMeters(22.75 / 2),
-                          .1,
+                          Units.inchesToMeters(8.25),
                           new Rotation3d(
-                              0, Units.degreesToRadians(-20), Units.degreesToRadians(-135)))),
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-135)))),
                   "BackRight")
             };
 
