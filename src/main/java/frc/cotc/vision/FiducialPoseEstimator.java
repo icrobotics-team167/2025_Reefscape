@@ -9,10 +9,12 @@ package frc.cotc.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import frc.cotc.Constants;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs;
+import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate;
 import java.util.ArrayList;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -74,124 +76,134 @@ public class FiducialPoseEstimator {
 
       switch (estimate.tagsUsed().length) {
         case 0 -> {} // Do nothing
-        case 1 -> {
-          var tag = estimate.tagsUsed()[0];
-
-          // Discard if key data is missing (position of tag and gyro yaw)
-          var tagPoseOptional = tagLayout.getTagPose(tag.id());
-          if (tagPoseOptional.isEmpty()) {
-            continue;
-          }
-          var gyroYaw = gyroYawGetter.get(estimate.timestamp());
-          if (gyroYaw == null) {
-            continue;
-          }
-          var tagPose = tagPoseOptional.get();
-
-          // Algorithm adapted from 6328 Mechanical Advantage
-          // https://www.chiefdelphi.com/t/frc-6328-mechanical-advantage-2025-build-thread/477314/85
-          var cameraToTagTranslation =
-              new Pose3d(
-                      Translation3d.kZero,
-                      new Rotation3d(
-                          0, Units.degreesToRadians(-tag.ty()), Units.degreesToRadians(-tag.tx())))
-                  .transformBy(
-                      new Transform3d(
-                          new Translation3d(tag.distanceToCamera(), 0, 0), Rotation3d.kZero))
-                  .getTranslation()
-                  .rotateBy(new Rotation3d(0, robotToCameraTransform.getRotation().getY(), 0))
-                  .toTranslation2d();
-          var cameraToTagRotation =
-              gyroYaw.plus(
-                  robotToCameraTransform
-                      .getRotation()
-                      .toRotation2d()
-                      .plus(cameraToTagTranslation.getAngle()));
-
-          var cameraTranslation =
-              new Pose2d(
-                      tagPose.getTranslation().toTranslation2d(),
-                      cameraToTagRotation.plus(Rotation2d.kPi))
-                  .transformBy(
-                      new Transform2d(cameraToTagTranslation.getNorm(), 0, Rotation2d.kZero))
-                  .getTranslation();
-          var robotPose =
-              new Pose2d(
-                      cameraTranslation,
-                      gyroYaw.plus(robotToCameraTransform.getRotation().toRotation2d()))
-                  .transformBy(cameraToRobotTransform2d);
-          robotPose = new Pose2d(robotPose.getTranslation(), gyroYaw);
-
-          // Filter out obviously bad data
-          if (robotPose.getX() < 0 || robotPose.getX() > Constants.FIELD_LENGTH_METERS) {
-            continue;
-          }
-          if (robotPose.getY() < 0 || robotPose.getY() > Constants.FIELD_WIDTH_METERS) {
-            continue;
-          }
-
-          // If it's too far off the pose estimate that's already in, discard
-          // Prevents bad data from bad initial conditions from affecting estimates
-          var delta = robotPose.minus(currentPoseEstimateSupplier.get());
-          if (delta.getTranslation().getNorm() > .025) {
-            continue;
-          }
-          if (delta.getRotation().getDegrees() > 2) {
-            continue;
-          }
-
-          tagsUsed.add(tagPose);
-          posesUsed.add(new Pose3d(robotPose));
-
-          // Heavy distrust compared multi-tag SolvePnp, due to the inherent lack of information
-          // usable in the solve
-          var stdDev =
-              .5 * tag.distanceToCamera() * tag.distanceToCamera() * tag.distanceToCamera();
-
-          estimatesList.add(new PoseEstimate(robotPose, estimate.timestamp(), stdDev, .001));
-        }
-        default -> {
-          // Filter out obviously bad data
-          if (Math.abs(estimate.robotPoseEstimate().getZ()) > .05) {
-            continue;
-          }
-          if (estimate.robotPoseEstimate().getX() < 0
-              || estimate.robotPoseEstimate().getX() > Constants.FIELD_LENGTH_METERS) {
-            continue;
-          }
-          if (estimate.robotPoseEstimate().getY() < 0
-              || estimate.robotPoseEstimate().getY() > Constants.FIELD_WIDTH_METERS) {
-            continue;
-          }
-
-          double translationalScoresSum = 0;
-          double angularScoresSum = 0;
-          for (var tag : estimate.tagsUsed()) {
-            tagsUsed.add(tag.location());
-            var tagDistance = tag.distanceToCamera();
-
-            translationalScoresSum += .25 * tagDistance * tagDistance;
-            angularScoresSum += .0001 * tagDistance * tagDistance;
-          }
-
-          var translationalDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
-          var angularDivisor = Math.pow(estimate.tagsUsed().length, 3);
-
-          posesUsed.add(estimate.robotPoseEstimate());
-
-          estimatesList.add(
-              new PoseEstimate(
-                  estimate.robotPoseEstimate().toPose2d(),
-                  estimate.timestamp(),
-                  translationalScoresSum / translationalDivisor,
-                  angularScoresSum / angularDivisor));
-        }
+        case 1 -> trigEstimate(estimate);
+        default -> solvePnPEstimate(estimate);
       }
     }
 
     Logger.recordOutput("Vision/" + name + "/Poses Used", posesUsed.toArray(new Pose3d[0]));
     Logger.recordOutput("Vision/" + name + "/Tags Used", tagsUsed.toArray(new Pose3d[0]));
     return estimatesList.toArray(new PoseEstimate[0]);
+  }
+
+  private void trigEstimate(FiducialPoseEstimate estimate) {
+    var tag = estimate.tagsUsed()[0];
+
+    // Fall back to regular solvePnP if key data is missing (position of tag and gyro yaw)
+    var tagPoseOptional = tagLayout.getTagPose(tag.id());
+    var gyroYaw = gyroYawGetter.get(estimate.timestamp());
+    if (tagPoseOptional.isEmpty() || gyroYaw == null) {
+      solvePnPEstimate(estimate);
+      return;
+    }
+    var tagPose = tagPoseOptional.get();
+
+    // Algorithm adapted from 6328 Mechanical Advantage
+    // https://www.chiefdelphi.com/t/frc-6328-mechanical-advantage-2025-build-thread/477314/85
+    var cameraToTagTranslation =
+        new Pose3d(
+                Translation3d.kZero,
+                new Rotation3d(
+                    0, Units.degreesToRadians(-tag.ty()), Units.degreesToRadians(-tag.tx())))
+            .transformBy(
+                new Transform3d(new Translation3d(tag.distanceToCamera(), 0, 0), Rotation3d.kZero))
+            .getTranslation()
+            .rotateBy(new Rotation3d(0, robotToCameraTransform.getRotation().getY(), 0))
+            .toTranslation2d();
+    var cameraToTagRotation =
+        gyroYaw.plus(
+            robotToCameraTransform
+                .getRotation()
+                .toRotation2d()
+                .plus(cameraToTagTranslation.getAngle()));
+
+    var cameraTranslation =
+        new Pose2d(
+                tagPose.getTranslation().toTranslation2d(),
+                cameraToTagRotation.plus(Rotation2d.kPi))
+            .transformBy(new Transform2d(cameraToTagTranslation.getNorm(), 0, Rotation2d.kZero))
+            .getTranslation();
+    var robotPose =
+        new Pose2d(
+                cameraTranslation,
+                gyroYaw.plus(robotToCameraTransform.getRotation().toRotation2d()))
+            .transformBy(cameraToRobotTransform2d);
+    robotPose = new Pose2d(robotPose.getTranslation(), gyroYaw);
+
+    // Filter out obviously bad data
+    if (robotPose.getX() < 0 || robotPose.getX() > Constants.FIELD_LENGTH_METERS) {
+      return;
+    }
+    if (robotPose.getY() < 0 || robotPose.getY() > Constants.FIELD_WIDTH_METERS) {
+      return;
+    }
+
+    // If it's too far off the pose estimate that's already in, discard
+    // Prevents bad data from bad initial conditions from affecting estimates
+    var delta = robotPose.minus(currentPoseEstimateSupplier.get());
+    if (delta.getTranslation().getNorm() > .025) {
+      return;
+    }
+    if (delta.getRotation().getDegrees() > 2) {
+      return;
+    }
+
+    tagsUsed.add(tagPose);
+    posesUsed.add(new Pose3d(robotPose));
+
+    // Heavy distrust compared multi-tag SolvePnp, due to the inherent lack of information
+    // usable in the solve
+    var stdDev = .5 * tag.distanceToCamera() * tag.distanceToCamera() * tag.distanceToCamera();
+
+    estimatesList.add(new PoseEstimate(robotPose, estimate.timestamp(), stdDev, .001));
+  }
+
+  private void solvePnPEstimate(FiducialPoseEstimate estimate) {
+    // Filter out obviously bad data
+    if (Math.abs(estimate.robotPoseEstimate().getZ()) > .025) {
+      return;
+    }
+    if (estimate.robotPoseEstimate().getX() < 0
+        || estimate.robotPoseEstimate().getX() > Constants.FIELD_LENGTH_METERS) {
+      return;
+    }
+    if (estimate.robotPoseEstimate().getY() < 0
+        || estimate.robotPoseEstimate().getY() > Constants.FIELD_WIDTH_METERS) {
+      return;
+    }
+    double maxAmbiguity = .2;
+    if (estimate.tagsUsed().length == 1 && estimate.tagsUsed()[0].ambiguity() > maxAmbiguity) {
+      return;
+    }
+
+    double translationalScoresSum = 0;
+    double angularScoresSum = 0;
+    for (var tag : estimate.tagsUsed()) {
+      tagsUsed.add(tag.location());
+      var tagDistance = tag.distanceToCamera();
+
+      translationalScoresSum += .25 * tagDistance * tagDistance;
+      angularScoresSum += .001 * tagDistance * tagDistance;
+    }
+
+    // Heavily distrust single tag observations
+    if (estimate.tagsUsed().length == 1) {
+      var scale = estimate.tagsUsed()[0].ambiguity() / maxAmbiguity;
+      translationalScoresSum *= MathUtil.interpolate(10, 50, scale);
+      angularScoresSum *= MathUtil.interpolate(25, 100, scale);
+    }
+
+    var translationalDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
+    var angularDivisor = Math.pow(estimate.tagsUsed().length, 3);
+
+    posesUsed.add(estimate.robotPoseEstimate());
+
+    estimatesList.add(
+        new PoseEstimate(
+            estimate.robotPoseEstimate().toPose2d(),
+            estimate.timestamp(),
+            translationalScoresSum / translationalDivisor,
+            angularScoresSum / angularDivisor));
   }
 
   public record PoseEstimate(
