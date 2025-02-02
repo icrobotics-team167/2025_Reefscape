@@ -143,6 +143,8 @@ public class FiducialPoseEstimator {
           tagsUsed.add(tagPose);
           posesUsed.add(new Pose3d(robotPose));
 
+          // Heavy distrust compared multi-tag SolvePnp, due to the inherent lack of information
+          // usable in the solve
           var stdDev =
               .5 * tag.distanceToCamera() * tag.distanceToCamera() * tag.distanceToCamera();
 
@@ -168,12 +170,12 @@ public class FiducialPoseEstimator {
             tagsUsed.add(tag.location());
             var tagDistance = tag.distanceToCamera();
 
-            translationalScoresSum += .3 * tagDistance * tagDistance;
-            angularScoresSum += .025 * tagDistance * tagDistance;
+            translationalScoresSum += .25 * tagDistance * tagDistance;
+            angularScoresSum += .0001 * tagDistance * tagDistance;
           }
 
           var translationalDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
-          var angularDivisor = Math.pow(estimate.tagsUsed().length, 1.5);
+          var angularDivisor = Math.pow(estimate.tagsUsed().length, 3);
 
           posesUsed.add(estimate.robotPoseEstimate());
 
