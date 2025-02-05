@@ -260,6 +260,9 @@ public class SwerveSetpointGenerator {
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredModuleStates, maxSpeed);
     desiredChassisSpeeds = kinematics.toChassisSpeeds(desiredModuleStates);
 
+    Logger.recordOutput(
+        "Swerve/Setpoint Generator/Internal State/Desired chassis speeds", desiredChassisSpeeds);
+
     // Special case: desiredState is a complete stop. In this case, module angle is arbitrary, so
     // just use the previous angle.
     boolean need_to_steer = true;
@@ -508,7 +511,7 @@ public class SwerveSetpointGenerator {
     }
 
     Logger.recordOutput(
-        "Swerve/Setpoint Generator/Internal State/Expected Duty Cycles/", dutyCycles);
+        "Swerve/Setpoint Generator/Internal State/Expected Duty Cycles", dutyCycles);
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Expected stator current/", expectedCurrentDraws);
     Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Force Signs", forceSigns);

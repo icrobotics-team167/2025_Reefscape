@@ -11,12 +11,14 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.cotc.Constants;
+import frc.cotc.Robot;
+import org.littletonrobotics.junction.Logger;
 
 public final class ReefLocations {
   private ReefLocations() {}
 
-  public static final Pose2d[] BLUE_POSES;
-  public static final Pose2d[] RED_POSES;
+  private static final Pose2d[] BLUE_POSES;
+  private static final Pose2d[] RED_POSES;
 
   static {
     var BLUE_REEF_LOCATION = new Translation2d(4.495, Constants.FIELD_WIDTH_METERS / 2);
@@ -56,5 +58,35 @@ public final class ReefLocations {
               BLUE_POSES[i].getTranslation().rotateAround(FIELD_CENTER, Rotation2d.kPi),
               BLUE_POSES[i].getRotation().rotateBy(Rotation2d.kPi));
     }
+  }
+
+  public enum ReefBranch {
+    A(0),
+    B(1),
+    C(2),
+    D(3),
+    E(4),
+    F(5),
+    G(6),
+    H(7),
+    I(8),
+    J(9),
+    K(10),
+    L(11);
+
+    final int id;
+
+    ReefBranch(int id) {
+      this.id = id;
+    }
+  }
+
+  public static Pose2d getScoringLocation(ReefBranch reefBranch) {
+    return (Robot.isOnRed() ? RED_POSES : BLUE_POSES)[reefBranch.id];
+  }
+
+  public static void log() {
+    Logger.recordOutput("Reef Scoring Locations/Blue", BLUE_POSES);
+    Logger.recordOutput("Reef Scoring Locations/Red", RED_POSES);
   }
 }

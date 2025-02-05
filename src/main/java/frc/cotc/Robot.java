@@ -7,6 +7,8 @@
 
 package frc.cotc;
 
+import static frc.cotc.util.ReefLocations.ReefBranch.A;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -116,10 +118,10 @@ public class Robot extends LoggedRobot {
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
 
-    autos = new Autos(swerve);
+    primary.y().whileTrue(swerve.followRepulsorField(ReefLocations.getScoringLocation(A)));
 
-    Logger.recordOutput("Reef Scoring Locations/Blue", ReefLocations.BLUE_POSES);
-    Logger.recordOutput("Reef Scoring Locations/Red", ReefLocations.RED_POSES);
+    autos = new Autos(swerve);
+    ReefLocations.log();
   }
 
   private Swerve getSwerve(Mode mode) {

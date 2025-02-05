@@ -1,3 +1,10 @@
+// Copyright (c) 2024 FRC 167
+// https://github.com/icrobotics-team167
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
 package frc.cotc.drive;
 
 import edu.wpi.first.math.MathUtil;
@@ -42,12 +49,12 @@ public class RepulsorFieldPlanner {
     final double tailDistance;
 
     public TeardropObstacle(
-      Translation2d loc,
-      double primaryStrength,
-      double primaryMaxRange,
-      double primaryRadius,
-      double tailStrength,
-      double tailLength) {
+        Translation2d loc,
+        double primaryStrength,
+        double primaryMaxRange,
+        double primaryRadius,
+        double tailStrength,
+        double tailLength) {
       super(primaryStrength, true);
       this.loc = loc;
       this.primaryMaxRange = primaryMaxRange;
@@ -66,11 +73,11 @@ public class RepulsorFieldPlanner {
       Translation2d outwardsForce;
       if (positionToLocationDistance <= primaryMaxRange) {
         outwardsForce =
-          new Translation2d(
-            distToForceMag(
-              Math.max(positionToLocationDistance - primaryRadius, 0),
-              primaryMaxRange - primaryRadius),
-            positionToLocation.getAngle());
+            new Translation2d(
+                distToForceMag(
+                    Math.max(positionToLocationDistance - primaryRadius, 0),
+                    primaryMaxRange - primaryRadius),
+                positionToLocation.getAngle());
       } else {
         outwardsForce = Translation2d.kZero;
       }
@@ -82,20 +89,20 @@ public class RepulsorFieldPlanner {
       var distanceScalar = distanceAlongLine / tailDistance;
       if (distanceScalar >= 0 && distanceScalar <= 1) {
         var secondaryMaxRange =
-          MathUtil.interpolate(primaryMaxRange, 0, distanceScalar * distanceScalar);
+            MathUtil.interpolate(primaryMaxRange, 0, distanceScalar * distanceScalar);
         var distanceToLine = Math.abs(positionToLine.getY());
         if (distanceToLine <= secondaryMaxRange) {
           var sidewaysMag =
-            tailStrength
-              * (1 - distanceScalar * distanceScalar)
-              * (secondaryMaxRange - distanceToLine);
+              tailStrength
+                  * (1 - distanceScalar * distanceScalar)
+                  * (secondaryMaxRange - distanceToLine);
           // flip the sidewaysMag based on which side of the goal-sideways circle the robot is on
           var sidewaysTheta =
-            target.minus(position).getAngle().minus(position.minus(sidewaysPoint).getAngle());
+              target.minus(position).getAngle().minus(position.minus(sidewaysPoint).getAngle());
           sidewaysForce =
-            new Translation2d(
-              sidewaysMag * Math.signum(Math.sin(sidewaysTheta.getRadians())),
-              targetToLocAngle.rotateBy(Rotation2d.kCCW_90deg));
+              new Translation2d(
+                  sidewaysMag * Math.signum(Math.sin(sidewaysTheta.getRadians())),
+                  targetToLocAngle.rotateBy(Rotation2d.kCCW_90deg));
         } else {
           sidewaysForce = Translation2d.kZero;
         }
@@ -169,8 +176,8 @@ public class RepulsorFieldPlanner {
       var positionToLine = position.minus(startPoint).rotateBy(inverseAngle);
       if (positionToLine.getX() > 0 && positionToLine.getX() < length) {
         return new Translation2d(
-          Math.copySign(distToForceMag(positionToLine.getY(), maxRange), positionToLine.getY()),
-          angle.rotateBy(Rotation2d.kCCW_90deg));
+            Math.copySign(distToForceMag(positionToLine.getY(), maxRange), positionToLine.getY()),
+            angle.rotateBy(Rotation2d.kCCW_90deg));
       }
       Translation2d closerPoint;
       if (positionToLine.getX() <= 0) {
@@ -179,8 +186,8 @@ public class RepulsorFieldPlanner {
         closerPoint = endPoint;
       }
       return new Translation2d(
-        distToForceMag(position.getDistance(closerPoint), maxRange),
-        position.minus(closerPoint).getAngle());
+          distToForceMag(position.getDistance(closerPoint), maxRange),
+          position.minus(closerPoint).getAngle());
     }
   }
 
@@ -191,33 +198,33 @@ public class RepulsorFieldPlanner {
   static final double SOURCE_X = 1.75;
   static final double SOURCE_Y = 1.25;
   static final List<Obstacle> FIELD_OBSTACLES =
-    List.of(
-      // Reef
-      new TeardropObstacle(new Translation2d(REEF_X, FIELD_WIDTH / 2), .9, 1.75, .83, 3, 2),
-      new TeardropObstacle(
-        new Translation2d(FIELD_LENGTH - REEF_X, FIELD_WIDTH / 2), .9, 1.75, .83, 3, 2),
-      // Walls
-      new HorizontalObstacle(0.0, 0.5, .5, true),
-      new HorizontalObstacle(FIELD_WIDTH, 0.5, .5, false),
-      new VerticalObstacle(0.0, 0.5, .5, true),
-      new VerticalObstacle(FIELD_LENGTH, 0.5, .5, false),
-      // Sources
-      new LineObstacle(new Translation2d(0, SOURCE_Y), new Translation2d(SOURCE_X, 0), .5, .5),
-      new LineObstacle(
-        new Translation2d(0, FIELD_WIDTH - SOURCE_Y),
-        new Translation2d(SOURCE_X, FIELD_WIDTH),
-        .5,
-        .5),
-      new LineObstacle(
-        new Translation2d(FIELD_LENGTH, SOURCE_Y),
-        new Translation2d(FIELD_LENGTH - SOURCE_X, 0),
-        .5,
-        .5),
-      new LineObstacle(
-        new Translation2d(FIELD_LENGTH, FIELD_WIDTH - SOURCE_Y),
-        new Translation2d(FIELD_LENGTH - SOURCE_X, FIELD_WIDTH),
-        .5,
-        .5));
+      List.of(
+          // Reef
+          new TeardropObstacle(new Translation2d(REEF_X, FIELD_WIDTH / 2), .9, 1.75, .83, 3, 2),
+          new TeardropObstacle(
+              new Translation2d(FIELD_LENGTH - REEF_X, FIELD_WIDTH / 2), .9, 1.75, .83, 3, 2),
+          // Walls
+          new HorizontalObstacle(0.0, 0.5, .5, true),
+          new HorizontalObstacle(FIELD_WIDTH, 0.5, .5, false),
+          new VerticalObstacle(0.0, 0.5, .5, true),
+          new VerticalObstacle(FIELD_LENGTH, 0.5, .5, false),
+          // Sources
+          new LineObstacle(new Translation2d(0, SOURCE_Y), new Translation2d(SOURCE_X, 0), .5, .5),
+          new LineObstacle(
+              new Translation2d(0, FIELD_WIDTH - SOURCE_Y),
+              new Translation2d(SOURCE_X, FIELD_WIDTH),
+              .5,
+              .5),
+          new LineObstacle(
+              new Translation2d(FIELD_LENGTH, SOURCE_Y),
+              new Translation2d(FIELD_LENGTH - SOURCE_X, 0),
+              .5,
+              .5),
+          new LineObstacle(
+              new Translation2d(FIELD_LENGTH, FIELD_WIDTH - SOURCE_Y),
+              new Translation2d(FIELD_LENGTH - SOURCE_X, FIELD_WIDTH),
+              .5,
+              .5));
 
   private Translation2d goal = new Translation2d(1, 1);
 
@@ -236,7 +243,7 @@ public class RepulsorFieldPlanner {
     for (int x = 0; x <= ARROWS_X; x++) {
       for (int y = 0; y <= ARROWS_Y; y++) {
         var translation =
-          new Translation2d(x * FIELD_LENGTH / ARROWS_X, y * FIELD_WIDTH / ARROWS_Y);
+            new Translation2d(x * FIELD_LENGTH / ARROWS_X, y * FIELD_WIDTH / ARROWS_Y);
         var force = getObstacleForce(translation, goal);
         if (force.getNorm() > 1e-6) {
           var rotation = force.getAngle();
@@ -281,18 +288,24 @@ public class RepulsorFieldPlanner {
   public RepulsorSample sampleField(Translation2d curTrans, double maxSpeed) {
     var err = curTrans.minus(goal);
     var netForce = getForce(curTrans, goal);
-    // Calculate how quickly to move in this direction
-    var closeToGoalMax = maxSpeed * Math.min(err.getNorm() / 2, 1);
 
-    double stepSize_m = Math.min(maxSpeed, closeToGoalMax) * Robot.defaultPeriodSecs;
+    double stepSize_m;
+    double slowdownDistance = 2;
+    if (err.getNorm() < slowdownDistance) {
+      stepSize_m =
+          MathUtil.interpolate(
+              0, maxSpeed * Robot.defaultPeriodSecs, err.getNorm() / slowdownDistance);
+    } else {
+      stepSize_m = maxSpeed * Robot.defaultPeriodSecs;
+    }
     var step = new Translation2d(stepSize_m, netForce.getAngle());
     return new RepulsorSample(
-      curTrans.plus(step),
-      step.getX() / Robot.defaultPeriodSecs,
-      step.getY() / Robot.defaultPeriodSecs);
+        curTrans.plus(step),
+        step.getX() / Robot.defaultPeriodSecs,
+        step.getY() / Robot.defaultPeriodSecs);
   }
 
-  public ArrayList<Translation2d> getTrajectory(Translation2d current, double stepSize_m) {
+  public Translation2d[] getTrajectory(Translation2d current, double stepSize_m) {
     ArrayList<Translation2d> trajectory = new ArrayList<>();
     Translation2d robot = current;
     for (int i = 0; i < 200; i++) {
@@ -311,6 +324,6 @@ public class RepulsorFieldPlanner {
         robot = intermediateGoal;
       }
     }
-    return trajectory;
+    return trajectory.toArray(new Translation2d[0]);
   }
 }

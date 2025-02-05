@@ -43,6 +43,7 @@ public class Swerve extends SubsystemBase {
   private final SwerveSetpointGenerator setpointGenerator;
   private final SwerveSetpoint stopInXSetpoint;
   private SwerveSetpoint lastSetpoint;
+  private final double currentVisualizationScalar;
 
   private final double maxLinearSpeedMetersPerSec;
   private final double maxAngularSpeedRadPerSec;
@@ -50,13 +51,12 @@ public class Swerve extends SubsystemBase {
 
   private final SwervePoseEstimator poseEstimator;
   private final TimeInterpolatableBuffer<Rotation2d> yawBuffer =
-      TimeInterpolatableBuffer.createBuffer(.5);
+      TimeInterpolatableBuffer.createBuffer(.25);
+  private final FiducialPoseEstimator[] fiducialPoseEstimators;
 
   private final PIDController xController, yController, yawController;
 
-  private final double currentVisualizationScalar;
-
-  private final FiducialPoseEstimator[] fiducialPoseEstimators;
+  private final RepulsorFieldPlanner repulsorFieldPlanner = new RepulsorFieldPlanner();
 
   public Swerve(SwerveIO driveIO, FiducialPoseEstimator.IO[] visionIOs) {
     this.swerveIO = driveIO;
@@ -177,7 +177,7 @@ public class Swerve extends SubsystemBase {
   @Override
   public void periodic() {
     Logger.recordOutput(
-        "Swerve/Setpoint Generator/Setpoint/Desired Speeds", lastSetpoint.chassisSpeeds());
+        "Swerve/Setpoint Generator/Setpoint/Output Speeds", lastSetpoint.chassisSpeeds());
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Setpoint/Module Setpoints", lastSetpoint.moduleStates());
     Logger.recordOutput(
@@ -405,6 +405,65 @@ public class Swerve extends SubsystemBase {
     var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
     swerveIO.drive(setpoint);
     lastSetpoint = setpoint;
+  }
+
+  public Command followRepulsorField(Pose2d goal) {
+    return sequence(
+            runOnce(
+                () -> {
+                  repulsorFieldPlanner.setGoal(goal.getTranslation());
+                  xController.reset();
+                  yController.reset();
+                  yawController.reset();
+                  Logger.recordOutput("Repulsor/Goal", goal);
+                }),
+            run(
+                () -> {
+                  Logger.recordOutput(
+                      "Repulsor/Trajectory",
+                      repulsorFieldPlanner.getTrajectory(
+                          poseEstimator.getEstimatedPosition().getTranslation(),
+                          Robot.defaultPeriodSecs * maxLinearSpeedMetersPerSec * .8));
+
+                  var sample =
+                      repulsorFieldPlanner.sampleField(
+                          poseEstimator.getEstimatedPosition().getTranslation(),
+                          maxLinearSpeedMetersPerSec * .8);
+
+                  var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
+                  var feedback =
+                      new ChassisSpeeds(
+                          xController.calculate(
+                              poseEstimator.getEstimatedPosition().getX(),
+                              sample.intermediateGoal().getX()),
+                          yController.calculate(
+                              poseEstimator.getEstimatedPosition().getY(),
+                              sample.intermediateGoal().getY()),
+                          yawController.calculate(
+                              poseEstimator.getEstimatedPosition().getRotation().getRadians(),
+                              goal.getRotation().getRadians()));
+
+                  Logger.recordOutput(
+                      "Repulsor/Error", goal.minus(poseEstimator.getEstimatedPosition()));
+                  Logger.recordOutput("Repulsor/Feedforward", feedforward);
+                  Logger.recordOutput("Repulsor/Feedback", feedback);
+
+                  var outputFieldRelative = feedforward.plus(feedback);
+                  var outputRobotRelative =
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          outputFieldRelative, swerveInputs.gyroYaw);
+
+                  var setpoint =
+                      setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
+                  swerveIO.drive(setpoint);
+                  lastSetpoint = setpoint;
+                }))
+        .until(
+            () -> {
+              var error = goal.minus(poseEstimator.getEstimatedPosition());
+              return error.getTranslation().getNorm() < .01
+                  && Math.abs(error.getRotation().getDegrees()) < 5;
+            });
   }
 
   public Command steerCharacterize() {
