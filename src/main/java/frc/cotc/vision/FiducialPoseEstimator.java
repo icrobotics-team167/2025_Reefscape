@@ -89,7 +89,7 @@ public class FiducialPoseEstimator {
   private void trigEstimate(FiducialPoseEstimate estimate) {
     var tag = estimate.tagsUsed()[0];
 
-    // Fall back to regular solvePnP if key data is missing (position of tag and gyro yaw)
+    // Fall back to SolvePnP if key data is missing (position of tag and gyro yaw)
     var tagPoseOptional = tagLayout.getTagPose(tag.id());
     var gyroYaw = gyroYawGetter.get(estimate.timestamp());
     if (tagPoseOptional.isEmpty() || gyroYaw == null) {
@@ -130,21 +130,21 @@ public class FiducialPoseEstimator {
             .transformBy(cameraToRobotTransform2d);
     robotPose = new Pose2d(robotPose.getTranslation(), gyroYaw);
 
-    // Filter out obviously bad data
+    // Obviously bad data falls back to SolvePnP
     if (robotPose.getX() < 0 || robotPose.getX() > Constants.FIELD_LENGTH_METERS) {
+      solvePnPEstimate(estimate);
       return;
     }
     if (robotPose.getY() < 0 || robotPose.getY() > Constants.FIELD_WIDTH_METERS) {
+      solvePnPEstimate(estimate);
       return;
     }
 
-    // If it's too far off the pose estimate that's already in, discard
+    // If it's too far off the pose estimate that's already in, fall back to SolvePnP
     // Prevents bad data from bad initial conditions from affecting estimates
     var delta = robotPose.minus(currentPoseEstimateSupplier.get());
-    if (delta.getTranslation().getNorm() > .025) {
-      return;
-    }
-    if (delta.getRotation().getDegrees() > 2) {
+    if (delta.getTranslation().getNorm() > .025 || delta.getRotation().getDegrees() > 2) {
+      solvePnPEstimate(estimate);
       return;
     }
 
