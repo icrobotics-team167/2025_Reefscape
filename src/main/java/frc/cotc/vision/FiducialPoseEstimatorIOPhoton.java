@@ -116,7 +116,7 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
 
     static {
       var none = new SimCameraProperties();
-      none.setCalibration(1280, 800, Rotation2d.fromDegrees(90));
+      none.setCalibration(1280, 800, Rotation2d.fromDegrees(70));
       none.setCalibError(.3, .1);
       none.setFPS(20);
       none.setExposureTimeMs(10);
