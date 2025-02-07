@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
+import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class SwerveIOPhoenix implements SwerveIO {
@@ -250,11 +251,13 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerMotor = new TalonFX(id * 3 + 1, Robot.CANIVORE_NAME);
       encoder = new CANcoder(id * 3 + 2, Robot.CANIVORE_NAME);
 
+      double driveFeedbackOverhead = 20;
       var driveConfig = new TalonFXConfiguration();
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-      driveConfig.CurrentLimits.StatorCurrentLimit = CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + 20;
+      driveConfig.CurrentLimits.StatorCurrentLimit =
+          CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + driveFeedbackOverhead;
       driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
       driveConfig.Audio.AllowMusicDurDisable = true;
 
@@ -280,7 +283,6 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       if (Robot.isReal()) {
         driveConfig.Slot0.kV = 1;
-        driveConfig.Slot0.kP = 20;
 
         steerConfig.Slot0.kP = 100;
         steerConfig.Slot0.kD = 1;
@@ -294,8 +296,18 @@ public class SwerveIOPhoenix implements SwerveIO {
       } else {
         steerConfig.Slot0.kP = 600;
         steerConfig.Slot0.kD = 2.5;
-        driveConfig.Slot0.kP = 50;
       }
+      driveConfig.Slot0.kP =
+          GainsCalculator.getVelocityPGain(
+              driveConfig.Slot0.kV,
+              WHEEL_CIRCUMFERENCE_METERS
+                  / (4
+                      * (CONSTANTS.DRIVE_MOTOR.KtNMPerAmp / (CONSTANTS.WHEEL_DIAMETER_METERS / 2))
+                      / CONSTANTS.MASS_KG),
+              driveFeedbackOverhead,
+              .05,
+              .001,
+              .001);
 
       driveMotor.getConfigurator().apply(driveConfig);
       steerMotor.getConfigurator().apply(steerConfig);
