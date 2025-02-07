@@ -12,11 +12,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.cotc.Robot;
+import frc.cotc.util.ReefLocations;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RepulsorFieldPlanner {
-  abstract static class Obstacle {
+  private abstract static class Obstacle {
     double strength;
     boolean positive;
 
@@ -41,12 +42,12 @@ public class RepulsorFieldPlanner {
     }
   }
 
-  static class TeardropObstacle extends Obstacle {
+  private static class TeardropObstacle extends Obstacle {
     final Translation2d loc;
     final double primaryMaxRange;
     final double primaryRadius;
     final double tailStrength;
-    final double tailDistance;
+    final double tailLength;
 
     public TeardropObstacle(
         Translation2d loc,
@@ -60,13 +61,13 @@ public class RepulsorFieldPlanner {
       this.primaryMaxRange = primaryMaxRange;
       this.primaryRadius = primaryRadius;
       this.tailStrength = tailStrength;
-      this.tailDistance = tailLength + primaryMaxRange;
+      this.tailLength = tailLength + primaryMaxRange;
     }
 
     public Translation2d getForceAtPosition(Translation2d position, Translation2d target) {
       var targetToLoc = loc.minus(target);
       var targetToLocAngle = targetToLoc.getAngle();
-      var sidewaysPoint = new Translation2d(tailDistance, targetToLoc.getAngle()).plus(loc);
+      var sidewaysPoint = new Translation2d(tailLength, targetToLoc.getAngle()).plus(loc);
 
       var positionToLocation = position.minus(loc);
       var positionToLocationDistance = positionToLocation.getNorm();
@@ -86,16 +87,23 @@ public class RepulsorFieldPlanner {
       var distanceAlongLine = positionToLine.getX();
 
       Translation2d sidewaysForce;
-      var distanceScalar = distanceAlongLine / tailDistance;
+      var distanceScalar = distanceAlongLine / tailLength;
       if (distanceScalar >= 0 && distanceScalar <= 1) {
         var secondaryMaxRange =
             MathUtil.interpolate(primaryMaxRange, 0, distanceScalar * distanceScalar);
         var distanceToLine = Math.abs(positionToLine.getY());
         if (distanceToLine <= secondaryMaxRange) {
-          var sidewaysMag =
-              tailStrength
-                  * (1 - distanceScalar * distanceScalar)
-                  * (secondaryMaxRange - distanceToLine);
+          double strength;
+          if (distanceAlongLine < primaryMaxRange) {
+            strength = tailStrength * (distanceAlongLine / primaryMaxRange);
+          } else {
+            strength =
+                -tailStrength * distanceAlongLine / (tailLength - primaryMaxRange)
+                    + tailLength * tailStrength / (tailLength - primaryMaxRange);
+          }
+          strength *= 1 - distanceToLine / secondaryMaxRange;
+
+          var sidewaysMag = tailStrength * strength * (secondaryMaxRange - distanceToLine);
           // flip the sidewaysMag based on which side of the goal-sideways circle the robot is on
           var sidewaysTheta =
               target.minus(position).getAngle().minus(position.minus(sidewaysPoint).getAngle());
@@ -133,7 +141,7 @@ public class RepulsorFieldPlanner {
     }
   }
 
-  static class VerticalObstacle extends Obstacle {
+  private static class VerticalObstacle extends Obstacle {
     final double x;
     final double maxRange;
 
@@ -152,7 +160,7 @@ public class RepulsorFieldPlanner {
     }
   }
 
-  static class LineObstacle extends Obstacle {
+  private static class LineObstacle extends Obstacle {
     final Translation2d startPoint;
     final Translation2d endPoint;
     final double length;
@@ -194,15 +202,13 @@ public class RepulsorFieldPlanner {
   static final double FIELD_LENGTH = 17.6022;
   static final double FIELD_WIDTH = 8.1026;
 
-  static final double REEF_X = 4.5;
   static final double SOURCE_X = 1.75;
   static final double SOURCE_Y = 1.25;
   static final List<Obstacle> FIELD_OBSTACLES =
       List.of(
           // Reef
-          new TeardropObstacle(new Translation2d(REEF_X, FIELD_WIDTH / 2), .9, 1.75, .83, 3, 2),
-          new TeardropObstacle(
-              new Translation2d(FIELD_LENGTH - REEF_X, FIELD_WIDTH / 2), .9, 1.75, .83, 3, 2),
+          new TeardropObstacle(ReefLocations.BLUE_REEF, 1, 2, .83, 3, 2),
+          new TeardropObstacle(ReefLocations.RED_REEF, 1, 2, .83, 3, 2),
           // Walls
           new HorizontalObstacle(0.0, 0.5, .5, true),
           new HorizontalObstacle(FIELD_WIDTH, 0.5, .5, false),
@@ -285,12 +291,12 @@ public class RepulsorFieldPlanner {
 
   public record RepulsorSample(Translation2d intermediateGoal, double vx, double vy) {}
 
-  public RepulsorSample sampleField(Translation2d curTrans, double maxSpeed) {
+  public RepulsorSample sampleField(
+      Translation2d curTrans, double maxSpeed, double slowdownDistance) {
     var err = curTrans.minus(goal);
     var netForce = getForce(curTrans, goal);
 
     double stepSize_m;
-    double slowdownDistance = 2;
     if (err.getNorm() < slowdownDistance) {
       stepSize_m =
           MathUtil.interpolate(

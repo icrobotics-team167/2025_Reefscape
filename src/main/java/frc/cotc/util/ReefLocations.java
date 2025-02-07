@@ -20,21 +20,20 @@ public final class ReefLocations {
   private static final Pose2d[] BLUE_POSES;
   private static final Pose2d[] RED_POSES;
 
+  public static final Translation2d BLUE_REEF;
+  public static final Translation2d RED_REEF;
+
   static {
-    var BLUE_REEF_LOCATION = new Translation2d(4.495, Constants.FIELD_WIDTH_METERS / 2);
+    BLUE_REEF = new Translation2d(4.495, Constants.FIELD_WIDTH_METERS / 2);
     var FIELD_CENTER =
         new Translation2d(Constants.FIELD_LENGTH_METERS / 2, Constants.FIELD_WIDTH_METERS / 2);
 
     var A =
         new Pose2d(
-            BLUE_REEF_LOCATION.getX() - 1.265,
-            Constants.FIELD_WIDTH_METERS / 2 + .165,
-            Rotation2d.kZero);
+            BLUE_REEF.getX() - 1.265, Constants.FIELD_WIDTH_METERS / 2 + .165, Rotation2d.kZero);
     var B =
         new Pose2d(
-            BLUE_REEF_LOCATION.getX() - 1.265,
-            Constants.FIELD_WIDTH_METERS / 2 - .165,
-            Rotation2d.kZero);
+            BLUE_REEF.getX() - 1.265, Constants.FIELD_WIDTH_METERS / 2 - .165, Rotation2d.kZero);
 
     BLUE_POSES = new Pose2d[12];
     BLUE_POSES[0] = A;
@@ -43,14 +42,15 @@ public final class ReefLocations {
       var rotAngle = Rotation2d.fromDegrees(30 * i);
       BLUE_POSES[i] =
           new Pose2d(
-              A.getTranslation().rotateAround(BLUE_REEF_LOCATION, rotAngle),
+              A.getTranslation().rotateAround(BLUE_REEF, rotAngle),
               A.getRotation().rotateBy(rotAngle));
       BLUE_POSES[i + 1] =
           new Pose2d(
-              B.getTranslation().rotateAround(BLUE_REEF_LOCATION, rotAngle),
+              B.getTranslation().rotateAround(BLUE_REEF, rotAngle),
               B.getRotation().rotateBy(rotAngle));
     }
 
+    RED_REEF = BLUE_REEF.rotateAround(FIELD_CENTER, Rotation2d.kPi);
     RED_POSES = new Pose2d[12];
     for (int i = 0; i < 12; i++) {
       RED_POSES[i] =

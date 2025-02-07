@@ -7,7 +7,8 @@
 
 package frc.cotc;
 
-import static frc.cotc.util.ReefLocations.ReefBranch.A;
+import static edu.wpi.first.wpilibj2.command.Commands.defer;
+import static frc.cotc.util.ReefLocations.ReefBranch.G;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,6 +31,7 @@ import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.*;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -118,7 +120,12 @@ public class Robot extends LoggedRobot {
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
 
-    primary.y().whileTrue(swerve.followRepulsorField(ReefLocations.getScoringLocation(A)));
+    primary
+        .y()
+        .whileTrue(
+            defer(
+                () -> swerve.followRepulsorField(ReefLocations.getScoringLocation(G)),
+                Set.of(swerve)));
 
     autos = new Autos(swerve);
     ReefLocations.log();

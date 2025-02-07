@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.cotc.drive.Swerve;
+import frc.cotc.util.ReefLocations;
 import frc.cotc.util.ReefLocations.ReefBranch;
 import java.util.HashMap;
 import java.util.function.Supplier;
@@ -30,6 +31,13 @@ public class Autos {
 
   private final HashMap<String, Supplier<Command>> routines = new HashMap<>();
   private final String NONE_NAME = "Do Nothing";
+
+  @FunctionalInterface
+  private interface RepulsorCommand {
+    Command goTo(ReefBranch branch);
+  }
+
+  private final RepulsorCommand repulsorCommand;
 
   public Autos(Swerve swerve) {
     chooser = new LoggedDashboardChooser<>("Auto Chooser");
@@ -57,6 +65,8 @@ public class Autos {
               }
               Logger.recordOutput("Choreo/Trajectory", poses);
             });
+    repulsorCommand =
+        branch -> swerve.followRepulsorField(ReefLocations.getScoringLocation(branch));
 
     addRoutine("ScoreOne", () -> scoreOne(factory));
   }
@@ -64,18 +74,16 @@ public class Autos {
   private AutoRoutine scoreOne(AutoFactory factory) {
     var routine = factory.newRoutine("scoreOne");
 
-    var startToG = routine.trajectory("StartToG");
+    var startToG = repulsorCommand.goTo(ReefBranch.G);
     var gToSource = getTrajectory(routine, ReefBranch.G, SourceLoc.R);
     var sourceToC = getTrajectory(routine, SourceLoc.R, ReefBranch.C);
     var cToSource = getTrajectory(routine, ReefBranch.C, SourceLoc.R);
     var sourceToD = getTrajectory(routine, SourceLoc.R, ReefBranch.D);
 
-    routine.active().onTrue(startToG.resetOdometry().andThen(startToG.cmd()));
-
-    startToG.done().onTrue(gToSource.cmd());
-    gToSource.done().onTrue(sourceToC.cmd());
-    sourceToC.done().onTrue(cToSource.cmd());
-    cToSource.done().onTrue(sourceToD.cmd());
+    routine
+        .active()
+        .onTrue(
+            sequence(startToG, gToSource.cmd(), sourceToC.cmd(), cToSource.cmd(), sourceToD.cmd()));
 
     return routine;
   }

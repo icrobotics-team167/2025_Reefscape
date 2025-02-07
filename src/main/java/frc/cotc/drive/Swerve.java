@@ -415,10 +415,10 @@ public class Swerve extends SubsystemBase {
                   xController.reset();
                   yController.reset();
                   yawController.reset();
-                  Logger.recordOutput("Repulsor/Goal", goal);
                 }),
             run(
                 () -> {
+                  Logger.recordOutput("Repulsor/Goal", goal);
                   Logger.recordOutput(
                       "Repulsor/Trajectory",
                       repulsorFieldPlanner.getTrajectory(
@@ -428,7 +428,8 @@ public class Swerve extends SubsystemBase {
                   var sample =
                       repulsorFieldPlanner.sampleField(
                           poseEstimator.getEstimatedPosition().getTranslation(),
-                          maxLinearSpeedMetersPerSec * .8);
+                          maxLinearSpeedMetersPerSec * .8,
+                          1.5);
 
                   var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
                   var feedback =
@@ -448,10 +449,13 @@ public class Swerve extends SubsystemBase {
                   Logger.recordOutput("Repulsor/Feedforward", feedforward);
                   Logger.recordOutput("Repulsor/Feedback", feedback);
 
+                  //                  Logger.recordOutput("Repulsor/Vector field",
+                  // repulsorFieldPlanner.getArrows());
+
                   var outputFieldRelative = feedforward.plus(feedback);
                   var outputRobotRelative =
                       ChassisSpeeds.fromFieldRelativeSpeeds(
-                          outputFieldRelative, swerveInputs.gyroYaw);
+                          outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation());
 
                   var setpoint =
                       setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);

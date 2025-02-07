@@ -487,7 +487,7 @@ public class SwerveIOPhoenix implements SwerveIO {
         module.encoderSim.setRawPosition(module.steerSim.getAngularPositionRotations());
       }
 
-      double frequencySeconds = 1.0 / 2000;
+      double frequencySeconds = 1.0 / 1000;
 
       // Minus one iteration to prevent divide by 0 errors later
       lastTime = (RobotController.getFPGATime() / 1e6) - frequencySeconds;
