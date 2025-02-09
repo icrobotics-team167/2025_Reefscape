@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.cotc.Robot;
+import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.function.DoubleSupplier;
@@ -468,6 +469,14 @@ public class Swerve extends SubsystemBase {
               return error.getTranslation().getNorm() < .01
                   && Math.abs(error.getRotation().getDegrees()) < 5;
             });
+  }
+
+  public Command reefAlign(Boolean left) {
+    return defer(
+        () ->
+            followRepulsorField(
+                ReefLocations.getSelectedLocation(
+                    poseEstimator.getEstimatedPosition().getTranslation(), left)));
   }
 
   public Command steerCharacterize() {

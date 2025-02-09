@@ -324,9 +324,9 @@ public class SwerveIOPhoenix implements SwerveIO {
         double currentVel,
         double steerFeedforwardRotPerSec,
         double forceFeedforwardAmps) {
-      if (MathUtil.isNear(0, desiredState.speedMetersPerSecond, 1e-3)
-          && MathUtil.isNear(0, forceFeedforwardAmps, 1e-3)
-          && MathUtil.isNear(0, currentVel, 1e-3)) {
+      if (MathUtil.isNear(0, desiredState.speedMetersPerSecond, .05)
+          && MathUtil.isNear(0, forceFeedforwardAmps, .05)
+          && MathUtil.isNear(0, currentVel, .05)) {
         driveMotor.setControl(brakeControlRequest);
       } else {
         driveMotor.setControl(
