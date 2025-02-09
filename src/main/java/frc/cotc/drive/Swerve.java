@@ -420,11 +420,6 @@ public class Swerve extends SubsystemBase {
             run(
                 () -> {
                   Logger.recordOutput("Repulsor/Goal", goal);
-                  Logger.recordOutput(
-                      "Repulsor/Trajectory",
-                      repulsorFieldPlanner.getTrajectory(
-                          poseEstimator.getEstimatedPosition().getTranslation(),
-                          Robot.defaultPeriodSecs * maxLinearSpeedMetersPerSec * .8));
 
                   var sample =
                       repulsorFieldPlanner.sampleField(

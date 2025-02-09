@@ -310,26 +310,4 @@ public class RepulsorFieldPlanner {
         step.getX() / Robot.defaultPeriodSecs,
         step.getY() / Robot.defaultPeriodSecs);
   }
-
-  public Translation2d[] getTrajectory(Translation2d current, double stepSize_m) {
-    ArrayList<Translation2d> trajectory = new ArrayList<>();
-    Translation2d robot = current;
-    for (int i = 0; i < 200; i++) {
-      var err = robot.minus(goal);
-      if (err.getNorm() < stepSize_m * 1.5) {
-        trajectory.add(goal);
-        break;
-      } else {
-        var netForce = getForce(robot, goal);
-        if (netForce.getNorm() == 0) {
-          break;
-        }
-        var step = new Translation2d(stepSize_m, netForce.getAngle());
-        var intermediateGoal = robot.plus(step);
-        trajectory.add(intermediateGoal);
-        robot = intermediateGoal;
-      }
-    }
-    return trajectory.toArray(new Translation2d[0]);
-  }
 }
