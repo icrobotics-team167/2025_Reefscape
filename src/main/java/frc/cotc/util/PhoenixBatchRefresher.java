@@ -8,6 +8,7 @@
 package frc.cotc.util;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 
 /**

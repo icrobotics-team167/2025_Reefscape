@@ -22,6 +22,8 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
+import frc.cotc.superstructure.Elevator;
+import frc.cotc.superstructure.ElevatorIOPhoenix;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
@@ -100,6 +102,7 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
+    var elevator = new Elevator(new ElevatorIOPhoenix());
     var primary = new CommandXboxController(0);
 
     // Robot wants +X fwd, +Y left
@@ -115,6 +118,8 @@ public class Robot extends LoggedRobot {
             2));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+
+    primary.y().whileTrue(elevator.runVoltage(12));
 
     autos = new Autos(swerve);
 
