@@ -26,6 +26,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command runVoltage(double volts) {
-    return run(() -> io.runVoltage(volts));
+    return run(() -> io.runVoltage(volts)).finallyDo(() -> io.runVoltage(0));
   }
 }

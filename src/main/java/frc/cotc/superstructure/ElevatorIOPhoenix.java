@@ -16,9 +16,10 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.cotc.Robot;
+import frc.cotc.util.ContinuousElevatorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class ElevatorIOPhoenix implements ElevatorIO {
@@ -43,6 +44,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     rightSupply = rightMotor.getSupplyCurrent(false);
     PhoenixBatchRefresher.register(
         posSignal, velSignal, leftStator, leftSupply, rightStator, rightSupply);
+    BaseStatusSignal.setUpdateFrequencyForAll(100, posSignal, velSignal);
+    BaseStatusSignal.setUpdateFrequencyForAll(50, leftStator, leftSupply, rightStator, rightSupply);
     ParentDevice.optimizeBusUtilizationForAll(4, leftMotor, rightMotor);
 
     var config = new TalonFXConfiguration();
@@ -63,8 +66,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
               leftMotor,
               rightMotor,
               12.0 / (Units.radiansToRotations(motorModel.freeSpeedRadPerSec) * metersPerRotation),
-              0.01,
-              motorModel);
+              0.02,
+              0.03);
     }
   }
 
@@ -99,13 +102,23 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     private final TalonFXSimState leftMotorSim;
     private final TalonFXSimState rightMotorSim;
 
-    private final ElevatorSim elevatorSim;
+    private final ContinuousElevatorSim elevatorSim;
 
-    Sim(TalonFX leftMotor, TalonFX rightMotor, double kV, double kA, DCMotor motorModel) {
+    Sim(
+        TalonFX leftMotor,
+        TalonFX rightMotor,
+        double kV,
+        double firstStage_kA,
+        double secondStage_kA) {
       leftMotorSim = leftMotor.getSimState();
       rightMotorSim = rightMotor.getSimState();
       rightMotorSim.Orientation = ChassisReference.Clockwise_Positive;
-      elevatorSim = new ElevatorSim(kV, kA, motorModel, 0, 2, true, 0);
+      elevatorSim =
+          new ContinuousElevatorSim(
+              LinearSystemId.identifyPositionSystem(kV, firstStage_kA),
+              LinearSystemId.identifyPositionSystem(kV, secondStage_kA),
+              1,
+              2);
     }
 
     private final double dt = Robot.defaultPeriodSecs;
