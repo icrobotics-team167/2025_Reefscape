@@ -23,6 +23,7 @@ import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.Elevator;
+import frc.cotc.superstructure.ElevatorIO;
 import frc.cotc.superstructure.ElevatorIOPhoenix;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
@@ -102,7 +103,8 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     var swerve = getSwerve(mode);
-    var elevator = new Elevator(new ElevatorIOPhoenix());
+    var elevator =
+        new Elevator(mode == Mode.REPLAY ? new ElevatorIO() {} : new ElevatorIOPhoenix());
     var primary = new CommandXboxController(0);
 
     // Robot wants +X fwd, +Y left
@@ -119,7 +121,8 @@ public class Robot extends LoggedRobot {
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
 
-    primary.y().whileTrue(elevator.runVoltage(12));
+    elevator.setDefaultCommand(elevator.retract());
+    primary.y().whileTrue(elevator.lvl4());
 
     autos = new Autos(swerve);
 

@@ -8,10 +8,22 @@
 package frc.cotc.superstructure;
 
 import frc.cotc.util.MotorCurrentDraws;
+import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface ElevatorIO {
+  @AutoLog
+  class ElevatorIOConstants {
+    double kV;
+    double kS_firstStage;
+    double kA_firstStage;
+    double kS_secondStage;
+    double kA_secondStage;
+    double switchPointMeters;
+    double maxHeightMeters;
+  }
+
   class ElevatorIOInputs implements LoggableInputs {
     double posMeters;
     double velMetersPerSec;
@@ -38,7 +50,13 @@ public interface ElevatorIO {
     }
   }
 
+  default ElevatorIOConstantsAutoLogged getConstants() {
+    return new ElevatorIOConstantsAutoLogged();
+  }
+
   default void updateInputs(ElevatorIOInputs inputs) {}
 
   default void runVoltage(double volts) {}
+
+  default void brake() {}
 }

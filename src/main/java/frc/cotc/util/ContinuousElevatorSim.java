@@ -57,8 +57,8 @@ public class ContinuousElevatorSim {
               xdot = xdot.plus(VecBuilder.fill(0, -9.81));
               return xdot;
             },
-          m_x,
-          m_u,
+            m_x,
+            m_u,
             dtSeconds);
 
     // We check for collisions after updating x-hat.

@@ -9,15 +9,16 @@ package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Notifier;
 import frc.cotc.Robot;
 import frc.cotc.util.ContinuousElevatorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
@@ -27,10 +28,19 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private final TalonFX rightMotor;
 
   private static final double gearRatio = 10;
-  private static final double spoolDiameter = .1;
+  private static final double spoolDiameter = Units.inchesToMeters(2.256);
   private static final double metersPerRotation = spoolDiameter * Math.PI;
 
-  private Sim sim;
+  private static final ElevatorIOConstantsAutoLogged constants;
+
+  static {
+    constants = new ElevatorIOConstantsAutoLogged();
+    constants.kV = 12.0 / ((5800.0 / 60.0) / gearRatio * metersPerRotation);
+    constants.kA_firstStage = .01;
+    constants.kA_secondStage = .02;
+    constants.switchPointMeters = 1;
+    constants.maxHeightMeters = 2;
+  }
 
   public ElevatorIOPhoenix() {
     leftMotor = new TalonFX(13, Robot.CANIVORE_NAME);
@@ -58,17 +68,20 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     rightMotor.getConfigurator().apply(config);
 
-    var motorModel = DCMotor.getKrakenX60Foc(2).withReduction(gearRatio);
-
     if (Robot.isSimulation()) {
-      sim =
-          new Sim(
+      new Sim(
               leftMotor,
               rightMotor,
-              12.0 / (Units.radiansToRotations(motorModel.freeSpeedRadPerSec) * metersPerRotation),
-              0.02,
-              0.03);
+              constants.kV,
+              constants.kA_firstStage,
+              constants.kA_secondStage)
+          .start();
     }
+  }
+
+  @Override
+  public ElevatorIOConstantsAutoLogged getConstants() {
+    return constants;
   }
 
   private final BaseStatusSignal posSignal;
@@ -80,11 +93,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
 
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
-    if (Robot.isSimulation()) {
-      sim.run();
-    }
-
-    inputs.posMeters = posSignal.getValueAsDouble() * metersPerRotation;
+    inputs.posMeters =
+        BaseStatusSignal.getLatencyCompensatedValueAsDouble(posSignal, velSignal)
+            * metersPerRotation;
     inputs.velMetersPerSec = velSignal.getValueAsDouble() * metersPerRotation;
     inputs.leftMotorCurrentDraws.mutateFromSignals(leftStator, leftSupply);
     inputs.rightMotorCurrentDraws.mutateFromSignals(rightStator, rightSupply);
@@ -96,6 +107,14 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   public void runVoltage(double volts) {
     leftMotor.setControl(voltageControl.withOutput(volts));
     rightMotor.setControl(voltageControl.withOutput(volts));
+  }
+
+  private final StaticBrake brakeControl = new StaticBrake();
+
+  @Override
+  public void brake() {
+    leftMotor.setControl(brakeControl);
+    rightMotor.setControl(brakeControl);
   }
 
   private static class Sim {
@@ -117,11 +136,17 @@ public class ElevatorIOPhoenix implements ElevatorIO {
           new ContinuousElevatorSim(
               LinearSystemId.identifyPositionSystem(kV, firstStage_kA),
               LinearSystemId.identifyPositionSystem(kV, secondStage_kA),
-              1,
-              2);
+              constants.switchPointMeters,
+              constants.maxHeightMeters);
     }
 
-    private final double dt = Robot.defaultPeriodSecs;
+    private final double dt = 1.0 / 250;
+
+    private final Notifier notifier = new Notifier(this::run);
+
+    public void start() {
+      notifier.startPeriodic(dt);
+    }
 
     void run() {
       elevatorSim.setInputVoltage(leftMotorSim.getMotorVoltage());
