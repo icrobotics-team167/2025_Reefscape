@@ -11,28 +11,32 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.cotc.Constants;
+import frc.cotc.Robot;
+import org.littletonrobotics.junction.Logger;
 
 public final class ReefLocations {
   private ReefLocations() {}
 
-  public static final Pose2d[] BLUE_POSES;
-  public static final Pose2d[] RED_POSES;
+  private static final Pose2d[] BLUE_POSES;
+  private static final Pose2d[] RED_POSES;
+
+  public static final Translation2d BLUE_REEF;
+  public static final Translation2d RED_REEF;
+
+  private static final Translation2d[] BLUE_REEF_WALLS;
+  private static final Translation2d[] RED_REEF_WALLS;
 
   static {
-    var BLUE_REEF_LOCATION = new Translation2d(4.495, Constants.FIELD_WIDTH_METERS / 2);
+    BLUE_REEF = new Translation2d(4.495, Constants.FIELD_WIDTH_METERS / 2);
     var FIELD_CENTER =
         new Translation2d(Constants.FIELD_LENGTH_METERS / 2, Constants.FIELD_WIDTH_METERS / 2);
 
     var A =
         new Pose2d(
-            BLUE_REEF_LOCATION.getX() - 1.265,
-            Constants.FIELD_WIDTH_METERS / 2 + .165,
-            Rotation2d.kZero);
+            BLUE_REEF.getX() - 1.265, Constants.FIELD_WIDTH_METERS / 2 + .165, Rotation2d.kZero);
     var B =
         new Pose2d(
-            BLUE_REEF_LOCATION.getX() - 1.265,
-            Constants.FIELD_WIDTH_METERS / 2 - .165,
-            Rotation2d.kZero);
+            BLUE_REEF.getX() - 1.265, Constants.FIELD_WIDTH_METERS / 2 - .165, Rotation2d.kZero);
 
     BLUE_POSES = new Pose2d[12];
     BLUE_POSES[0] = A;
@@ -41,14 +45,15 @@ public final class ReefLocations {
       var rotAngle = Rotation2d.fromDegrees(30 * i);
       BLUE_POSES[i] =
           new Pose2d(
-              A.getTranslation().rotateAround(BLUE_REEF_LOCATION, rotAngle),
+              A.getTranslation().rotateAround(BLUE_REEF, rotAngle),
               A.getRotation().rotateBy(rotAngle));
       BLUE_POSES[i + 1] =
           new Pose2d(
-              B.getTranslation().rotateAround(BLUE_REEF_LOCATION, rotAngle),
+              B.getTranslation().rotateAround(BLUE_REEF, rotAngle),
               B.getRotation().rotateBy(rotAngle));
     }
 
+    RED_REEF = BLUE_REEF.rotateAround(FIELD_CENTER, Rotation2d.kPi);
     RED_POSES = new Pose2d[12];
     for (int i = 0; i < 12; i++) {
       RED_POSES[i] =
@@ -56,5 +61,77 @@ public final class ReefLocations {
               BLUE_POSES[i].getTranslation().rotateAround(FIELD_CENTER, Rotation2d.kPi),
               BLUE_POSES[i].getRotation().rotateBy(Rotation2d.kPi));
     }
+
+    var center = new Translation2d(BLUE_REEF.getX() - .85, Constants.FIELD_WIDTH_METERS / 2);
+    BLUE_REEF_WALLS = new Translation2d[6];
+    RED_REEF_WALLS = new Translation2d[6];
+    for (int i = 0; i < 6; i++) {
+      var rotAngle = Rotation2d.fromDegrees(60 * i);
+      BLUE_REEF_WALLS[i] = center.rotateAround(BLUE_REEF, rotAngle);
+      RED_REEF_WALLS[i] = BLUE_REEF_WALLS[i].rotateAround(FIELD_CENTER, Rotation2d.kPi);
+    }
+  }
+
+  public enum ReefBranch {
+    A(0),
+    B(1),
+    C(2),
+    D(3),
+    E(4),
+    F(5),
+    G(6),
+    H(7),
+    I(8),
+    J(9),
+    K(10),
+    L(11);
+
+    final int id;
+
+    ReefBranch(int id) {
+      this.id = id;
+    }
+  }
+
+  private enum ReefWalls {
+    AB(0),
+    CD(1),
+    EF(2),
+    GH(3),
+    IJ(4),
+    KL(5);
+
+    final int id;
+
+    ReefWalls(int id) {
+      this.id = id;
+    }
+  }
+
+  public static Pose2d getScoringLocation(ReefBranch reefBranch) {
+    return (Robot.isOnRed() ? RED_POSES : BLUE_POSES)[reefBranch.id];
+  }
+
+  public static Pose2d getSelectedLocation(Translation2d currentPos, boolean left) {
+    var walls = Robot.isOnRed() ? RED_REEF_WALLS : BLUE_REEF_WALLS;
+    double closestDistance = Double.POSITIVE_INFINITY;
+    ReefWalls closestWall = ReefWalls.AB;
+    for (var wall : ReefWalls.values()) {
+      var dist = walls[wall.id].getDistance(currentPos);
+      if (dist < closestDistance) {
+        closestWall = wall;
+        closestDistance = dist;
+      }
+    }
+
+    int poseID = closestWall.id * 2 + (left ? 0 : 1);
+    return (Robot.isOnRed() ? RED_POSES : BLUE_POSES)[poseID];
+  }
+
+  public static void log() {
+    Logger.recordOutput("Reef Scoring Locations/Blue", BLUE_POSES);
+    Logger.recordOutput("Reef Scoring Locations/Red", RED_POSES);
+    Logger.recordOutput("Reef Scoring Locations/Blue Walls", BLUE_REEF_WALLS);
+    Logger.recordOutput("Reef Scoring Locations/Red Walls", RED_REEF_WALLS);
   }
 }

@@ -120,14 +120,14 @@ public class Robot extends LoggedRobot {
             2));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+    primary.b().whileTrue(swerve.reefAlign(true));
+    primary.x().whileTrue(swerve.reefAlign(false));
 
     elevator.setDefaultCommand(elevator.retract());
     primary.y().whileTrue(elevator.lvl4());
 
     autos = new Autos(swerve);
-
-    Logger.recordOutput("Reef Scoring Locations/Blue", ReefLocations.BLUE_POSES);
-    Logger.recordOutput("Reef Scoring Locations/Red", ReefLocations.RED_POSES);
+    ReefLocations.log();
   }
 
   private Swerve getSwerve(Mode mode) {
