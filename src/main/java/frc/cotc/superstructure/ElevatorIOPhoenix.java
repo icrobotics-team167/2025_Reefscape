@@ -17,7 +17,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
 import frc.cotc.Robot;
 import frc.cotc.util.ContinuousElevatorSim;
@@ -27,13 +26,18 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private final TalonFX leftMotor;
   private final TalonFX rightMotor;
 
-  private static final double gearRatio = 10;
-  private static final double spoolDiameter = Units.inchesToMeters(2.256);
-  private static final double metersPerRotation = spoolDiameter * Math.PI;
+  private static final double gearRatio;
+  private static final double metersPerRotation;
 
   private static final ElevatorIOConstantsAutoLogged constants;
 
   static {
+    gearRatio = (50.0 / 12.0) * (52.0 / 20.0);
+
+    var pitch = 5.0 / 1000;
+    var teeth = 36;
+    metersPerRotation = teeth * pitch;
+
     constants = new ElevatorIOConstantsAutoLogged();
     constants.kV = 12.0 / ((5800.0 / 60.0) / gearRatio * metersPerRotation);
     constants.kA_firstStage = .01;
@@ -64,6 +68,11 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.CurrentLimits.SupplyCurrentLimit = 60;
     config.CurrentLimits.SupplyCurrentLowerLimit = 40;
     config.CurrentLimits.SupplyCurrentLowerTime = 1;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        constants.maxHeightMeters / metersPerRotation;
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     rightMotor.getConfigurator().apply(config);
