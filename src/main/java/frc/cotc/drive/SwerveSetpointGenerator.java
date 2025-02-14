@@ -209,12 +209,8 @@ public class SwerveSetpointGenerator {
 
   public SwerveSetpoint generateSetpoint(
       final SwerveSetpoint prevSetpoint, ChassisSpeeds desiredState) {
-    return generateSetpoint(prevSetpoint, desiredState, RobotController.getBatteryVoltage());
-  }
-
-  public SwerveSetpoint generateSetpoint(
-      final SwerveSetpoint prevSetpoint, ChassisSpeeds desiredState, double voltage) {
-    return generateSetpoint(prevSetpoint, desiredState, voltage, Robot.defaultPeriodSecs);
+    return generateSetpoint(
+        prevSetpoint, desiredState, RobotController.getBatteryVoltage(), Robot.defaultPeriodSecs);
   }
 
   private enum ActiveConstraint {
@@ -243,6 +239,9 @@ public class SwerveSetpointGenerator {
       ChassisSpeeds desiredChassisSpeeds,
       double voltage,
       double dt) {
+    Logger.recordOutput(
+        "Swerve/Setpoint Generator/Internal State/Desired chassis speeds", desiredChassisSpeeds);
+
     if (voltage > 12) {
       voltage = 12;
     }
@@ -261,7 +260,8 @@ public class SwerveSetpointGenerator {
     desiredChassisSpeeds = kinematics.toChassisSpeeds(desiredModuleStates);
 
     Logger.recordOutput(
-        "Swerve/Setpoint Generator/Internal State/Desired chassis speeds", desiredChassisSpeeds);
+        "Swerve/Setpoint Generator/Internal State/Desaturated chassis speeds",
+        desiredChassisSpeeds);
 
     // Special case: desiredState is a complete stop. In this case, module angle is arbitrary, so
     // just use the previous angle.
@@ -515,7 +515,8 @@ public class SwerveSetpointGenerator {
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Expected stator current/", expectedCurrentDraws);
     Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Force Signs", forceSigns);
-    Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Desired Speeds", desiredSpeeds);
+    Logger.recordOutput(
+        "Swerve/Setpoint Generator/Internal State/Desired Wheel Speeds", desiredSpeeds);
     Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Last Vel Mag", lastVelMagnitudes);
 
     Translation2d chassisAccelVec = chassisForceVec.div(massKg);
