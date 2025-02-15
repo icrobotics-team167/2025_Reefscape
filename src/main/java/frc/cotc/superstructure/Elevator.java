@@ -10,11 +10,16 @@ package frc.cotc.superstructure;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.cotc.Robot;
 import frc.cotc.util.GainsCalculator;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 
 public class Elevator extends SubsystemBase {
   private final ElevatorIO io;
@@ -28,7 +33,13 @@ public class Elevator extends SubsystemBase {
   private final double switchPoint;
   private final double maxHeight;
 
-  public Elevator(ElevatorIO io) {
+  private final LoggedMechanism2d visualization;
+  private final LoggedMechanismLigament2d stage1Ligament;
+  private final LoggedMechanismLigament2d stage2Ligament;
+
+  private final double baseLength = Units.inchesToMeters(40);
+
+  Elevator(ElevatorIO io) {
     this.io = io;
 
     var constants = io.getConstants();
@@ -58,12 +69,35 @@ public class Elevator extends SubsystemBase {
 
     switchPoint = constants.switchPointMeters;
     maxHeight = constants.maxHeightMeters;
+
+    visualization = new LoggedMechanism2d(Units.inchesToMeters(28), 3);
+    stage1Ligament =
+        new LoggedMechanismLigament2d("stage1", baseLength, 90, 5, new Color8Bit(255, 0, 0));
+    stage2Ligament =
+        new LoggedMechanismLigament2d("stage2", baseLength, 90, 7.5, new Color8Bit(255, 0, 0));
+    var root =
+        visualization.getRoot("root", Units.inchesToMeters(28 - 6), Units.inchesToMeters(.5));
+    root.append(stage1Ligament);
+    root.append(stage2Ligament);
+    root.append(
+        new LoggedMechanismLigament2d("base", baseLength, 90, 10, new Color8Bit(255, 0, 0)));
+    visualization
+        .getRoot("coralBase", 0, 0)
+        .append(
+            new LoggedMechanismLigament2d(
+                "coral", Units.inchesToMeters(6), -35, 2.5, new Color8Bit(Color.kOrangeRed)));
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Superstructure/Elevator", inputs);
+    stage1Ligament.setLength(inputs.posMeters + baseLength);
+    stage2Ligament.setLength(Math.max(inputs.posMeters, baseLength));
+    visualization
+        .getRoot("coralBase", 0, 0)
+        .setPosition(Units.inchesToMeters(28 - 6), inputs.posMeters + Units.inchesToMeters(16.5));
+    Logger.recordOutput("Superstructure/Elevator/Visualization", visualization);
   }
 
   public Command retract() {
