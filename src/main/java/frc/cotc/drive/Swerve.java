@@ -443,6 +443,7 @@ public class Swerve extends SubsystemBase {
               xController.reset();
               yController.reset();
               yawController.reset();
+              targetPose = goal;
             }),
         run(
             () -> {
