@@ -71,11 +71,11 @@ public class Autos {
                 .followRepulsorField(ReefLocations.getScoringLocation(branch))
                 .until(swerve::atTargetPose);
 
-    addRoutine("ScoreOne", () -> scoreOne(factory));
+    addRoutine("CycleFromG", () -> cycleFromG(factory));
   }
 
-  private AutoRoutine scoreOne(AutoFactory factory) {
-    var routine = factory.newRoutine("scoreOne");
+  private AutoRoutine cycleFromG(AutoFactory factory) {
+    var routine = factory.newRoutine("CycleFromG");
 
     var startToG = repulsorCommand.goTo(ReefBranch.G);
     var gToSource = getTrajectory(routine, ReefBranch.G, SourceLoc.R);
