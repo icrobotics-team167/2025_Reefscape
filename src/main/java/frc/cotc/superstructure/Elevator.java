@@ -83,13 +83,23 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command lvl4() {
-    return goToPos(2);
+    return goToPos(1.5);
+  }
+
+  private double targetHeight = 0;
+
+  public boolean atTargetPos() {
+    return Math.abs(inputs.posMeters - targetHeight) < .025;
   }
 
   private final PIDController feedbackController = new PIDController(0, 0, 0);
 
   private Command goToPos(double posMeters) {
-    return runOnce(feedbackController::reset)
+    return runOnce(
+            () -> {
+              feedbackController.reset();
+              targetHeight = posMeters;
+            })
         .andThen(
             run(
                 () -> {

@@ -7,6 +7,8 @@
 
 package frc.cotc;
 
+import static edu.wpi.first.wpilibj2.command.Commands.deadline;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -21,9 +23,10 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
-import frc.cotc.superstructure.Elevator;
+import frc.cotc.superstructure.CoralOuttakeIO;
 import frc.cotc.superstructure.ElevatorIO;
 import frc.cotc.superstructure.ElevatorIOPhoenix;
+import frc.cotc.superstructure.Superstructure;
 import frc.cotc.util.CommandXboxControllerWithRumble;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
@@ -104,8 +107,10 @@ public class Robot extends LoggedRobot {
 
     var swerve = getSwerve(mode);
     var primary = new CommandXboxControllerWithRumble(0);
-    var elevator =
-        new Elevator(mode == Mode.REPLAY ? new ElevatorIO() {} : new ElevatorIOPhoenix());
+    var superstructure =
+        new Superstructure(
+            mode == Mode.REPLAY ? new ElevatorIO() {} : new ElevatorIOPhoenix(),
+            new CoralOuttakeIO() {});
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
@@ -120,11 +125,12 @@ public class Robot extends LoggedRobot {
             2));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-    primary.b().whileTrue(swerve.reefAlign(true));
-    primary.x().whileTrue(swerve.reefAlign(false));
-
-    elevator.setDefaultCommand(elevator.retract());
-    primary.y().whileTrue(elevator.lvl4());
+    primary
+        .b()
+        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(true)));
+    primary
+        .x()
+        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(false)));
 
     autos = new Autos(swerve);
     ReefLocations.log();

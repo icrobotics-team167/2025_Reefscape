@@ -66,7 +66,10 @@ public class Autos {
               Logger.recordOutput("Choreo/Trajectory", poses);
             });
     repulsorCommand =
-        branch -> swerve.followRepulsorField(ReefLocations.getScoringLocation(branch));
+        branch ->
+            swerve
+                .followRepulsorField(ReefLocations.getScoringLocation(branch))
+                .until(swerve::atTargetPose);
 
     addRoutine("ScoreOne", () -> scoreOne(factory));
   }

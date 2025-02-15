@@ -428,62 +428,62 @@ public class Swerve extends SubsystemBase {
     lastSetpoint = setpoint;
   }
 
+  private Pose2d targetPose;
+
+  public boolean atTargetPose() {
+    var error = targetPose.minus(poseEstimator.getEstimatedPosition());
+    return error.getTranslation().getNorm() < .01 && Math.abs(error.getRotation().getDegrees()) < 5;
+  }
+
   public Command followRepulsorField(Pose2d goal) {
     return sequence(
-            runOnce(
-                () -> {
-                  repulsorFieldPlanner.setGoal(goal.getTranslation());
-                  xController.reset();
-                  yController.reset();
-                  yawController.reset();
-                }),
-            run(
-                () -> {
-                  Logger.recordOutput("Repulsor/Goal", goal);
-
-                  var sample =
-                      repulsorFieldPlanner.sampleField(
-                          poseEstimator.getEstimatedPosition().getTranslation(),
-                          maxLinearSpeedMetersPerSec * .8,
-                          1.5);
-
-                  var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
-                  var feedback =
-                      new ChassisSpeeds(
-                          xController.calculate(
-                              poseEstimator.getEstimatedPosition().getX(),
-                              sample.intermediateGoal().getX()),
-                          yController.calculate(
-                              poseEstimator.getEstimatedPosition().getY(),
-                              sample.intermediateGoal().getY()),
-                          yawController.calculate(
-                              poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-                              goal.getRotation().getRadians()));
-
-                  Logger.recordOutput(
-                      "Repulsor/Error", goal.minus(poseEstimator.getEstimatedPosition()));
-                  Logger.recordOutput("Repulsor/Feedforward", feedforward);
-                  Logger.recordOutput("Repulsor/Feedback", feedback);
-
-                  //                  Logger.recordOutput("Repulsor/Vector field",
-                  // repulsorFieldPlanner.getArrows());
-
-                  var outputFieldRelative = feedforward.plus(feedback);
-                  var outputRobotRelative =
-                      ChassisSpeeds.fromFieldRelativeSpeeds(
-                          outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation());
-
-                  var setpoint =
-                      setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
-                  swerveIO.drive(setpoint);
-                  lastSetpoint = setpoint;
-                }))
-        .until(
+        runOnce(
             () -> {
-              var error = goal.minus(poseEstimator.getEstimatedPosition());
-              return error.getTranslation().getNorm() < .01
-                  && Math.abs(error.getRotation().getDegrees()) < 5;
-            });
+              repulsorFieldPlanner.setGoal(goal.getTranslation());
+              xController.reset();
+              yController.reset();
+              yawController.reset();
+            }),
+        run(
+            () -> {
+              Logger.recordOutput("Repulsor/Goal", goal);
+
+              var sample =
+                  repulsorFieldPlanner.sampleField(
+                      poseEstimator.getEstimatedPosition().getTranslation(),
+                      maxLinearSpeedMetersPerSec * .8,
+                      1.5);
+
+              var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
+              var feedback =
+                  new ChassisSpeeds(
+                      xController.calculate(
+                          poseEstimator.getEstimatedPosition().getX(),
+                          sample.intermediateGoal().getX()),
+                      yController.calculate(
+                          poseEstimator.getEstimatedPosition().getY(),
+                          sample.intermediateGoal().getY()),
+                      yawController.calculate(
+                          poseEstimator.getEstimatedPosition().getRotation().getRadians(),
+                          goal.getRotation().getRadians()));
+
+              Logger.recordOutput(
+                  "Repulsor/Error", goal.minus(poseEstimator.getEstimatedPosition()));
+              Logger.recordOutput("Repulsor/Feedforward", feedforward);
+              Logger.recordOutput("Repulsor/Feedback", feedback);
+
+              //                  Logger.recordOutput("Repulsor/Vector field",
+              // repulsorFieldPlanner.getArrows());
+
+              var outputFieldRelative = feedforward.plus(feedback);
+              var outputRobotRelative =
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation());
+
+              var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
+              swerveIO.drive(setpoint);
+              lastSetpoint = setpoint;
+            }));
   }
 
   public Command reefAlign(Boolean left) {

@@ -42,8 +42,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     constants.kV = 12.0 / ((5800.0 / 60.0) / gearRatio * metersPerRotation);
     constants.kA_firstStage = .01;
     constants.kA_secondStage = .02;
-    constants.switchPointMeters = 1;
-    constants.maxHeightMeters = 2;
+    constants.switchPointMeters = 1.5 / 2;
+    constants.maxHeightMeters = 1.5;
   }
 
   public ElevatorIOPhoenix() {
@@ -60,7 +60,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
         posSignal, velSignal, leftStator, leftSupply, rightStator, rightSupply);
     BaseStatusSignal.setUpdateFrequencyForAll(100, posSignal, velSignal);
     BaseStatusSignal.setUpdateFrequencyForAll(50, leftStator, leftSupply, rightStator, rightSupply);
-    ParentDevice.optimizeBusUtilizationForAll(4, leftMotor, rightMotor);
+    ParentDevice.optimizeBusUtilizationForAll(5, leftMotor, rightMotor);
 
     var config = new TalonFXConfiguration();
     config.Feedback.SensorToMechanismRatio = gearRatio;
