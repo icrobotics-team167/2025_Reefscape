@@ -305,6 +305,8 @@ public class Swerve extends SubsystemBase {
     };
   }
 
+  private double accelLimitMpss = -1;
+
   public Command teleopDrive(
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
@@ -353,12 +355,30 @@ public class Swerve extends SubsystemBase {
 
             translationalMagnitude = maxLinearSpeedMetersPerSec;
           }
+
+          if (accelLimitMpss > 0) {
+            double desiredAccelXMpss =
+                (commandedRobotSpeeds.vxMetersPerSecond
+                        - lastSetpoint.chassisSpeeds().vxMetersPerSecond)
+                    / Robot.defaultPeriodSecs;
+            double desiredAccelYMpss =
+                (commandedRobotSpeeds.vyMetersPerSecond
+                        - lastSetpoint.chassisSpeeds().vyMetersPerSecond)
+                    / Robot.defaultPeriodSecs;
+            double desiredAccelMpss = Math.hypot(desiredAccelXMpss, desiredAccelYMpss);
+            if (desiredAccelMpss > accelLimitMpss) {
+              var accelDirRad = Math.atan2(desiredAccelYMpss, desiredAccelXMpss);
+              commandedRobotSpeeds.vxMetersPerSecond =
+                  lastSetpoint.chassisSpeeds().vxMetersPerSecond
+                      + Math.cos(accelDirRad) * accelLimitMpss * Robot.defaultPeriodSecs;
+              commandedRobotSpeeds.vyMetersPerSecond =
+                  lastSetpoint.chassisSpeeds().vyMetersPerSecond
+                      + Math.sin(accelDirRad) * accelLimitMpss * Robot.defaultPeriodSecs;
+            }
+          }
+
           commandedRobotSpeeds.omegaRadiansPerSecond *=
-              MathUtil.interpolate(
-                  1,
-                  angularSpeedFudgeFactor,
-                  MathUtil.inverseInterpolate(
-                      0, maxLinearSpeedMetersPerSec, translationalMagnitude));
+              1 - (translationalMagnitude / maxLinearSpeedMetersPerSec) * angularSpeedFudgeFactor;
 
           var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
           swerveIO.drive(setpoint);
