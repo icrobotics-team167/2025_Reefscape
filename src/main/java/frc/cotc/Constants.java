@@ -8,14 +8,13 @@
 package frc.cotc;
 
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
+import frc.cotc.vision.FiducialPoseEstimator;
 
 public final class Constants {
   private Constants() {}
 
-  public static final double FIELD_LENGTH_METERS =
-      Units.feetToMeters(57) + Units.inchesToMeters(6.875);
-  public static final double FIELD_WIDTH_METERS = 8.025;
+  public static final double FIELD_LENGTH_METERS = FiducialPoseEstimator.tagLayout.getFieldLength();
+  public static final double FIELD_WIDTH_METERS = FiducialPoseEstimator.tagLayout.getFieldWidth();
   public static final Translation2d FIELD_CENTER =
       new Translation2d(FIELD_LENGTH_METERS / 2, FIELD_WIDTH_METERS / 2);
 }

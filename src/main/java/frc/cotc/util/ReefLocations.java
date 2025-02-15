@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.cotc.Constants;
 import frc.cotc.Robot;
+import frc.cotc.vision.FiducialPoseEstimator;
 import org.littletonrobotics.junction.Logger;
 
 public final class ReefLocations {
@@ -27,9 +28,11 @@ public final class ReefLocations {
   private static final Translation2d[] RED_REEF_WALLS;
 
   static {
-    BLUE_REEF = new Translation2d(4.495, Constants.FIELD_WIDTH_METERS / 2);
-    var FIELD_CENTER =
-        new Translation2d(Constants.FIELD_LENGTH_METERS / 2, Constants.FIELD_WIDTH_METERS / 2);
+    //noinspection OptionalGetWithoutIsPresent
+    double tag18X = FiducialPoseEstimator.tagLayout.getTagPose(18).get().getX();
+    //noinspection OptionalGetWithoutIsPresent
+    double tag21X = FiducialPoseEstimator.tagLayout.getTagPose(21).get().getX();
+    BLUE_REEF = new Translation2d((tag18X + tag21X) / 2, Constants.FIELD_WIDTH_METERS / 2);
 
     var A =
         new Pose2d(
@@ -43,23 +46,14 @@ public final class ReefLocations {
     BLUE_POSES[1] = B;
     for (int i = 2; i < 12; i += 2) {
       var rotAngle = Rotation2d.fromDegrees(30 * i);
-      BLUE_POSES[i] =
-          new Pose2d(
-              A.getTranslation().rotateAround(BLUE_REEF, rotAngle),
-              A.getRotation().rotateBy(rotAngle));
-      BLUE_POSES[i + 1] =
-          new Pose2d(
-              B.getTranslation().rotateAround(BLUE_REEF, rotAngle),
-              B.getRotation().rotateBy(rotAngle));
+      BLUE_POSES[i] = A.rotateAround(BLUE_REEF, rotAngle);
+      BLUE_POSES[i + 1] = B.rotateAround(BLUE_REEF, rotAngle);
     }
 
-    RED_REEF = BLUE_REEF.rotateAround(FIELD_CENTER, Rotation2d.kPi);
+    RED_REEF = BLUE_REEF.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
     RED_POSES = new Pose2d[12];
     for (int i = 0; i < 12; i++) {
-      RED_POSES[i] =
-          new Pose2d(
-              BLUE_POSES[i].getTranslation().rotateAround(FIELD_CENTER, Rotation2d.kPi),
-              BLUE_POSES[i].getRotation().rotateBy(Rotation2d.kPi));
+      RED_POSES[i] = BLUE_POSES[i].rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
     }
 
     var center = new Translation2d(BLUE_REEF.getX() - .85, Constants.FIELD_WIDTH_METERS / 2);
@@ -68,7 +62,7 @@ public final class ReefLocations {
     for (int i = 0; i < 6; i++) {
       var rotAngle = Rotation2d.fromDegrees(60 * i);
       BLUE_REEF_WALLS[i] = center.rotateAround(BLUE_REEF, rotAngle);
-      RED_REEF_WALLS[i] = BLUE_REEF_WALLS[i].rotateAround(FIELD_CENTER, Rotation2d.kPi);
+      RED_REEF_WALLS[i] = BLUE_REEF_WALLS[i].rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
     }
   }
 

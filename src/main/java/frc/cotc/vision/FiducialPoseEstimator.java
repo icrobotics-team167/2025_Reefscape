@@ -20,8 +20,8 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class FiducialPoseEstimator {
-  static final AprilTagFieldLayout tagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+  public static final AprilTagFieldLayout tagLayout =
+      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
   private final FiducialPoseEstimatorIO io;
   private final FiducialPoseEstimatorIOInputs inputs = new FiducialPoseEstimatorIOInputs();
