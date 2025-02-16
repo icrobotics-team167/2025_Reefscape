@@ -40,10 +40,10 @@ public class ElevatorIOPhoenix implements ElevatorIO {
 
     constants = new ElevatorIOConstantsAutoLogged();
     constants.kV = 12.0 / ((5800.0 / 60.0) / gearRatio * metersPerRotation);
-    constants.kA_firstStage = .01;
-    constants.kA_secondStage = .02;
-    constants.switchPointMeters = 1.5 / 2;
-    constants.maxHeightMeters = 1.5;
+    constants.kG_firstStage = .176;
+    constants.kG_secondStage = .192;
+    constants.switchPointMeters = 0.76981640676;
+    constants.maxHeightMeters = 1.53551952554;
   }
 
   public ElevatorIOPhoenix() {
@@ -73,8 +73,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    leftMotor.getConfigurator().apply(config);
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     rightMotor.getConfigurator().apply(config);
 
     if (Robot.isSimulation()) {
@@ -82,8 +83,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
               leftMotor,
               rightMotor,
               constants.kV,
-              constants.kA_firstStage,
-              constants.kA_secondStage)
+              constants.kG_firstStage / 9.81,
+              constants.kG_secondStage / 9.81)
           .start();
     }
   }

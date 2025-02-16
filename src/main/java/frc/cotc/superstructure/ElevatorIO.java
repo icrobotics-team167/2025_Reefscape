@@ -16,10 +16,8 @@ public interface ElevatorIO {
   @AutoLog
   class ElevatorIOConstants {
     double kV;
-    double kS_firstStage;
-    double kA_firstStage;
-    double kS_secondStage;
-    double kA_secondStage;
+    double kG_firstStage;
+    double kG_secondStage;
     double switchPointMeters;
     double maxHeightMeters;
   }

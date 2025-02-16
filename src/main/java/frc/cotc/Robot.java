@@ -7,8 +7,6 @@
 
 package frc.cotc;
 
-import static edu.wpi.first.wpilibj2.command.Commands.deadline;
-
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -19,15 +17,11 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
-import frc.cotc.superstructure.CoralOuttakeIO;
-import frc.cotc.superstructure.ElevatorIO;
-import frc.cotc.superstructure.ElevatorIOPhoenix;
-import frc.cotc.superstructure.Superstructure;
-import frc.cotc.util.CommandXboxControllerWithRumble;
+import frc.cotc.superstructure.*;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
@@ -105,32 +99,36 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
-    var swerve = getSwerve(mode);
-    var primary = new CommandXboxControllerWithRumble(0);
-    var superstructure =
-        new Superstructure(
-            mode == Mode.REPLAY ? new ElevatorIO() {} : new ElevatorIOPhoenix(),
-            new CoralOuttakeIO() {});
+    var primaryLeft = new CommandJoystick(0);
 
-    // Robot wants +X fwd, +Y left
-    // Sticks are +X right +Y back
-    swerve.setDefaultCommand(
-        swerve.teleopDrive(
-            () -> -primary.getLeftY(),
-            () -> -primary.getLeftX(),
-            .06,
-            2,
-            () -> -primary.getRightX(),
-            .05,
-            2));
-    //    primary.povDown().whileTrue(swerve.stopInX());
-    RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-    primary
-        .b()
-        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(true)));
-    primary
-        .x()
-        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(false)));
+    var swerve = new Swerve(new SwerveIO() {}, new FiducialPoseEstimator.IO[] {});
+    var elevator =
+        new Elevator(mode != Mode.REPLAY ? new ElevatorIOPhoenix() : new ElevatorIO() {});
+
+    //    // Robot wants +X fwd, +Y left
+    //    // Sticks are +X right +Y back
+    //    swerve.setDefaultCommand(
+    //        swerve.teleopDrive(
+    //            () -> -primary.getLeftY(),
+    //            () -> -primary.getLeftX(),
+    //            .06,
+    //            2,
+    //            () -> -primary.getRightX(),
+    //            .05,
+    //            2));
+    //    //    primary.povDown().whileTrue(swerve.stopInX());
+    //    RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+    //    primary
+    //        .b()
+    //        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose),
+    // swerve.reefAlign(true)));
+    //    primary
+    //        .x()
+    //        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose),
+    // swerve.reefAlign(false)));
+
+    elevator.setDefaultCommand(elevator.retract());
+    primaryLeft.button(2).whileTrue(elevator.lvl4());
 
     autos = new Autos(swerve);
     ReefLocations.log();

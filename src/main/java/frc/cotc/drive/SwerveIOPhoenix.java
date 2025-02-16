@@ -78,7 +78,7 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG = Units.lbsToKilograms(80);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(90);
 
     double linearKa = 1;
     double angularKa = 1;

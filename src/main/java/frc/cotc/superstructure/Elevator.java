@@ -8,7 +8,6 @@
 package frc.cotc.superstructure;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
@@ -25,9 +24,9 @@ public class Elevator extends SubsystemBase {
   private final ElevatorIO io;
   private final ElevatorIO.ElevatorIOInputs inputs = new ElevatorIO.ElevatorIOInputs();
 
-  private final ElevatorFeedforward firstStageFeedforward;
+  private final double firstStageKg;
   private final GainsCalculator.PDGains firstStageGains;
-  private final ElevatorFeedforward secondStageFeedforward;
+  private final double secondStageKg;
   private final GainsCalculator.PDGains secondStageGains;
 
   private final double switchPoint;
@@ -39,29 +38,27 @@ public class Elevator extends SubsystemBase {
 
   private final double baseLength = Units.inchesToMeters(40);
 
-  Elevator(ElevatorIO io) {
+  public Elevator(ElevatorIO io) {
     this.io = io;
 
     var constants = io.getConstants();
     Logger.processInputs("Superstructure/Elevator/CONSTANTS", constants);
-    firstStageFeedforward =
-        new ElevatorFeedforward(constants.kS_firstStage, constants.kA_firstStage * 9.81, 0, 0);
+    firstStageKg = constants.kG_firstStage;
     firstStageGains =
         GainsCalculator.getPositionGains(
             constants.kV,
-            constants.kA_firstStage,
-            12 - constants.kS_firstStage - (constants.kA_firstStage * 9.81),
+            constants.kG_firstStage / 9.81,
+            12 - constants.kG_firstStage,
             .01,
             .2,
             Robot.defaultPeriodSecs,
             0.001);
-    secondStageFeedforward =
-        new ElevatorFeedforward(constants.kS_secondStage, constants.kA_secondStage * 9.81, 0, 0);
+    secondStageKg = constants.kG_secondStage;
     secondStageGains =
         GainsCalculator.getPositionGains(
             constants.kV,
-            constants.kA_secondStage,
-            12 - constants.kS_secondStage - (constants.kA_secondStage * 9.81),
+            constants.kG_secondStage / 9.81,
+            12 - constants.kG_secondStage,
             .01,
             .2,
             Robot.defaultPeriodSecs,
@@ -138,16 +135,12 @@ public class Elevator extends SubsystemBase {
             run(
                 () -> {
                   var gains = inputs.posMeters <= switchPoint ? firstStageGains : secondStageGains;
-                  var ff =
-                      inputs.posMeters <= switchPoint
-                          ? firstStageFeedforward
-                          : secondStageFeedforward;
+                  var ff = inputs.posMeters <= switchPoint ? firstStageKg : secondStageKg;
 
                   feedbackController.setPID(gains.kP(), 0, gains.kD());
                   var feedbackVoltage =
                       feedbackController.calculate(
                           inputs.posMeters, MathUtil.clamp(posMeters, 0, maxHeight));
-                  var feedfowardVoltage = ff.calculate(feedbackVoltage);
                   Logger.recordOutput("Superstructure/Elevator/Feedback", feedbackVoltage);
 
                   if (posMeters == 0
@@ -155,7 +148,7 @@ public class Elevator extends SubsystemBase {
                       && MathUtil.isNear(0, inputs.velMetersPerSec, .01)) {
                     io.brake();
                   } else {
-                    io.runVoltage(feedbackVoltage + feedfowardVoltage);
+                    io.runVoltage(feedbackVoltage + ff);
                   }
                 }));
   }
