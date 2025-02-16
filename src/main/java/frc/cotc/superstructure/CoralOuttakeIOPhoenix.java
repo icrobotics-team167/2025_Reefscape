@@ -9,33 +9,44 @@ package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.UpdateModeValue;
 
 public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   private final TalonFX motor;
-  private final CANrange detector;
 
   private final BaseStatusSignal statorSignal;
   private final BaseStatusSignal supplySignal;
   private final StatusSignal<Boolean> detectedSignal;
 
   public CoralOuttakeIOPhoenix() {
-    motor = new TalonFX(15);
-    detector = new CANrange(16);
+    motor = new TalonFX(0);
+    //noinspection resource
+    var detector = new CANrange(1);
 
-    var config = new TalonFXConfiguration();
-    config.CurrentLimits.StatorCurrentLimit = 60;
-    config.CurrentLimits.SupplyCurrentLimit = 40;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.HardwareLimitSwitch.ForwardLimitEnable = true;
-    config.HardwareLimitSwitch.ForwardLimitSource = ForwardLimitSourceValue.RemoteCANrange;
-    config.HardwareLimitSwitch.ForwardLimitRemoteSensorID = detector.getDeviceID();
-    motor.getConfigurator().apply(config);
+    var motorConfig = new TalonFXConfiguration();
+    motorConfig.CurrentLimits.StatorCurrentLimit = 60;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.HardwareLimitSwitch.ForwardLimitEnable = true;
+    motorConfig.HardwareLimitSwitch.ForwardLimitSource = ForwardLimitSourceValue.RemoteCANrange;
+    motorConfig.HardwareLimitSwitch.ForwardLimitRemoteSensorID = detector.getDeviceID();
+    motor.getConfigurator().apply(motorConfig);
+
+    var detectorConfig = new CANrangeConfiguration();
+    detectorConfig.FovParams.FOVRangeX = 6.75;
+    detectorConfig.FovParams.FOVRangeY = 6.75;
+    detectorConfig.ProximityParams.ProximityThreshold = .175;
+    detectorConfig.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
+    detector.getConfigurator().apply(detectorConfig);
 
     statorSignal = motor.getStatorCurrent(false);
     supplySignal = motor.getSupplyCurrent(false);
@@ -56,14 +67,14 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     inputs.currentDraws.mutateFromSignals(statorSignal, supplySignal);
   }
 
-  private final VoltageOut intakeControl = new VoltageOut(12).withIgnoreHardwareLimits(false);
+  private final VoltageOut intakeControl = new VoltageOut(3).withIgnoreHardwareLimits(false);
 
   @Override
   public void intake() {
     motor.setControl(intakeControl);
   }
 
-  private final VoltageOut outtakeControl = new VoltageOut(12).withIgnoreHardwareLimits(true);
+  private final VoltageOut outtakeControl = new VoltageOut(6).withIgnoreHardwareLimits(true);
 
   @Override
   public void outtake() {

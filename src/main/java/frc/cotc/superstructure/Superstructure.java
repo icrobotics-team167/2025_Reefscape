@@ -32,6 +32,10 @@ public class Superstructure extends SubsystemBase {
             elevator.lvl4()));
   }
 
+  public Command intake() {
+    return expose(coralOuttake.intake());
+  }
+
   private Command expose(Command internal) {
     var proxied = internal.asProxy();
     proxied.addRequirements(this);
