@@ -222,6 +222,17 @@ public class Robot extends LoggedRobot {
     return new Swerve(swerveIO, visionIOs);
   }
 
+  private Superstructure getSuperstructure(Mode mode) {
+    switch (mode) {
+      case REAL, SIM -> {
+        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIO() {});
+      }
+      default -> {
+        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {});
+      }
+    }
+  }
+
   private Command autoCommand;
 
   @Override
