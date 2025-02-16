@@ -32,8 +32,8 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     var detector = new CANrange(1);
 
     var motorConfig = new TalonFXConfiguration();
-    motorConfig.CurrentLimits.StatorCurrentLimit = 60;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 20;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 10;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     motorConfig.HardwareLimitSwitch.ForwardLimitEnable = true;
