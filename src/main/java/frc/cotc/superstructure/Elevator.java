@@ -141,6 +141,9 @@ public class Elevator extends SubsystemBase {
                   var feedbackVoltage =
                       feedbackController.calculate(
                           inputs.posMeters, MathUtil.clamp(posMeters, 0, maxHeight));
+                  if (inputs.posMeters < .25) {
+                    feedbackVoltage *= MathUtil.interpolate(.25, 1, inputs.posMeters / .25);
+                  }
                   Logger.recordOutput("Superstructure/Elevator/Feedback", feedbackVoltage);
 
                   if (posMeters == 0

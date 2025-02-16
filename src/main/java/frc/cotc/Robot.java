@@ -17,11 +17,11 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.*;
+import frc.cotc.util.CommandXboxControllerWithRumble;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
@@ -99,7 +99,8 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
-    var primaryLeft = new CommandJoystick(0);
+    //    var primaryLeft = new CommandJoystick(0);
+    var primary = new CommandXboxControllerWithRumble(0);
 
     var swerve = new Swerve(new SwerveIO() {}, new FiducialPoseEstimator.IO[] {});
     var elevator =
@@ -128,7 +129,8 @@ public class Robot extends LoggedRobot {
     // swerve.reefAlign(false)));
 
     elevator.setDefaultCommand(elevator.retract());
-    primaryLeft.button(2).whileTrue(elevator.lvl4());
+    //    primaryLeft.button(2).whileTrue(elevator.lvl4());
+    primary.b().whileTrue(elevator.lvl4());
 
     autos = new Autos(swerve);
     ReefLocations.log();

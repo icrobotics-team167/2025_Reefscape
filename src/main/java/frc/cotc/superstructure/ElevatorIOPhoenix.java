@@ -141,7 +141,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
         double secondStage_kA) {
       leftMotorSim = leftMotor.getSimState();
       rightMotorSim = rightMotor.getSimState();
-      rightMotorSim.Orientation = ChassisReference.Clockwise_Positive;
+      leftMotorSim.Orientation = ChassisReference.Clockwise_Positive;
       elevatorSim =
           new ContinuousElevatorSim(
               LinearSystemId.identifyPositionSystem(kV, firstStage_kA),
