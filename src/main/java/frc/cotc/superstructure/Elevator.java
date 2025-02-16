@@ -36,8 +36,6 @@ public class Elevator extends SubsystemBase {
   private final LoggedMechanismLigament2d stage1Ligament;
   private final LoggedMechanismLigament2d stage2Ligament;
 
-  private final double baseLength = Units.inchesToMeters(40);
-
   public Elevator(ElevatorIO io) {
     this.io = io;
 
@@ -68,16 +66,15 @@ public class Elevator extends SubsystemBase {
     maxHeight = constants.maxHeightMeters;
 
     visualization = new LoggedMechanism2d(Units.inchesToMeters(28), 3);
-    stage1Ligament =
-        new LoggedMechanismLigament2d("stage1", baseLength, 90, 5, new Color8Bit(255, 0, 0));
-    stage2Ligament =
-        new LoggedMechanismLigament2d("stage2", baseLength, 90, 7.5, new Color8Bit(255, 0, 0));
+    stage1Ligament = new LoggedMechanismLigament2d("stage1", 1, 90, 5, new Color8Bit(255, 0, 0));
+    stage2Ligament = new LoggedMechanismLigament2d("stage2", 1, 90, 7.5, new Color8Bit(255, 0, 0));
     var root =
         visualization.getRoot("root", Units.inchesToMeters(28 - 6), Units.inchesToMeters(.5));
     root.append(stage1Ligament);
     root.append(stage2Ligament);
     root.append(
-        new LoggedMechanismLigament2d("base", baseLength, 90, 10, new Color8Bit(255, 0, 0)));
+        new LoggedMechanismLigament2d(
+            "base", Units.inchesToMeters(39), 90, 10, new Color8Bit(255, 0, 0)));
     visualization
         .getRoot("coralBase", 0, 0)
         .append(
@@ -89,8 +86,11 @@ public class Elevator extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Superstructure/Elevator", inputs);
-    stage1Ligament.setLength(inputs.posMeters + baseLength);
-    stage2Ligament.setLength(Math.max(inputs.posMeters, baseLength));
+    stage1Ligament.setLength(Units.inchesToMeters(40.5) + inputs.posMeters);
+    stage2Ligament.setLength(
+        inputs.posMeters < switchPoint
+            ? Units.inchesToMeters(40)
+            : Units.inchesToMeters(40) + inputs.posMeters - switchPoint);
     visualization
         .getRoot("coralBase", 0, 0)
         .setPosition(Units.inchesToMeters(28 - 6), inputs.posMeters + Units.inchesToMeters(16.5));
