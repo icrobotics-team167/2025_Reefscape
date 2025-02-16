@@ -32,7 +32,9 @@ public interface CoralOuttakeIO {
 
   default void updateInputs(CoralOuttakeIOInputs inputs) {}
 
-  default void run() {}
+  default void intake() {}
+
+  default void outtake() {}
 
   default void brake() {}
 }
