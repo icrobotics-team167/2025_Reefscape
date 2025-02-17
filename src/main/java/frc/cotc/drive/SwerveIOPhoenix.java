@@ -45,6 +45,7 @@ import frc.cotc.util.PhoenixBatchRefresher;
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
   private static final double DRIVE_GEAR_RATIO;
+  private static final boolean[] DRIVE_INVERTS;
   private static final double[] STEER_GEAR_RATIOS;
   private static final double WHEEL_CIRCUMFERENCE_METERS;
 
@@ -59,6 +60,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
+    DRIVE_INVERTS = new boolean[] {false, true, false, true};
 
     var MK4N_STEER_GEAR_RATIO = 18.75;
     var MK4I_STEER_GEAR_RATIO = 150.0 / 7;
@@ -255,7 +257,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       driveConfig.MotorOutput.Inverted =
-          id == 1 || id == 3
+          Robot.isReal() && DRIVE_INVERTS[id]
               ? InvertedValue.Clockwise_Positive
               : InvertedValue.CounterClockwise_Positive;
       driveConfig.CurrentLimits.StatorCurrentLimit =
@@ -469,7 +471,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     SimThread(Module[] modules, Pigeon2 gyro) {
       for (int i = 0; i < 4; i++) {
-        simModules[i] = new SimModule(modules[i], STEER_GEAR_RATIOS[i], i == 1 || i == 3);
+        simModules[i] = new SimModule(modules[i], STEER_GEAR_RATIOS[i]);
       }
       gyroSimState = gyro.getSimState();
 
@@ -576,15 +578,11 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       final double STEER_GEAR_RATIO;
 
-      SimModule(Module module, double STEER_GEAR_RATIO, boolean invertedDrive) {
+      SimModule(Module module, double STEER_GEAR_RATIO) {
         driveMotorSim = module.driveMotor.getSimState();
         steerMotorSim = module.steerMotor.getSimState();
         encoderSim = module.encoder.getSimState();
 
-        driveMotorSim.Orientation =
-            invertedDrive
-                ? ChassisReference.Clockwise_Positive
-                : ChassisReference.CounterClockwise_Positive;
         steerMotorSim.Orientation = ChassisReference.Clockwise_Positive;
         encoderSim.Orientation = ChassisReference.CounterClockwise_Positive;
 
