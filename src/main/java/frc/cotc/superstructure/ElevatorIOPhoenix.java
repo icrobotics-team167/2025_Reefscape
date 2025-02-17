@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Notifier;
 import frc.cotc.Robot;
 import frc.cotc.util.ContinuousElevatorSim;
@@ -25,6 +26,7 @@ import frc.cotc.util.PhoenixBatchRefresher;
 public class ElevatorIOPhoenix implements ElevatorIO {
   private final TalonFX leftMotor;
   private final TalonFX rightMotor;
+  private final DigitalInput limitSwitch;
 
   private static final double gearRatio;
   private static final double metersPerRotation;
@@ -49,6 +51,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   public ElevatorIOPhoenix() {
     leftMotor = new TalonFX(13, Robot.CANIVORE_NAME);
     rightMotor = new TalonFX(14, Robot.CANIVORE_NAME);
+    limitSwitch = new DigitalInput(3);
 
     posSignal = leftMotor.getPosition(false);
     velSignal = leftMotor.getVelocity(false);
@@ -101,11 +104,21 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private final BaseStatusSignal rightStator;
   private final BaseStatusSignal rightSupply;
 
+  private boolean lastTriggeredState = false;
+
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
+    var triggeredState = !limitSwitch.get(); // Normally closed
+    if (!lastTriggeredState && triggeredState) {
+      leftMotor.setPosition(0);
+    }
+    lastTriggeredState = triggeredState;
+
     inputs.posMeters =
-        BaseStatusSignal.getLatencyCompensatedValueAsDouble(posSignal, velSignal)
-            * metersPerRotation;
+        triggeredState
+            ? 0
+            : BaseStatusSignal.getLatencyCompensatedValueAsDouble(posSignal, velSignal)
+                * metersPerRotation;
     inputs.velMetersPerSec = velSignal.getValueAsDouble() * metersPerRotation;
     inputs.leftMotorCurrentDraws.mutateFromSignals(leftStator, leftSupply);
     inputs.rightMotorCurrentDraws.mutateFromSignals(rightStator, rightSupply);
