@@ -47,7 +47,7 @@ public class Elevator extends SubsystemBase {
         GainsCalculator.getPositionGains(
             constants.kV,
             constants.kG_firstStage / 9.81,
-            8 - constants.kG_firstStage,
+            12 - constants.kG_firstStage,
             .01,
             .075,
             Robot.defaultPeriodSecs,
@@ -57,7 +57,7 @@ public class Elevator extends SubsystemBase {
         GainsCalculator.getPositionGains(
             constants.kV,
             constants.kG_secondStage / 9.81,
-            8 - constants.kG_secondStage,
+            12 - constants.kG_secondStage,
             .01,
             .075,
             Robot.defaultPeriodSecs,
@@ -94,7 +94,7 @@ public class Elevator extends SubsystemBase {
             : Units.inchesToMeters(40) + inputs.posMeters - switchPoint);
     visualization
         .getRoot("coralBase", 0, 0)
-        .setPosition(Units.inchesToMeters(28 - 6), inputs.posMeters + Units.inchesToMeters(16.5));
+        .setPosition(Units.inchesToMeters(28 - 6), inputs.posMeters + Units.inchesToMeters(18.5));
     Logger.recordOutput("Superstructure/Elevator/Visualization", visualization);
   }
 
@@ -160,7 +160,7 @@ public class Elevator extends SubsystemBase {
                       && MathUtil.isNear(0, inputs.velMetersPerSec, .05)) {
                     io.brake();
                   } else {
-                    io.runVoltage(MathUtil.clamp(feedbackVoltage + ff, -8, 8));
+                    io.runVoltage(MathUtil.clamp(feedbackVoltage + ff, -12, 12));
                   }
                 }));
   }

@@ -24,6 +24,7 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -150,9 +151,9 @@ public class Swerve extends SubsystemBase {
               poseEstimator::getEstimatedPosition);
     }
 
-    xController = new PIDController(10, 0, 1);
-    yController = new PIDController(10, 0, 1);
-    yawController = new PIDController(5, 0, 0);
+    xController = new PIDController(7.5, 0, 1);
+    yController = new PIDController(7.5, 0, 1);
+    yawController = new PIDController(10, 0, 1);
     yawController.enableContinuousInput(-PI, PI);
   }
 
@@ -430,7 +431,11 @@ public class Swerve extends SubsystemBase {
 
   public boolean atTargetPose() {
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
-    return error.getTranslation().getNorm() < .01 && Math.abs(error.getRotation().getDegrees()) < 5;
+    return error.getTranslation().getNorm() < .025
+        && Math.abs(error.getRotation().getDegrees()) < 5
+        && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
+            < .5
+        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 10;
   }
 
   public Command followRepulsorField(Pose2d goal) {

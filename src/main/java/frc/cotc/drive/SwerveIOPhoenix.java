@@ -299,7 +299,7 @@ public class SwerveIOPhoenix implements SwerveIO {
           case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.41015625;
         }
       } else {
-        driveConfig.Slot0.kP = 2;
+        driveConfig.Slot0.kP = 10;
 
         steerConfig.Slot0.kP = 600;
         steerConfig.Slot0.kD = 2.5;

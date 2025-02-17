@@ -69,14 +69,14 @@ public class Autos {
     repulsorCommand =
         branch -> swerve.followRepulsorField(ReefLocations.getScoringLocation(branch));
 
-    addRoutine("CycleFromG", () -> cycleFromG(factory, swerve, superstructure));
+    addRoutine("CycleFromE", () -> cycleFromE(factory, swerve, superstructure));
   }
 
-  private AutoRoutine cycleFromG(
+  private AutoRoutine cycleFromE(
       AutoFactory factory, Swerve swerve, Superstructure superstructure) {
-    var routine = factory.newRoutine("CycleFromG");
+    var routine = factory.newRoutine("CycleFromE");
 
-    var gToSource = getTrajectory(routine, ReefBranch.G, SourceLoc.R);
+    var eToSource = getTrajectory(routine, ReefBranch.E, SourceLoc.R);
     var sourceToC = getTrajectory(routine, SourceLoc.R, ReefBranch.C);
     var cToSource = getTrajectory(routine, ReefBranch.C, SourceLoc.R);
     var sourceToD = getTrajectory(routine, SourceLoc.R, ReefBranch.D);
@@ -84,10 +84,10 @@ public class Autos {
     routine
         .active()
         .onTrue(
-            deadline(superstructure.lvl4(swerve::atTargetPose), repulsorCommand.goTo(ReefBranch.G))
-                .andThen(gToSource.spawnCmd()));
+            deadline(superstructure.lvl4(swerve::atTargetPose), repulsorCommand.goTo(ReefBranch.E))
+                .andThen(eToSource.spawnCmd()));
 
-    gToSource
+    eToSource
         .done()
         .onTrue(
             deadline(
@@ -100,7 +100,7 @@ public class Autos {
         .onTrue(
             deadline(
                 superstructure.lvl4(swerve::atTargetPose),
-                sourceToD.cmd().andThen(repulsorCommand.goTo(ReefBranch.C))));
+                sourceToD.cmd().andThen(repulsorCommand.goTo(ReefBranch.D))));
 
     return routine;
   }
