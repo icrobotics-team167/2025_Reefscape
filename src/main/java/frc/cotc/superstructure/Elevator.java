@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.cotc.Robot;
 import frc.cotc.util.GainsCalculator;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -46,9 +47,9 @@ public class Elevator extends SubsystemBase {
         GainsCalculator.getPositionGains(
             constants.kV,
             constants.kG_firstStage / 9.81,
-            12 - constants.kG_firstStage,
+            8 - constants.kG_firstStage,
             .01,
-            .2,
+            .075,
             Robot.defaultPeriodSecs,
             0.001);
     secondStageKg = constants.kG_secondStage;
@@ -56,9 +57,9 @@ public class Elevator extends SubsystemBase {
         GainsCalculator.getPositionGains(
             constants.kV,
             constants.kG_secondStage / 9.81,
-            12 - constants.kG_secondStage,
+            8 - constants.kG_secondStage,
             .01,
-            .2,
+            .075,
             Robot.defaultPeriodSecs,
             0.001);
 
@@ -102,19 +103,27 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command lvl1() {
-    return goToPos(.5);
+    return goToPos(.3);
   }
 
   public Command lvl2() {
-    return goToPos(1);
+    return goToPos(.5);
   }
 
   public Command lvl3() {
-    return goToPos(1.5);
+    return goToPos(.9);
   }
 
   public Command lvl4() {
     return goToPos(1.5);
+  }
+
+  public Command manualControl(DoubleSupplier control) {
+    return run(
+        () ->
+            io.runVoltage(
+                control.getAsDouble()
+                    + (inputs.posMeters <= switchPoint ? firstStageKg : secondStageKg)));
   }
 
   private double targetHeight = 0;
@@ -148,10 +157,10 @@ public class Elevator extends SubsystemBase {
 
                   if (posMeters == 0
                       && MathUtil.isNear(0, inputs.posMeters, .01)
-                      && MathUtil.isNear(0, inputs.velMetersPerSec, .01)) {
+                      && MathUtil.isNear(0, inputs.velMetersPerSec, .05)) {
                     io.brake();
                   } else {
-                    io.runVoltage(feedbackVoltage + ff);
+                    io.runVoltage(MathUtil.clamp(feedbackVoltage + ff, -8, 8));
                   }
                 }));
   }
