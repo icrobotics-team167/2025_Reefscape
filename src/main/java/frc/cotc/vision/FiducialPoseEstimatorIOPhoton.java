@@ -109,7 +109,7 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
     }
 
     public static void update() {
-      if (Robot.groundTruthPoseSupplier != null) {
+      if (Robot.groundTruthPoseSupplier != null && visionSystemSim != null) {
         visionSystemSim.update(Robot.groundTruthPoseSupplier.get());
       }
     }

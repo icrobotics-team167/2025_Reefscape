@@ -313,8 +313,7 @@ public class Swerve extends SubsystemBase {
       DoubleSupplier omegaSupplier,
       double omegaDeadband,
       double omegaExponent) {
-    return run(
-        () -> {
+    return run(() -> {
           double xControl = xSupplier.getAsDouble();
           double yControl = ySupplier.getAsDouble();
           double magnitude = Math.hypot(xControl, yControl);
@@ -381,7 +380,8 @@ public class Swerve extends SubsystemBase {
           var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
           swerveIO.drive(setpoint);
           lastSetpoint = setpoint;
-        });
+        })
+        .withName("Teleop Drive");
   }
 
   public Command stopInX() {
@@ -435,62 +435,65 @@ public class Swerve extends SubsystemBase {
 
   public Command followRepulsorField(Pose2d goal) {
     return sequence(
-        runOnce(
-            () -> {
-              repulsorFieldPlanner.setGoal(goal.getTranslation());
-              xController.reset();
-              yController.reset();
-              yawController.reset();
-              targetPose = goal;
-            }),
-        run(
-            () -> {
-              Logger.recordOutput("Repulsor/Goal", goal);
+            runOnce(
+                () -> {
+                  repulsorFieldPlanner.setGoal(goal.getTranslation());
+                  xController.reset();
+                  yController.reset();
+                  yawController.reset();
+                  targetPose = goal;
+                }),
+            run(
+                () -> {
+                  Logger.recordOutput("Repulsor/Goal", goal);
 
-              var sample =
-                  repulsorFieldPlanner.sampleField(
-                      poseEstimator.getEstimatedPosition().getTranslation(),
-                      maxLinearSpeedMetersPerSec * .8,
-                      1.5);
+                  var sample =
+                      repulsorFieldPlanner.sampleField(
+                          poseEstimator.getEstimatedPosition().getTranslation(),
+                          maxLinearSpeedMetersPerSec * .8,
+                          1.5);
 
-              var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
-              var feedback =
-                  new ChassisSpeeds(
-                      xController.calculate(
-                          poseEstimator.getEstimatedPosition().getX(),
-                          sample.intermediateGoal().getX()),
-                      yController.calculate(
-                          poseEstimator.getEstimatedPosition().getY(),
-                          sample.intermediateGoal().getY()),
-                      yawController.calculate(
-                          poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-                          goal.getRotation().getRadians()));
+                  var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
+                  var feedback =
+                      new ChassisSpeeds(
+                          xController.calculate(
+                              poseEstimator.getEstimatedPosition().getX(),
+                              sample.intermediateGoal().getX()),
+                          yController.calculate(
+                              poseEstimator.getEstimatedPosition().getY(),
+                              sample.intermediateGoal().getY()),
+                          yawController.calculate(
+                              poseEstimator.getEstimatedPosition().getRotation().getRadians(),
+                              goal.getRotation().getRadians()));
 
-              Logger.recordOutput(
-                  "Repulsor/Error", goal.minus(poseEstimator.getEstimatedPosition()));
-              Logger.recordOutput("Repulsor/Feedforward", feedforward);
-              Logger.recordOutput("Repulsor/Feedback", feedback);
+                  Logger.recordOutput(
+                      "Repulsor/Error", goal.minus(poseEstimator.getEstimatedPosition()));
+                  Logger.recordOutput("Repulsor/Feedforward", feedforward);
+                  Logger.recordOutput("Repulsor/Feedback", feedback);
 
-              //                  Logger.recordOutput("Repulsor/Vector field",
-              // repulsorFieldPlanner.getArrows());
+                  //                  Logger.recordOutput("Repulsor/Vector field",
+                  // repulsorFieldPlanner.getArrows());
 
-              var outputFieldRelative = feedforward.plus(feedback);
-              var outputRobotRelative =
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation());
+                  var outputFieldRelative = feedforward.plus(feedback);
+                  var outputRobotRelative =
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation());
 
-              var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
-              swerveIO.drive(setpoint);
-              lastSetpoint = setpoint;
-            }));
+                  var setpoint =
+                      setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
+                  swerveIO.drive(setpoint);
+                  lastSetpoint = setpoint;
+                }))
+        .withName("Repulsor Field");
   }
 
   public Command reefAlign(Boolean left) {
     return defer(
-        () ->
-            followRepulsorField(
-                ReefLocations.getSelectedLocation(
-                    poseEstimator.getEstimatedPosition().getTranslation(), left)));
+            () ->
+                followRepulsorField(
+                    ReefLocations.getSelectedLocation(
+                        poseEstimator.getEstimatedPosition().getTranslation(), left)))
+        .withName("Reef align " + (left ? "left" : "right"));
   }
 
   public Command steerCharacterize() {

@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.cotc.drive.Swerve;
+import frc.cotc.superstructure.Superstructure;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.util.ReefLocations.ReefBranch;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class Autos {
 
   private final RepulsorCommand repulsorCommand;
 
-  public Autos(Swerve swerve) {
+  public Autos(Swerve swerve, Superstructure superstructure) {
     chooser = new LoggedDashboardChooser<>("Auto Chooser");
     chooser.addDefaultOption(NONE_NAME, NONE_NAME);
     routines.put(NONE_NAME, Commands::none);
@@ -66,18 +67,15 @@ public class Autos {
               Logger.recordOutput("Choreo/Trajectory", poses);
             });
     repulsorCommand =
-        branch ->
-            swerve
-                .followRepulsorField(ReefLocations.getScoringLocation(branch))
-                .until(swerve::atTargetPose);
+        branch -> swerve.followRepulsorField(ReefLocations.getScoringLocation(branch));
 
-    addRoutine("CycleFromG", () -> cycleFromG(factory));
+    addRoutine("CycleFromG", () -> cycleFromG(factory, swerve, superstructure));
   }
 
-  private AutoRoutine cycleFromG(AutoFactory factory) {
+  private AutoRoutine cycleFromG(
+      AutoFactory factory, Swerve swerve, Superstructure superstructure) {
     var routine = factory.newRoutine("CycleFromG");
 
-    var startToG = repulsorCommand.goTo(ReefBranch.G);
     var gToSource = getTrajectory(routine, ReefBranch.G, SourceLoc.R);
     var sourceToC = getTrajectory(routine, SourceLoc.R, ReefBranch.C);
     var cToSource = getTrajectory(routine, ReefBranch.C, SourceLoc.R);
@@ -86,7 +84,23 @@ public class Autos {
     routine
         .active()
         .onTrue(
-            sequence(startToG, gToSource.cmd(), sourceToC.cmd(), cToSource.cmd(), sourceToD.cmd()));
+            deadline(superstructure.lvl4(swerve::atTargetPose), repulsorCommand.goTo(ReefBranch.G))
+                .andThen(gToSource.spawnCmd()));
+
+    gToSource
+        .done()
+        .onTrue(
+            deadline(
+                    superstructure.lvl4(swerve::atTargetPose),
+                    sourceToC.cmd().andThen(repulsorCommand.goTo(ReefBranch.C)))
+                .andThen(cToSource.spawnCmd()));
+
+    cToSource
+        .done()
+        .onTrue(
+            deadline(
+                superstructure.lvl4(swerve::atTargetPose),
+                sourceToD.cmd().andThen(repulsorCommand.goTo(ReefBranch.C))));
 
     return routine;
   }

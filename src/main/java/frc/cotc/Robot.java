@@ -7,6 +7,8 @@
 
 package frc.cotc;
 
+import static edu.wpi.first.wpilibj2.command.Commands.deadline;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -15,14 +17,15 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
 import frc.cotc.superstructure.*;
+import frc.cotc.util.CommandXboxControllerWithRumble;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
@@ -100,46 +103,44 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
-    var primaryLeft = new CommandJoystick(0);
-    var primaryRight = new CommandJoystick(1);
-    var secondaryLeft = new CommandJoystick(2);
-    var secondaryRight = new CommandJoystick(3);
-    //    var primary = new CommandXboxControllerWithRumble(0);
+    //    var primaryLeft = new CommandJoystick(0);
+    //    var primaryRight = new CommandJoystick(1);
+    //    var secondaryLeft = new CommandJoystick(2);
+    //    var secondaryRight = new CommandJoystick(3);
+    var primary = new CommandXboxControllerWithRumble(0);
 
-    var swerve = new Swerve(new SwerveIOPhoenix(), new FiducialPoseEstimator.IO[] {});
+    var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
     swerve.setDefaultCommand(
         swerve.teleopDrive(
-            () -> -primaryLeft.getY(),
-            () -> -primaryLeft.getX(),
+            () -> -primary.getLeftY(),
+            () -> -primary.getLeftX(),
             .06,
             2,
-            () -> -primaryRight.getX(),
+            () -> -primary.getRightX(),
             .05,
             2));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-    //    primary
-    //        .b()
-    //        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose),
-    // swerve.reefAlign(true)));
-    //    primary
-    //        .x()
-    //        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose),
-    // swerve.reefAlign(false)));
-    secondaryLeft.button(2).whileTrue(superstructure.intake());
-    secondaryRight
-        .trigger()
-        .whileTrue(superstructure.elevatorManualControl(() -> -secondaryRight.getY()));
-    secondaryRight.button(8).whileTrue(superstructure.lvl1());
-    secondaryRight.button(2).whileTrue(superstructure.lvl2(() -> true));
-    secondaryRight.button(3).whileTrue(superstructure.lvl3(() -> true));
-    secondaryRight.button(4).whileTrue(superstructure.lvl4(() -> true));
+    primary
+        .b()
+        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(true)));
+    primary
+        .x()
+        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(false)));
+    //    secondaryLeft.button(2).whileTrue(superstructure.intake());
+    //    secondaryRight
+    //        .trigger()
+    //        .whileTrue(superstructure.elevatorManualControl(() -> -secondaryRight.getY()));
+    //    secondaryRight.button(8).whileTrue(superstructure.lvl1());
+    //    secondaryRight.button(2).whileTrue(superstructure.lvl2(() -> true));
+    //    secondaryRight.button(3).whileTrue(superstructure.lvl3(() -> true));
+    //    secondaryRight.button(4).whileTrue(superstructure.lvl4(() -> true));
 
-    autos = new Autos(swerve);
+    autos = new Autos(swerve, superstructure);
     ReefLocations.log();
   }
 
@@ -268,6 +269,7 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput(
         "LoggedRobot/MemoryUsageMb",
         (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6);
+    SmartDashboard.putData(CommandScheduler.getInstance());
   }
 
   @Override

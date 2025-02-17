@@ -31,6 +31,6 @@ public class CoralOuttake extends SubsystemBase {
   }
 
   Command score() {
-    return run(io::outtake).onlyWhile(() -> inputs.hasCoral).finallyDo(io::brake);
+    return run(io::outtake).onlyWhile(() -> inputs.hasCoral).withTimeout(1).finallyDo(io::brake);
   }
 }
