@@ -39,7 +39,7 @@ import org.littletonrobotics.junction.Logger;
 public class Swerve extends SubsystemBase {
   private final SwerveIO swerveIO;
 
-  private final SwerveIO.SwerveIOInputs swerveInputs;
+  private final SwerveIO.SwerveIOInputs inputs;
 
   private final SwerveSetpointGenerator setpointGenerator;
   private final SwerveSetpoint stopInXSetpoint;
@@ -62,9 +62,9 @@ public class Swerve extends SubsystemBase {
   public Swerve(SwerveIO driveIO, FiducialPoseEstimator.IO[] visionIOs) {
     this.swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
-    swerveInputs = new SwerveIO.SwerveIOInputs();
-    driveIO.updateInputs(swerveInputs);
-    Logger.processInputs("Swerve", swerveInputs);
+    inputs = new SwerveIO.SwerveIOInputs();
+    driveIO.updateInputs(inputs);
+    Logger.processInputs("Swerve", inputs);
     Logger.processInputs("Swerve/Constants", CONSTANTS);
 
     maxLinearSpeedMetersPerSec =
@@ -124,8 +124,7 @@ public class Swerve extends SubsystemBase {
             new double[4],
             new double[4]);
     lastSetpoint =
-        new SwerveSetpoint(
-            new ChassisSpeeds(), swerveInputs.moduleStates, new double[4], new double[4]);
+        new SwerveSetpoint(new ChassisSpeeds(), inputs.moduleStates, new double[4], new double[4]);
 
     currentVisualizationScalar =
         CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS / maxLinearSpeedMetersPerSec;
@@ -136,7 +135,7 @@ public class Swerve extends SubsystemBase {
     poseEstimator =
         new SwervePoseEstimator(
             setpointGenerator.getKinematics(),
-            new Rotation2d(),
+            inputs.gyroYaw,
             getLatestModulePositions(),
             new Pose2d());
 
@@ -192,13 +191,13 @@ public class Swerve extends SubsystemBase {
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Setpoint/Drive feedforwards", lastDriveFeedforwards);
 
-    swerveIO.updateInputs(swerveInputs);
-    Logger.processInputs("Swerve", swerveInputs);
+    swerveIO.updateInputs(inputs);
+    Logger.processInputs("Swerve", inputs);
     robotRelativeSpeeds = getRobotChassisSpeeds();
     Logger.recordOutput("Swerve/Actual Speed", robotRelativeSpeeds);
 
     fieldRelativeSpeeds =
-        ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, swerveInputs.gyroYaw);
+        ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, inputs.gyroYaw);
 
     if (Robot.isSimulation() && !Logger.hasReplaySource()) {
       FiducialPoseEstimatorIOPhoton.Sim.update();
@@ -210,7 +209,7 @@ public class Swerve extends SubsystemBase {
       poseEstimator.setDriveMeasurementStdDevs(driveStdDevs);
 
       double lastTimestamp = -1;
-      for (var frame : swerveInputs.odometryFrames) {
+      for (var frame : inputs.odometryFrames) {
         if (frame.timestamp() < 0) {
           invalidOdometryWarning.set(true);
           break;
@@ -263,8 +262,7 @@ public class Swerve extends SubsystemBase {
     for (int i = 0; i < 4; i++) {
       var measuredVector =
           new Translation2d(
-              swerveInputs.moduleStates[i].speedMetersPerSecond,
-              swerveInputs.moduleStates[i].angle);
+              inputs.moduleStates[i].speedMetersPerSecond, inputs.moduleStates[i].angle);
       var idealVector =
           new Translation2d(idealStates[i].speedMetersPerSecond, idealStates[i].angle);
 
@@ -283,7 +281,7 @@ public class Swerve extends SubsystemBase {
     var stdDevs =
         new Translation2d(
                 scalar * (Math.sqrt(xSquaredSum) / 4), scalar * (Math.sqrt(ySquaredSum) / 4))
-            .rotateBy(swerveInputs.gyroYaw);
+            .rotateBy(inputs.gyroYaw);
 
     // If translating and rotating at the same time, odometry drifts pretty badly in the
     // direction perpendicular to the direction of translational travel.
@@ -342,7 +340,7 @@ public class Swerve extends SubsystemBase {
                       xControl * maxLinearSpeedMetersPerSec,
                       yControl * maxLinearSpeedMetersPerSec,
                       omegaControl * maxAngularSpeedRadPerSec),
-                  swerveInputs.gyroYaw);
+                  inputs.gyroYaw);
 
           var translationalMagnitude =
               Math.hypot(
@@ -566,15 +564,15 @@ public class Swerve extends SubsystemBase {
   }
 
   private ChassisSpeeds getRobotChassisSpeeds() {
-    return setpointGenerator.getKinematics().toChassisSpeeds(swerveInputs.moduleStates);
+    return setpointGenerator.getKinematics().toChassisSpeeds(inputs.moduleStates);
   }
 
   public SwerveModulePosition[] getLatestModulePositions() {
-    if (swerveInputs.odometryFrames.length == 0) {
+    if (inputs.odometryFrames.length == 0) {
       throw new IndexOutOfBoundsException(
           "swerveInputs.odometryFrames.length was 0! This should not be possible.");
     }
-    return swerveInputs.odometryFrames[swerveInputs.odometryFrames.length - 1].positions();
+    return inputs.odometryFrames[inputs.odometryFrames.length - 1].positions();
   }
 
   public Pose2d getPose() {
@@ -597,8 +595,8 @@ public class Swerve extends SubsystemBase {
     yController.reset();
     yawController.reset();
     poseEstimator.resetPosition(gyroAngle, getLatestModulePositions(), pose);
-    swerveIO.updateInputs(swerveInputs);
-    Logger.processInputs("Swerve", swerveInputs);
+    swerveIO.updateInputs(inputs);
+    Logger.processInputs("Swerve", inputs);
     poseReset = true;
   }
 }

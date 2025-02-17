@@ -40,7 +40,6 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
-import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class SwerveIOPhoenix implements SwerveIO {
@@ -78,7 +77,7 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG = Units.lbsToKilograms(90);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(102);
 
     double linearKa = 1;
     double angularKa = 1;
@@ -255,7 +254,10 @@ public class SwerveIOPhoenix implements SwerveIO {
       var driveConfig = new TalonFXConfiguration();
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-      driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+      driveConfig.MotorOutput.Inverted =
+          id == 1 || id == 3
+              ? InvertedValue.Clockwise_Positive
+              : InvertedValue.CounterClockwise_Positive;
       driveConfig.CurrentLimits.StatorCurrentLimit =
           CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + driveFeedbackOverhead;
       driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
@@ -283,31 +285,23 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       if (Robot.isReal()) {
         driveConfig.Slot0.kV = 1;
+        driveConfig.Slot0.kP = 2;
 
         steerConfig.Slot0.kP = 100;
         steerConfig.Slot0.kD = 1;
 
         switch (id) {
-          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.465087890625;
-          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.30615234375;
-          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.330322265625;
-          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.260009765625;
+          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
+          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.295654296875;
+          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
+          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.41015625;
         }
       } else {
+        driveConfig.Slot0.kP = 2;
+
         steerConfig.Slot0.kP = 600;
         steerConfig.Slot0.kD = 2.5;
       }
-      driveConfig.Slot0.kP =
-          GainsCalculator.getVelocityPGain(
-              driveConfig.Slot0.kV,
-              WHEEL_CIRCUMFERENCE_METERS
-                  / (4
-                      * (CONSTANTS.DRIVE_MOTOR.KtNMPerAmp / (CONSTANTS.WHEEL_DIAMETER_METERS / 2))
-                      / CONSTANTS.MASS_KG),
-              driveFeedbackOverhead,
-              .05,
-              .001,
-              .001);
 
       driveMotor.getConfigurator().apply(driveConfig);
       steerMotor.getConfigurator().apply(steerConfig);
@@ -475,7 +469,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     SimThread(Module[] modules, Pigeon2 gyro) {
       for (int i = 0; i < 4; i++) {
-        simModules[i] = new SimModule(modules[i], STEER_GEAR_RATIOS[i]);
+        simModules[i] = new SimModule(modules[i], STEER_GEAR_RATIOS[i], i == 1 || i == 3);
       }
       gyroSimState = gyro.getSimState();
 
@@ -582,12 +576,15 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       final double STEER_GEAR_RATIO;
 
-      SimModule(Module module, double STEER_GEAR_RATIO) {
+      SimModule(Module module, double STEER_GEAR_RATIO, boolean invertedDrive) {
         driveMotorSim = module.driveMotor.getSimState();
         steerMotorSim = module.steerMotor.getSimState();
         encoderSim = module.encoder.getSimState();
 
-        driveMotorSim.Orientation = ChassisReference.CounterClockwise_Positive;
+        driveMotorSim.Orientation =
+            invertedDrive
+                ? ChassisReference.Clockwise_Positive
+                : ChassisReference.CounterClockwise_Positive;
         steerMotorSim.Orientation = ChassisReference.Clockwise_Positive;
         encoderSim.Orientation = ChassisReference.CounterClockwise_Positive;
 
