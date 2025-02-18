@@ -38,6 +38,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.CircularBuffer;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
@@ -52,8 +53,8 @@ public class SwerveIOPhoenix implements SwerveIO {
   static {
     CONSTANTS = new SwerveModuleConstantsAutoLogged();
 
-    CONSTANTS.TRACK_WIDTH_METERS = Units.inchesToMeters(22.75);
-    CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(22.75);
+    CONSTANTS.TRACK_WIDTH_METERS = Units.inchesToMeters(28 - (2.625 * 2));
+    CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(28 - (2.625 * 2));
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
     CONSTANTS.WHEEL_COF = 1;
@@ -82,11 +83,14 @@ public class SwerveIOPhoenix implements SwerveIO {
     CONSTANTS.MASS_KG = Units.lbsToKilograms(102);
 
     double linearKa = 1;
-    double angularKa = 1;
+    double angularKa =
+        Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2);
     CONSTANTS.MOI_KG_METERS_SQUARED =
         CONSTANTS.MASS_KG
             * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2)
-            * (Robot.isReal() ? angularKa / linearKa : 1);
+            * (Robot.isReal()
+                ? angularKa / linearKa
+                : Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2));
 
     CONSTANTS.ANGULAR_SPEED_FUDGING = .5;
 
@@ -527,9 +531,9 @@ public class SwerveIOPhoenix implements SwerveIO {
               new SwerveModulePosition()
             },
             new Pose2d(
-                Math.random() * 14 + 1,
-                Math.random() * 7 + 1,
-                new Rotation2d((Math.random() * 2 - 1) * PI)));
+                7.62,
+                MathUtil.interpolate(2, Constants.FIELD_WIDTH_METERS - 2, Math.random()),
+                Rotation2d.fromDegrees(180 - MathUtil.interpolate(-30, 30, Math.random()))));
     private double yawDeg = 0;
     private double filteredCurrentDraw = 0;
     private double lastTime;

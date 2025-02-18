@@ -9,18 +9,23 @@ package frc.cotc.vision;
 
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.cotc.Robot;
+import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate.AprilTag;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.simulation.VisionTargetSim;
 
 public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
   private final PhotonCamera camera;
@@ -91,6 +96,14 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
       if (visionSystemSim == null) {
         visionSystemSim = new VisionSystemSim("main");
         visionSystemSim.addAprilTags(FiducialPoseEstimator.tagLayout);
+        visionSystemSim.addVisionTargets(
+            new VisionTargetSim(
+                new Pose3d(new Pose2d(ReefLocations.BLUE_REEF, Rotation2d.kZero)),
+                new TargetModel(1.5)));
+        visionSystemSim.addVisionTargets(
+            new VisionTargetSim(
+                new Pose3d(new Pose2d(ReefLocations.RED_REEF, Rotation2d.kZero)),
+                new TargetModel(1.5)));
       }
 
       var name = camera.getName();

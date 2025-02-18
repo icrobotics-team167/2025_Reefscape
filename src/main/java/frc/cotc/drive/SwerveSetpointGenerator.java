@@ -74,8 +74,8 @@ public class SwerveSetpointGenerator {
       var modPosReciprocal =
           new Translation2d(
               1.0 / this.moduleLocations[i].getNorm(), this.moduleLocations[i].getAngle());
-      this.forceKinematics.setRow(i * 2, 0, /* Start Data */ 1, 0, -modPosReciprocal.getY());
-      this.forceKinematics.setRow(i * 2 + 1, 0, /* Start Data */ 0, 1, modPosReciprocal.getX());
+      forceKinematics.setRow(i * 2, 0, /* Start Data */ 1, 0, -modPosReciprocal.getY());
+      forceKinematics.setRow(i * 2 + 1, 0, /* Start Data */ 0, 1, modPosReciprocal.getX());
     }
   }
 

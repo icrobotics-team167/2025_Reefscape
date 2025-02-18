@@ -187,27 +187,7 @@ public class Robot extends LoggedRobot {
                           Units.inchesToMeters(8.25),
                           new Rotation3d(
                               0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                  "FrontRight"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "BackLeftCamera",
-                      new Transform3d(
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(135)))),
-                  "BackLeft"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "BackRightCamera",
-                      new Transform3d(
-                          -Units.inchesToMeters(22.75 / 2),
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-135)))),
-                  "BackRight")
+                  "FrontRight")
             };
 
         cameraNames.names = new String[visionIOs.length];
