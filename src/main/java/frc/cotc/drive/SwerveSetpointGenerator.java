@@ -247,17 +247,27 @@ public class SwerveSetpointGenerator {
     }
     double maxSpeed = maxDriveVelocity * Math.min(1, voltage / 12);
 
-    // Some crimes against RAM right here. This wouldn't be a big deal if the RoboRIO wasn't crap.
-    SwerveModuleState[] desiredModuleStates = kinematics.toSwerveModuleStates(desiredChassisSpeeds);
-    // Make sure desiredState respects velocity limits.
-    SwerveDriveKinematics.desaturateWheelSpeeds(desiredModuleStates, maxSpeed);
-    desiredChassisSpeeds = kinematics.toChassisSpeeds(desiredModuleStates);
-    // Discretize
-    desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, dt);
-    desiredModuleStates = kinematics.toSwerveModuleStates(desiredChassisSpeeds);
-    // Desaturate
-    SwerveDriveKinematics.desaturateWheelSpeeds(desiredModuleStates, maxSpeed);
-    desiredChassisSpeeds = kinematics.toChassisSpeeds(desiredModuleStates);
+    SwerveModuleState[] desiredModuleStates;
+    if (Math.hypot(desiredChassisSpeeds.vxMetersPerSecond, desiredChassisSpeeds.vyMetersPerSecond)
+            < .01
+        && Math.abs(desiredChassisSpeeds.omegaRadiansPerSecond) < .01) {
+      desiredChassisSpeeds.vxMetersPerSecond = 0;
+      desiredChassisSpeeds.vyMetersPerSecond = 0;
+      desiredChassisSpeeds.omegaRadiansPerSecond = 0;
+      desiredModuleStates = kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+    } else { // Some crimes against RAM right here. This wouldn't be a big deal if the RoboRIO
+      // wasn't crap.
+      desiredModuleStates = kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+      // Make sure desiredState respects velocity limits.
+      SwerveDriveKinematics.desaturateWheelSpeeds(desiredModuleStates, maxSpeed);
+      desiredChassisSpeeds = kinematics.toChassisSpeeds(desiredModuleStates);
+      // Discretize
+      desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, dt);
+      desiredModuleStates = kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+      // Desaturate
+      SwerveDriveKinematics.desaturateWheelSpeeds(desiredModuleStates, maxSpeed);
+      desiredChassisSpeeds = kinematics.toChassisSpeeds(desiredModuleStates);
+    }
 
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Desaturated chassis speeds",
