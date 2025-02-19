@@ -7,12 +7,12 @@
 
 package frc.cotc;
 
-import static edu.wpi.first.wpilibj2.command.Commands.deadline;
-
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -112,25 +112,35 @@ public class Robot extends LoggedRobot {
     var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
 
+    Supplier<Translation2d> driveTranslationalControlSupplier =
+        () -> {
+          double xControl = -primary.getLeftY();
+          double yControl = -primary.getLeftX();
+          double magnitude = Math.hypot(xControl, yControl);
+          if (magnitude > 1) {
+            xControl /= magnitude;
+            yControl /= magnitude;
+          } else if (magnitude > 1e-6) {
+            double scalar = Math.pow(MathUtil.applyDeadband(magnitude, .05) / magnitude, 2);
+            xControl *= scalar;
+            yControl *= scalar;
+          }
+          return new Translation2d(xControl, yControl);
+        };
+
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
     swerve.setDefaultCommand(
         swerve.teleopDrive(
-            () -> -primary.getLeftY(),
-            () -> -primary.getLeftX(),
-            .06,
-            2,
-            () -> -primary.getRightX(),
-            .05,
-            2));
+            driveTranslationalControlSupplier,
+            () -> {
+              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .05);
+              return rawInput * rawInput * Math.signum(rawInput);
+            }));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-    primary
-        .b()
-        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(true)));
-    primary
-        .x()
-        .whileTrue(deadline(superstructure.lvl4(swerve::atTargetPose), swerve.reefAlign(false)));
+    primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
+    primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
     //    secondaryLeft.button(2).whileTrue(superstructure.intake());
     //    secondaryRight
     //        .trigger()
@@ -249,6 +259,7 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput(
         "LoggedRobot/MemoryUsageMb",
         (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6);
+    Logger.recordOutput("IsOnRed", isOnRed());
     SmartDashboard.putData(CommandScheduler.getInstance());
   }
 
