@@ -56,7 +56,7 @@ public final class ReefLocations {
       RED_POSES[i] = BLUE_POSES[i].rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
     }
 
-    var center = new Translation2d(BLUE_REEF.getX() - .85, Constants.FIELD_WIDTH_METERS / 2);
+    var center = new Translation2d(tag18X, Constants.FIELD_WIDTH_METERS / 2);
     BLUE_REEF_WALLS = new Translation2d[6];
     RED_REEF_WALLS = new Translation2d[6];
     for (int i = 0; i < 6; i++) {
