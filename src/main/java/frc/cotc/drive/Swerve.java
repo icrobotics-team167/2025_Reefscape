@@ -465,7 +465,10 @@ public class Swerve extends SubsystemBase {
                   if (nudgeSupplier != null) {
                     var nudge = nudgeSupplier.get();
                     if (nudge.getNorm() > .1) {
-                      var nudgeScalar = Math.min(error.getTranslation().getNorm() / 3, 1) * maxLinearSpeedMetersPerSec;
+                      var nudgeScalar =
+                          Math.min(error.getTranslation().getNorm() / 3, 1)
+                              * Math.min(error.getTranslation().getNorm() / 3, 1)
+                              * maxLinearSpeedMetersPerSec;
 
                       if (Robot.isOnRed()) {
                         nudge = new Translation2d(-nudge.getX(), -nudge.getY());
