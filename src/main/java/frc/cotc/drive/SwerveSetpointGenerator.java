@@ -255,7 +255,8 @@ public class SwerveSetpointGenerator {
       desiredChassisSpeeds.vyMetersPerSecond = 0;
       desiredChassisSpeeds.omegaRadiansPerSecond = 0;
       desiredModuleStates = kinematics.toSwerveModuleStates(desiredChassisSpeeds);
-    } else { // Some crimes against RAM right here. This wouldn't be a big deal if the RoboRIO
+    } else {
+      // Some crimes against RAM right here. This wouldn't be a big deal if the RoboRIO
       // wasn't crap.
       desiredModuleStates = kinematics.toSwerveModuleStates(desiredChassisSpeeds);
       // Make sure desiredState respects velocity limits.
