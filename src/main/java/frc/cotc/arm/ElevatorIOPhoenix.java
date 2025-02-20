@@ -1,3 +1,10 @@
+// Copyright (c) 2024 FRC 167
+// https://github.com/icrobotics-team167
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
 package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -13,11 +20,10 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Notifier;
 import frc.cotc.Robot;
-import frc.cotc.arm.ElevatorIO;
 import frc.cotc.util.ContinuousElevatorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
 
-public class ElevatorIOSparkFlex implements ElevatorIO {
+public class ElevatorIOPhoenix implements ElevatorIO {
     private final TalonFX leftMotor;
     private final TalonFX rightMotor;
     private final DigitalInput limitSwitch;
@@ -42,7 +48,7 @@ public class ElevatorIOSparkFlex implements ElevatorIO {
         constants.maxHeightMeters = 1.53551952554;
     }
 
-    public ElevatorIOSparkFlex() {
+    public ElevatorIOPhoenix() {
         leftMotor = new TalonFX(13, Robot.CANIVORE_NAME);
         rightMotor = new TalonFX(14, Robot.CANIVORE_NAME);
         limitSwitch = new DigitalInput(3);

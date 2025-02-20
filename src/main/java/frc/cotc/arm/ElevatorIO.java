@@ -5,19 +5,12 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.arm;
+package frc.cotc.superstructure;
 
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.measure.Height;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Velocity;
-import edu.wpi.first.units.measure.Voltage;
 import frc.cotc.util.MotorCurrentDraws;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
-
-import static edu.wpi.first.units.Units.*;
 
 public interface ElevatorIO {
   @AutoLog
@@ -30,14 +23,14 @@ public interface ElevatorIO {
   }
 
   class ElevatorIOInputs implements LoggableInputs {
-    public double posMeters = 0;
-    public double velMetersPerSec = 0;
+    double posMeters;
+    double velMetersPerSec;
 
-    public MotorCurrentDraws leftMotorCurrentDraws = new MotorCurrentDraws();
-    public MotorCurrentDraws rightMotorCurrentDraws = new MotorCurrentDraws();
+    MotorCurrentDraws leftMotorCurrentDraws = new MotorCurrentDraws();
+    MotorCurrentDraws rightMotorCurrentDraws = new MotorCurrentDraws();
 
     @Override
-    public void toLog(org.littletonrobotics.junction.LogTable table) {
+    public void toLog(LogTable table) {
       table.put("posMeters", posMeters);
       table.put("velMetersPerSec", velMetersPerSec);
       table.put("leftMotorCurrentDraws", MotorCurrentDraws.struct, leftMotorCurrentDraws);
@@ -45,19 +38,23 @@ public interface ElevatorIO {
     }
 
     @Override
-    public void fromLog(org.littletonrobotics.junction.LogTable table) {
+    public void fromLog(LogTable table) {
       posMeters = table.get("posMeters", 0.0);
       velMetersPerSec = table.get("velMetersPerSec", 0.0);
-      leftMotorCurrentDraws = table.get("leftMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
-      rightMotorCurrentDraws = table.get("rightMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
+      leftMotorCurrentDraws =
+              table.get("leftMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
+      rightMotorCurrentDraws =
+              table.get("rightMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
     }
   }
 
-  ElevatorIOConstants getConstants();
+  default ElevatorIOConstantsAutoLogged getConstants() {
+    return new ElevatorIOConstantsAutoLogged();
+  }
 
-  void updateInputs(ElevatorIOInputs inputs);
+  default void updateInputs(ElevatorIOInputs inputs) {}
 
-  void runVoltage(double volts);
+  default void runVoltage(double volts) {}
 
-  void brake();
+  default void brake() {}
 }
