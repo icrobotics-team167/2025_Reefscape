@@ -70,7 +70,7 @@ public class Elevator extends SubsystemBase {
     stage1Ligament = new LoggedMechanismLigament2d("stage1", 1, 90, 5, new Color8Bit(255, 0, 0));
     stage2Ligament = new LoggedMechanismLigament2d("stage2", 1, 90, 7.5, new Color8Bit(255, 0, 0));
     var root =
-        visualization.getRoot("root", Units.inchesToMeters(28 - 6), Units.inchesToMeters(.5));
+        visualization.getRoot("root", Units.inchesToMeters(28 - 7), Units.inchesToMeters(.5));
     root.append(stage1Ligament);
     root.append(stage2Ligament);
     root.append(
@@ -94,7 +94,7 @@ public class Elevator extends SubsystemBase {
             : Units.inchesToMeters(40) + inputs.posMeters - switchPoint);
     visualization
         .getRoot("coralBase", 0, 0)
-        .setPosition(Units.inchesToMeters(28 - 6), inputs.posMeters + Units.inchesToMeters(18.5));
+        .setPosition(Units.inchesToMeters(28 - 6), inputs.posMeters + Units.inchesToMeters(20.5));
     Logger.recordOutput("Superstructure/Elevator/Visualization", visualization);
   }
 

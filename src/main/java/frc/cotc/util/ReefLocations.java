@@ -33,10 +33,14 @@ public final class ReefLocations {
 
     var A =
         new Pose2d(
-            BLUE_REEF.getX() - 1.265, Constants.FIELD_WIDTH_METERS / 2 + .155, Rotation2d.kZero);
+            tag18X - (Constants.BUMPER_THICKNESS_METERS + (Constants.FRAME_LENGTH_METERS / 2)),
+            Constants.FIELD_WIDTH_METERS / 2 + .155,
+            Rotation2d.kZero);
     var B =
         new Pose2d(
-            BLUE_REEF.getX() - 1.265, Constants.FIELD_WIDTH_METERS / 2 - .155, Rotation2d.kZero);
+            tag18X - (Constants.BUMPER_THICKNESS_METERS + (Constants.FRAME_LENGTH_METERS / 2)),
+            Constants.FIELD_WIDTH_METERS / 2 - .155,
+            Rotation2d.kZero);
 
     BLUE_POSES = new Pose2d[12];
     BLUE_POSES[0] = A;
