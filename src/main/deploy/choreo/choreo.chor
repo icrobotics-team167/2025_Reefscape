@@ -7,8 +7,8 @@
    "FieldWidth":{
     "dimension":"Length",
     "var":{
-     "exp":"8.025 m",
-     "val":8.025
+     "exp":"8.052 m",
+     "val":8.052
     }
    }
   },
@@ -188,7 +188,7 @@
     },
     "y":{
      "exp":"FieldWidth - SR.y",
-     "val":7.464031481742859
+     "val":7.491031481742859
     },
     "heading":{
      "exp":"-SR.heading",
@@ -257,8 +257,8 @@
    "val":0.5
   },
   "cof":{
-   "exp":"0.5",
-   "val":0.5
+   "exp":"0.6",
+   "val":0.6
   },
   "bumper":{
    "front":{

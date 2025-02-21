@@ -49,7 +49,7 @@ public class Elevator extends SubsystemBase {
             constants.kG_firstStage / 9.81,
             12 - constants.kG_firstStage,
             .01,
-            .075,
+            .2,
             Robot.defaultPeriodSecs,
             0.001);
     secondStageKg = constants.kG_secondStage;
@@ -59,7 +59,7 @@ public class Elevator extends SubsystemBase {
             constants.kG_secondStage / 9.81,
             12 - constants.kG_secondStage,
             .01,
-            .075,
+            .2,
             Robot.defaultPeriodSecs,
             0.001);
 
@@ -129,7 +129,8 @@ public class Elevator extends SubsystemBase {
   private double targetHeight = 0;
 
   public boolean atTargetPos() {
-    return Math.abs(inputs.posMeters - targetHeight) < .025;
+    return Math.abs(inputs.posMeters - targetHeight) < .025
+        && Math.abs(inputs.velMetersPerSec) < .5;
   }
 
   private final PIDController feedbackController = new PIDController(0, 0, 0);
@@ -150,8 +151,8 @@ public class Elevator extends SubsystemBase {
                   var feedbackVoltage =
                       feedbackController.calculate(
                           inputs.posMeters, MathUtil.clamp(posMeters, 0, maxHeight));
-                  if (inputs.posMeters < .25) {
-                    feedbackVoltage *= MathUtil.interpolate(.25, 1, inputs.posMeters / .25);
+                  if (inputs.posMeters < .2) {
+                    feedbackVoltage *= MathUtil.interpolate(.5, 1, inputs.posMeters / .2);
                   }
                   Logger.recordOutput("Superstructure/Elevator/Feedback", feedbackVoltage);
 
