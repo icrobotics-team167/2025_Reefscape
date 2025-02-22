@@ -413,7 +413,7 @@ public class Swerve extends SubsystemBase {
       return false;
     }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
-    return error.getTranslation().getNorm() < .04
+    return error.getTranslation().getNorm() < .05
         && Math.abs(error.getRotation().getDegrees()) < 5
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
             < .5
