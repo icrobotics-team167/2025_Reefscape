@@ -28,7 +28,7 @@ public class Superstructure extends SubsystemBase {
   public Command lvl1() {
     return expose(
         deadline(
-            waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(), waitSeconds(.25)),
+            waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(), waitSeconds(.5)),
             elevator.lvl1()));
   }
 
@@ -36,7 +36,7 @@ public class Superstructure extends SubsystemBase {
     return expose(
         deadline(
             waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                .andThen(coralOuttake.score()),
+                .andThen(coralOuttake.score(), waitSeconds(.5)),
             elevator.lvl2()));
   }
 
@@ -44,7 +44,7 @@ public class Superstructure extends SubsystemBase {
     return expose(
         deadline(
             waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                .andThen(coralOuttake.score()),
+                .andThen(coralOuttake.score(), waitSeconds(.5)),
             elevator.lvl3()));
   }
 
@@ -52,7 +52,7 @@ public class Superstructure extends SubsystemBase {
     return expose(
         deadline(
             waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                .andThen(coralOuttake.score(), waitSeconds(.25)),
+                .andThen(coralOuttake.score(), waitSeconds(.75)),
             elevator.lvl4()));
   }
 
