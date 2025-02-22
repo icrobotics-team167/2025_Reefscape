@@ -239,7 +239,9 @@ public class SwerveSetpointGenerator {
       ChassisSpeeds desiredChassisSpeeds,
       double voltage,
       double dt) {
-    desiredChassisSpeeds.omegaRadiansPerSecond *= -1; // TODO: Root cause analysis
+    if (Robot.isReal() || Logger.hasReplaySource()) {
+      desiredChassisSpeeds.omegaRadiansPerSecond *= -1; // TODO: Root cause analysis
+    }
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Desired chassis speeds", desiredChassisSpeeds);
 
