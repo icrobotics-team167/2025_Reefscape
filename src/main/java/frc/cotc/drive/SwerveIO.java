@@ -187,6 +187,8 @@ public interface SwerveIO {
 
   default void drive(SwerveSetpointGenerator.SwerveSetpoint setpoint) {}
 
+  default void stop() {}
+
   default void resetGyro(Rotation2d newYaw) {}
 
   default void initSysId() {}

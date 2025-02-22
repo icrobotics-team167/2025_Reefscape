@@ -140,6 +140,7 @@ public class Robot extends LoggedRobot {
             }));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+    RobotModeTriggers.disabled().whileTrue(swerve.stop());
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
     primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
     //    primary.y().whileTrue(superstructure.lvl4(() -> true));

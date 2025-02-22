@@ -341,6 +341,11 @@ public class SwerveIOPhoenix implements SwerveIO {
               .withVelocity(steerFeedforwardRotPerSec));
     }
 
+    void brake() {
+      driveMotor.setControl(brakeControlRequest);
+      steerMotor.setControl(brakeControlRequest);
+    }
+
     private final VoltageOut steerCharacterization = new VoltageOut(0).withEnableFOC(false);
 
     void steerCharacterize(double volts) {

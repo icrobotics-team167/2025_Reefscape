@@ -371,6 +371,10 @@ public class Swerve extends SubsystemBase {
         .ignoringDisable(true);
   }
 
+  public Command stop() {
+    return run(swerveIO::stop).ignoringDisable(true);
+  }
+
   public Command resetGyro() {
     return runOnce(
         () -> {
