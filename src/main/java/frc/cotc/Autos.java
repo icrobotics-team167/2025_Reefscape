@@ -87,6 +87,7 @@ public class Autos {
     addRoutine("CycleFromJ", () -> cycleFromJ(factory, swerve, superstructure));
     addRoutine("L&K", () -> lAndK(factory, swerve, superstructure));
     addRoutine("DriveTest", () -> driveTest(factory, swerve));
+    addRoutine("ChoreoDriveTest", () -> choreoDriveTest(factory, swerve));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.758, .7, Rotation2d.fromDegrees(54));
@@ -241,6 +242,16 @@ public class Autos {
                 sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose),
                 reefRepulsorCommand.goTo(ReefBranch.K).until(swerve::atTargetPose),
                 sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose)));
+
+    return routine;
+  }
+
+  private AutoRoutine choreoDriveTest(AutoFactory factory, Swerve swerve) {
+    var routine = factory.newRoutine("driveTest");
+
+    var jToSource = getTrajectory(routine, ReefBranch.J, Source.L);
+
+    routine.active().onTrue(reefRepulsorCommand.goTo(ReefBranch.J).andThen(jToSource.spawnCmd()));
 
     return routine;
   }
