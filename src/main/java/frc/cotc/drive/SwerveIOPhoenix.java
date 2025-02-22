@@ -83,15 +83,10 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     CONSTANTS.MASS_KG = Units.lbsToKilograms(115 + 17 + 9);
 
-    double linearKa = 1;
-    double angularKa =
-        Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2);
     CONSTANTS.MOI_KG_METERS_SQUARED =
         CONSTANTS.MASS_KG
             * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2)
-            * (Robot.isReal()
-                ? (angularKa / linearKa)
-                : Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2));
+            * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2);
 
     CONSTANTS.ANGULAR_SPEED_FUDGING = .9;
 
