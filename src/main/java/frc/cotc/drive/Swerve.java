@@ -393,12 +393,14 @@ public class Swerve extends SubsystemBase {
         "Choreo/Target pose", new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading)));
 
     var feedforward = new ChassisSpeeds(sample.vx, sample.vy, sample.omega);
+    Logger.recordOutput("Choreo/Feedforward (Field)", feedforward);
     var feedback =
         new ChassisSpeeds(
             xController.calculate(poseEstimator.getEstimatedPosition().getX(), sample.x),
             yController.calculate(poseEstimator.getEstimatedPosition().getY(), sample.y),
             yawController.calculate(
                 poseEstimator.getEstimatedPosition().getRotation().getRadians(), sample.heading));
+    Logger.recordOutput("Choreo/Feedback (Field)", feedback);
 
     var outputFieldRelative = feedforward.plus(feedback);
     var outputRobotRelative =

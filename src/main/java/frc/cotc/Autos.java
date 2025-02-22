@@ -251,8 +251,13 @@ public class Autos {
 
     var jToSource = getTrajectory(routine, ReefBranch.J, Source.L);
 
-    routine.active().onTrue(reefRepulsorCommand.goTo(ReefBranch.J).until(swerve::atTargetPose
-    ).andThen(jToSource.cmd()));
+    routine
+        .active()
+        .onTrue(
+            reefRepulsorCommand
+                .goTo(ReefBranch.J)
+                .until(swerve::atTargetPose)
+                .andThen(jToSource.cmd()));
 
     return routine;
   }
