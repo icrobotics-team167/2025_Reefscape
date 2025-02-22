@@ -93,7 +93,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                 ? angularKa / linearKa
                 : Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2));
 
-    CONSTANTS.ANGULAR_SPEED_FUDGING = .5;
+    CONSTANTS.ANGULAR_SPEED_FUDGING = .75;
 
     CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS =
         Math.min(
