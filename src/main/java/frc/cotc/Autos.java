@@ -78,10 +78,7 @@ public class Autos {
         source -> {
           var pose = source == Source.L ? sourceLeft : sourceRight;
           if (Robot.isOnRed()) {
-            pose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
-            DriverStation.reportWarning("Source Repulsor: Flipped!", false);
-          } else {
-            DriverStation.reportWarning("Source Repulsor: Not Flipped!", false);
+            pose = pose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
           }
           return swerve.followRepulsorField(pose);
         };
