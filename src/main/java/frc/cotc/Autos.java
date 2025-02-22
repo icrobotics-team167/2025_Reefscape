@@ -89,9 +89,9 @@ public class Autos {
     addRoutine("DriveTest", () -> driveTest(factory, swerve));
   }
 
-  private final Pose2d sourceRight = new Pose2d(1.61, .6, Rotation2d.fromDegrees(54));
+  private final Pose2d sourceRight = new Pose2d(1.65, .65, Rotation2d.fromDegrees(54));
   private final Pose2d sourceLeft =
-      new Pose2d(1.61, Constants.FIELD_WIDTH_METERS - .6, Rotation2d.fromDegrees(-54));
+      new Pose2d(1.65, Constants.FIELD_WIDTH_METERS - .65, Rotation2d.fromDegrees(-54));
 
   private AutoRoutine cycleFromE(
       AutoFactory factory, Swerve swerve, Superstructure superstructure) {
