@@ -291,8 +291,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
       if (Robot.isReal()) {
-        driveConfig.Slot0.kV = 2;
-        driveConfig.Slot0.kP = 10;
+        driveConfig.Slot0.kV = 2.25;
+        driveConfig.Slot0.kP = 15;
 
         steerConfig.Slot0.kP = 80;
         steerConfig.Slot0.kD = 0.1;
