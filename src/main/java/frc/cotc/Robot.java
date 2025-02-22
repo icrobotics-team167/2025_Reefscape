@@ -122,7 +122,7 @@ public class Robot extends LoggedRobot {
             xControl /= magnitude;
             yControl /= magnitude;
           } else if (magnitude > 1e-6) {
-            double scalar = Math.pow(MathUtil.applyDeadband(magnitude, .05) / magnitude, 2);
+            double scalar = Math.pow(MathUtil.applyDeadband(magnitude, .06) / magnitude, 2);
             xControl *= scalar;
             yControl *= scalar;
           }
@@ -135,7 +135,7 @@ public class Robot extends LoggedRobot {
         swerve.teleopDrive(
             driveTranslationalControlSupplier,
             () -> {
-              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .05);
+              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
               return Math.copySign(rawInput * rawInput, rawInput);
             }));
     //    primary.povDown().whileTrue(swerve.stopInX());
