@@ -77,7 +77,7 @@ public class Autos {
     sourceRepulsorCommand =
         source -> {
           var pose = source == Source.L ? sourceLeft : sourceRight;
-          if (Robot.isReal()) {
+          if (Robot.isOnRed()) {
             pose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
           }
           return swerve.followRepulsorField(pose);
