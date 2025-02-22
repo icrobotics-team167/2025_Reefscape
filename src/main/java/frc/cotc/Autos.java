@@ -78,12 +78,13 @@ public class Autos {
         source -> swerve.followRepulsorField(source == Source.L ? sourceLeft : sourceRight);
 
     addRoutine("CycleFromE", () -> cycleFromE(factory, swerve, superstructure));
+    addRoutine("CycleFromJ", () -> cycleFromJ(factory, swerve, superstructure));
     addRoutine("L&K", () -> lAndK(factory, swerve, superstructure));
   }
 
-  private final Pose2d sourceRight = new Pose2d(1.601, .6, Rotation2d.fromDegrees(54));
+  private final Pose2d sourceRight = new Pose2d(1.61, .6, Rotation2d.fromDegrees(54));
   private final Pose2d sourceLeft =
-      new Pose2d(Constants.FRAME_WIDTH_METERS - 1.601, .6, Rotation2d.fromDegrees(-54));
+      new Pose2d(1.61, Constants.FIELD_WIDTH_METERS - .6, Rotation2d.fromDegrees(-54));
 
   private AutoRoutine cycleFromE(
       AutoFactory factory, Swerve swerve, Superstructure superstructure) {
@@ -143,6 +144,68 @@ public class Autos {
                     .lvl4(swerve::atTargetPose)
                     .deadlineFor(sourceToB.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.B)))
                     .andThen(bToSource.spawnCmd())));
+
+    return routine;
+  }
+
+  private AutoRoutine cycleFromJ(
+      AutoFactory factory, Swerve swerve, Superstructure superstructure) {
+    var routine = factory.newRoutine("CycleFromJ");
+
+    var jToSource = getTrajectory(routine, ReefBranch.J, Source.L);
+    var sourceToL = getTrajectory(routine, Source.L, ReefBranch.L);
+    var lToSource = getTrajectory(routine, ReefBranch.L, Source.L);
+    var sourceToK = getTrajectory(routine, Source.L, ReefBranch.K);
+    var kToSource = getTrajectory(routine, ReefBranch.K, Source.L);
+    var sourceToA = getTrajectory(routine, Source.L, ReefBranch.A);
+    var aToSource = getTrajectory(routine, ReefBranch.A, Source.L);
+
+    routine
+        .active()
+        .onTrue(
+            deadline(
+                    superstructure.lvl4(swerve::atTargetPose),
+                    reefRepulsorCommand.goTo(ReefBranch.J))
+                .andThen(jToSource.spawnCmd()));
+
+    jToSource
+        .done()
+        .onTrue(
+            sequence(
+                superstructure
+                    .intake()
+                    .withTimeout(1)
+                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
+                superstructure
+                    .lvl4(swerve::atTargetPose)
+                    .deadlineFor(sourceToK.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.K)))
+                    .andThen(kToSource.spawnCmd())));
+
+    kToSource
+        .done()
+        .onTrue(
+            sequence(
+                superstructure
+                    .intake()
+                    .withTimeout(1)
+                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
+                superstructure
+                    .lvl4(swerve::atTargetPose)
+                    .deadlineFor(sourceToL.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.L)))
+                    .andThen(lToSource.spawnCmd())));
+
+    lToSource
+        .done()
+        .onTrue(
+            sequence(
+                superstructure
+                    .intake()
+                    .withTimeout(1)
+                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
+                superstructure
+                    .lvl4(swerve::atTargetPose)
+                    .deadlineFor(sourceToA.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.A)))
+                    .andThen(aToSource.spawnCmd())));
 
     return routine;
   }
