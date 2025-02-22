@@ -67,10 +67,10 @@ public class ElevatorIOPhoenix implements ElevatorIO {
 
     var config = new TalonFXConfiguration();
     config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.CurrentLimits.StatorCurrentLimit = 80;
-    config.CurrentLimits.SupplyCurrentLimit = 60;
-    config.CurrentLimits.SupplyCurrentLowerLimit = 40;
-    config.CurrentLimits.SupplyCurrentLowerTime = 1;
+    config.CurrentLimits.StatorCurrentLimit = 50;
+    config.CurrentLimits.SupplyCurrentLimit = 40;
+    config.CurrentLimits.SupplyCurrentLowerLimit = 10;
+    config.CurrentLimits.SupplyCurrentLowerTime = 1.5;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         constants.maxHeightMeters / metersPerRotation;
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
