@@ -35,6 +35,7 @@ import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Swerve extends SubsystemBase {
@@ -406,7 +407,11 @@ public class Swerve extends SubsystemBase {
 
   private Pose2d targetPose;
 
+  @AutoLogOutput
   public boolean atTargetPose() {
+    if (targetPose == null) {
+      return false;
+    }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
     return error.getTranslation().getNorm() < .025
         && Math.abs(error.getRotation().getDegrees()) < 5
