@@ -81,7 +81,7 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG = Units.lbsToKilograms(115);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(115 + 17 + 9);
 
     double linearKa = 1;
     double angularKa =
@@ -291,8 +291,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
       if (Robot.isReal()) {
-        driveConfig.Slot0.kV = 2.5;
-        driveConfig.Slot0.kP = 3;
+        driveConfig.Slot0.kV = 2;
+        driveConfig.Slot0.kP = 10;
 
         steerConfig.Slot0.kP = 80;
         steerConfig.Slot0.kD = 0.1;
