@@ -75,7 +75,13 @@ public class Autos {
     reefRepulsorCommand =
         branch -> swerve.followRepulsorField(ReefLocations.getScoringLocation(branch));
     sourceRepulsorCommand =
-        source -> swerve.followRepulsorField(source == Source.L ? sourceLeft : sourceRight);
+        source -> {
+          var pose = source == Source.L ? sourceLeft : sourceRight;
+          if (Robot.isReal()) {
+            pose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
+          }
+          return swerve.followRepulsorField(pose);
+        };
 
     addRoutine("CycleFromE", () -> cycleFromE(factory, swerve, superstructure));
     addRoutine("CycleFromJ", () -> cycleFromJ(factory, swerve, superstructure));
@@ -227,12 +233,14 @@ public class Autos {
   private AutoRoutine driveTest(AutoFactory factory, Swerve swerve) {
     var routine = factory.newRoutine("driveTest");
 
-    routine.active().onTrue(sequence(
-      reefRepulsorCommand.goTo(ReefBranch.J).until(swerve::atTargetPose),
-      sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose),
-      reefRepulsorCommand.goTo(ReefBranch.K).until(swerve::atTargetPose),
-      sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose)
-    ));
+    routine
+        .active()
+        .onTrue(
+            sequence(
+                reefRepulsorCommand.goTo(ReefBranch.J).until(swerve::atTargetPose),
+                sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose),
+                reefRepulsorCommand.goTo(ReefBranch.K).until(swerve::atTargetPose),
+                sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose)));
 
     return routine;
   }
