@@ -250,8 +250,8 @@ public class SwerveSetpointGenerator {
 
     SwerveModuleState[] desiredModuleStates;
     if (Math.hypot(desiredChassisSpeeds.vxMetersPerSecond, desiredChassisSpeeds.vyMetersPerSecond)
-            < .025
-        && Math.abs(desiredChassisSpeeds.omegaRadiansPerSecond) < .1) {
+            < .005
+        && Math.abs(desiredChassisSpeeds.omegaRadiansPerSecond) < .01) {
       desiredChassisSpeeds.vxMetersPerSecond = 0;
       desiredChassisSpeeds.vyMetersPerSecond = 0;
       desiredChassisSpeeds.omegaRadiansPerSecond = 0;

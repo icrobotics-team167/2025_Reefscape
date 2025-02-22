@@ -152,8 +152,8 @@ public class Swerve extends SubsystemBase {
               poseEstimator::getEstimatedPosition);
     }
 
-    xController = new PIDController(5, 0, 0);
-    yController = new PIDController(5, 0, 0);
+    xController = new PIDController(7.5, 0, 0);
+    yController = new PIDController(7.5, 0, 0);
     yawController = new PIDController(10, 0, 1);
     yawController.enableContinuousInput(-PI, PI);
   }
