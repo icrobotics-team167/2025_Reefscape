@@ -23,7 +23,6 @@ import frc.cotc.superstructure.Superstructure;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.util.ReefLocations.ReefBranch;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -76,16 +75,16 @@ public class Autos {
     reefRepulsorCommand =
         branch -> swerve.followRepulsorField(ReefLocations.getScoringLocation(branch));
     sourceRepulsorCommand =
-        source ->
-            defer(
-                () -> {
-                  var pose = source == Source.L ? sourceLeft : sourceRight;
-                  if (Robot.isOnRed()) {
-                    pose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
-                  }
-                  return swerve.followRepulsorField(pose);
-                },
-                Set.of(swerve));
+        source -> {
+          var pose = source == Source.L ? sourceLeft : sourceRight;
+          if (Robot.isOnRed()) {
+            pose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
+            DriverStation.reportWarning("Source Repulsor: Flipped!", false);
+          } else {
+            DriverStation.reportWarning("Source Repulsor: Flipped!", false);
+          }
+          return swerve.followRepulsorField(pose);
+        };
 
     addRoutine("CycleFromE", () -> cycleFromE(factory, swerve, superstructure));
     addRoutine("CycleFromJ", () -> cycleFromJ(factory, swerve, superstructure));
