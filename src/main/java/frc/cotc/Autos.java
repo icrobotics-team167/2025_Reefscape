@@ -81,7 +81,7 @@ public class Autos {
             pose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
             DriverStation.reportWarning("Source Repulsor: Flipped!", false);
           } else {
-            DriverStation.reportWarning("Source Repulsor: Flipped!", false);
+            DriverStation.reportWarning("Source Repulsor: Not Flipped!", false);
           }
           return swerve.followRepulsorField(pose);
         };
