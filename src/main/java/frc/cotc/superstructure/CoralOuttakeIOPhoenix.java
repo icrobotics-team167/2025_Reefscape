@@ -67,7 +67,7 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     inputs.currentDraws.mutateFromSignals(statorSignal, supplySignal);
   }
 
-  private final VoltageOut intakeControl = new VoltageOut(5).withIgnoreHardwareLimits(false);
+  private final VoltageOut intakeControl = new VoltageOut(6).withIgnoreHardwareLimits(false);
 
   @Override
   public void intake() {

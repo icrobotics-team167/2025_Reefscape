@@ -78,6 +78,7 @@ public class Autos {
         source -> swerve.followRepulsorField(source == Source.L ? sourceLeft : sourceRight);
 
     addRoutine("CycleFromE", () -> cycleFromE(factory, swerve, superstructure));
+    addRoutine("L&K", () -> lAndK(factory, swerve, superstructure));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.601, .6, Rotation2d.fromDegrees(54));
@@ -142,6 +143,19 @@ public class Autos {
                     .lvl4(swerve::atTargetPose)
                     .deadlineFor(sourceToB.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.B)))
                     .andThen(bToSource.spawnCmd())));
+
+    return routine;
+  }
+
+  private AutoRoutine lAndK(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
+    var routine = factory.newRoutine("lAndK");
+
+    routine
+        .active()
+        .onTrue(
+            superstructure
+                .lvl4(swerve::atTargetPose)
+                .deadlineFor(reefRepulsorCommand.goTo(ReefBranch.L)));
 
     return routine;
   }

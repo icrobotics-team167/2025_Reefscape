@@ -239,6 +239,7 @@ public class SwerveSetpointGenerator {
       ChassisSpeeds desiredChassisSpeeds,
       double voltage,
       double dt) {
+    desiredChassisSpeeds.omegaRadiansPerSecond *= -1; // TODO: Root cause analysis
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Desired chassis speeds", desiredChassisSpeeds);
 
@@ -249,8 +250,8 @@ public class SwerveSetpointGenerator {
 
     SwerveModuleState[] desiredModuleStates;
     if (Math.hypot(desiredChassisSpeeds.vxMetersPerSecond, desiredChassisSpeeds.vyMetersPerSecond)
-            < .01
-        && Math.abs(desiredChassisSpeeds.omegaRadiansPerSecond) < .01) {
+            < .025
+        && Math.abs(desiredChassisSpeeds.omegaRadiansPerSecond) < .1) {
       desiredChassisSpeeds.vxMetersPerSecond = 0;
       desiredChassisSpeeds.vyMetersPerSecond = 0;
       desiredChassisSpeeds.omegaRadiansPerSecond = 0;

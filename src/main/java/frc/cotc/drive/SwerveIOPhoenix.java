@@ -292,10 +292,10 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       if (Robot.isReal()) {
         driveConfig.Slot0.kV = 1;
-        driveConfig.Slot0.kP = 2;
+        driveConfig.Slot0.kP = 1.5;
 
-        steerConfig.Slot0.kP = 100;
-        steerConfig.Slot0.kD = 1;
+        steerConfig.Slot0.kP = 80;
+        steerConfig.Slot0.kD = 0.1;
 
         switch (id) {
           case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;

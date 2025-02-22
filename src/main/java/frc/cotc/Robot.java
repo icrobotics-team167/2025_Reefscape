@@ -136,20 +136,17 @@ public class Robot extends LoggedRobot {
             driveTranslationalControlSupplier,
             () -> {
               var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .05);
-              return rawInput * rawInput * Math.signum(rawInput);
+              return Math.copySign(rawInput * rawInput, rawInput);
             }));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
     primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
-    //    secondaryLeft.button(2).whileTrue(superstructure.intake());
-    //    secondaryRight
-    //        .trigger()
-    //        .whileTrue(superstructure.elevatorManualControl(() -> -secondaryRight.getY()));
-    //    secondaryRight.button(8).whileTrue(superstructure.lvl1());
-    //    secondaryRight.button(2).whileTrue(superstructure.lvl2(() -> true));
-    //    secondaryRight.button(3).whileTrue(superstructure.lvl3(() -> true));
-    //    secondaryRight.button(4).whileTrue(superstructure.lvl4(() -> true));
+    primary.y().whileTrue(superstructure.lvl4(() -> true));
+    primary.x().whileTrue(superstructure.lvl3(() -> true));
+    primary.b().whileTrue(superstructure.lvl2(() -> true));
+    primary.a().whileTrue(superstructure.lvl1());
+    primary.rightBumper().whileTrue(superstructure.intake());
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
@@ -181,7 +178,7 @@ public class Robot extends LoggedRobot {
             new FiducialPoseEstimator.IO[] {
               new FiducialPoseEstimator.IO(
                   new FiducialPoseEstimatorIOPhoton(
-                      "FrontLeftCamera",
+                      "FrontLeft",
                       new Transform3d(
                           Units.inchesToMeters(22.75 / 2),
                           Units.inchesToMeters(22.75 / 2),
@@ -189,16 +186,17 @@ public class Robot extends LoggedRobot {
                           new Rotation3d(
                               0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
                   "FrontLeft"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "FrontRightCamera",
-                      new Transform3d(
-                          Units.inchesToMeters(22.75 / 2),
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                  "FrontRight")
+              //              new FiducialPoseEstimator.IO(
+              //                  new FiducialPoseEstimatorIOPhoton(
+              //                      "FrontRight",
+              //                      new Transform3d(
+              //                          Units.inchesToMeters(22.75 / 2),
+              //                          -Units.inchesToMeters(22.75 / 2),
+              //                          Units.inchesToMeters(8.25),
+              //                          new Rotation3d(
+              //                              0, Units.degreesToRadians(-15),
+              // Units.degreesToRadians(0)))),
+              //                  "FrontRight")
             };
 
         cameraNames.names = new String[visionIOs.length];

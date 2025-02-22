@@ -182,7 +182,7 @@ public class FiducialPoseEstimator {
       tagsUsed.add(tag.location());
       var tagDistance = tag.distanceToCamera();
 
-      translationalScoresSum += .35 * tagDistance * tagDistance;
+      translationalScoresSum += .4 * tagDistance * tagDistance;
       angularScoresSum += .2 * tagDistance * tagDistance;
     }
 
