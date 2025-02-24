@@ -46,7 +46,6 @@ public class Swerve extends SubsystemBase {
   private final SwerveSetpointGenerator setpointGenerator;
   private final SwerveSetpoint stopInXSetpoint;
   private SwerveSetpoint lastSetpoint;
-  private final double currentVisualizationScalar;
 
   private final double maxLinearSpeedMetersPerSec;
   private final double maxAngularSpeedRadPerSec;
@@ -127,12 +126,6 @@ public class Swerve extends SubsystemBase {
             new double[4]);
     lastSetpoint =
         new SwerveSetpoint(new ChassisSpeeds(), inputs.moduleStates, new double[4], new double[4]);
-
-    currentVisualizationScalar =
-        CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS / maxLinearSpeedMetersPerSec;
-    Logger.recordOutput(
-        "Swerve/Setpoint Generator/Setpoint/Current Visualization Scalar",
-        currentVisualizationScalar);
 
     poseEstimator =
         new SwervePoseEstimator(

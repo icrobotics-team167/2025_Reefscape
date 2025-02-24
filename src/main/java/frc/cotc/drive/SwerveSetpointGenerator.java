@@ -492,11 +492,11 @@ public class SwerveSetpointGenerator {
     // Enforce drive wheel torque limits
     Translation2d chassisForceVec = new Translation2d();
     double chassisTorque = 0.0;
-    double[] dutyCycles = new double[4];
     int[] forceSigns = new int[4];
     double[] desiredSpeeds = new double[4];
     double[] expectedCurrentDraws = new double[4];
     double[] lastVelMagnitudes = new double[4];
+    Translation2d[] moduleForces = new Translation2d[4];
     for (int i = 0; i < 4; i++) {
       double prevSpeed = prevSetpoint.moduleStates()[i].speedMetersPerSecond;
       desiredModuleStates[i].optimize(prevSetpoint.moduleStates()[i].angle);
@@ -522,17 +522,17 @@ public class SwerveSetpointGenerator {
 
       forceSigns[i] = forceSign;
 
-      lastVelMagnitudes[i] =
-          Math.abs(prevSetpoint.moduleStates()[i].speedMetersPerSecond / wheelRadiusMeters);
       // Estimate duty cycle from stator current and duty cycle
-      double lastVelRadPerSec = lastVelMagnitudes[i];
-      double dutyCycle = Math.min(Math.abs(lastVelRadPerSec) / (maxSpeed / wheelRadiusMeters), 1);
-      dutyCycles[i] = dutyCycle;
+      double lastVelRadPerSec =
+          Math.abs(prevSetpoint.moduleStates()[i].speedMetersPerSecond / wheelRadiusMeters);
+      lastVelMagnitudes[i] = lastVelRadPerSec;
 
       double currentDraw;
-      if (forceSign == 1) { // Use the current battery voltage since we won't be able to supply
-        // 12v if the
-        // battery is sagging down to 11v, which will affect the max torque output
+      if (epsilonEquals(prevSpeed, desiredSpeed)) {
+        currentDraw = 0;
+      } else if (forceSign == 1) {
+        // Use the current battery voltage since we won't be able to supply
+        // 12v if the battery is sagging down to 11v, which will affect the max torque output
         currentDraw =
             Math.max(
                 Math.min(
@@ -542,13 +542,7 @@ public class SwerveSetpointGenerator {
       } else {
         currentDraw = statorCurrentLimitAmps;
       }
-      double moduleTorque =
-          driveMotor.getTorque(
-              Math.max(
-                  currentDraw
-                      - MathUtil.interpolate(
-                          0, driveMotor.freeCurrentAmps, Math.abs(lastVelRadPerSec)),
-                  0));
+      double moduleTorque = driveMotor.getTorque(currentDraw);
 
       // Limit torque to prevent wheel slip
       moduleTorque = Math.min(moduleTorque, maxTorqueFriction);
@@ -566,6 +560,8 @@ public class SwerveSetpointGenerator {
       double forceAtCarpet = moduleTorque / wheelRadiusMeters;
       Translation2d moduleForceVec = new Translation2d(forceAtCarpet * forceSign, forceAngle);
 
+      moduleForces[i] = moduleForceVec;
+
       // Add the module force vector to the chassis force vector
       chassisForceVec = chassisForceVec.plus(moduleForceVec);
 
@@ -578,13 +574,16 @@ public class SwerveSetpointGenerator {
     }
 
     Logger.recordOutput(
-        "Swerve/Setpoint Generator/Internal State/Expected Duty Cycles", dutyCycles);
-    Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Expected stator current/", expectedCurrentDraws);
     Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Force Signs", forceSigns);
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Desired Wheel Speeds", desiredSpeeds);
     Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Last Vel Mag", lastVelMagnitudes);
+
+    Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Module Force Vecs", moduleForces);
+    Logger.recordOutput(
+        "Swerve/Setpoint Generator/Internal State/Chassis Force Vec", chassisForceVec);
+    Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Chassis Torque", chassisTorque);
 
     Translation2d chassisAccelVec = chassisForceVec.div(massKg);
     double chassisAngularAccel = chassisTorque / moiKgMetersSquared;
@@ -603,7 +602,7 @@ public class SwerveSetpointGenerator {
         break;
       }
 
-      double maxVelStep = Math.abs(accelStates[i].speedMetersPerSecond * dt);
+      double maxVelStep = Math.max(Math.abs(accelStates[i].speedMetersPerSecond * dt), .01);
       maxVelSteps[i] = maxVelStep;
 
       double vx_min_s =
