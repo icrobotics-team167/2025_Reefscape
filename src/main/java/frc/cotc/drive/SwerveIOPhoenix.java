@@ -46,7 +46,6 @@ import frc.cotc.util.PhoenixBatchRefresher;
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
   private static final double DRIVE_GEAR_RATIO;
-  private static final boolean[] DRIVE_INVERTS;
   private static final double[] STEER_GEAR_RATIOS;
   private static final double WHEEL_CIRCUMFERENCE_METERS;
 
@@ -61,7 +60,6 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
-    DRIVE_INVERTS = new boolean[] {false, true, false, true};
 
     var MK4N_STEER_GEAR_RATIO = 18.75;
     var MK4I_STEER_GEAR_RATIO = 150.0 / 7;
@@ -255,10 +253,6 @@ public class SwerveIOPhoenix implements SwerveIO {
       var driveConfig = new TalonFXConfiguration();
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-      driveConfig.MotorOutput.Inverted =
-          Robot.isReal() && DRIVE_INVERTS[id]
-              ? InvertedValue.Clockwise_Positive
-              : InvertedValue.CounterClockwise_Positive;
       driveConfig.CurrentLimits.StatorCurrentLimit =
           CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + driveFeedbackOverhead;
       driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
@@ -293,9 +287,9 @@ public class SwerveIOPhoenix implements SwerveIO {
 
         switch (id) {
           case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
-          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.295654296875;
+          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.204345703125;
           case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
-          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.41015625;
+          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.08984375;
         }
       } else {
         driveConfig.Slot0.kP = 10;

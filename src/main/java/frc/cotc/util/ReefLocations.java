@@ -86,5 +86,7 @@ public final class ReefLocations {
   public static void log() {
     Logger.recordOutput("Reef Scoring Locations/Blue", BLUE_POSES);
     Logger.recordOutput("Reef Scoring Locations/Red", RED_POSES);
+    Logger.recordOutput("Reef Scoring Locations/Blue Reef Center", BLUE_REEF);
+    Logger.recordOutput("Reef Scoring Locations/Red Reef Center", RED_REEF);
   }
 }
