@@ -14,8 +14,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.cotc.Robot;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -128,7 +131,56 @@ public class SwerveSetpointGenerator {
       ChassisSpeeds chassisSpeeds,
       SwerveModuleState[] moduleStates,
       double[] steerFeedforwardsRadPerSec,
-      double[] driveFeedforwardsAmps) {}
+      double[] driveFeedforwardsAmps)
+      implements StructSerializable {
+    public static Struct<SwerveSetpoint> struct =
+        new Struct<>() {
+          @Override
+          public Class<SwerveSetpoint> getTypeClass() {
+            return SwerveSetpoint.class;
+          }
+
+          @Override
+          public String getTypeName() {
+            return "SwerveSetpoint";
+          }
+
+          @Override
+          public int getSize() {
+            return ChassisSpeeds.struct.getSize()
+                + (SwerveModuleState.struct.getSize() + kSizeDouble * 2) * 4;
+          }
+
+          @Override
+          public String getSchema() {
+            return "ChassisSpeeds chassisSpeeds;SwerveModuleState moduleStates[4];double "
+                + "steerFeedforwardsRadPerSec[4];double driveFeedforwardsAmps[4]";
+          }
+
+          @Override
+          public SwerveSetpoint unpack(ByteBuffer bb) {
+            var chassisSpeeds = ChassisSpeeds.struct.unpack(bb);
+            var moduleStates = Struct.unpackArray(bb, 4, SwerveModuleState.struct);
+            var steerFeedforwards = Struct.unpackDoubleArray(bb, 4);
+            var driveFeedforwards = Struct.unpackDoubleArray(bb, 4);
+            return new SwerveSetpoint(
+                chassisSpeeds, moduleStates, steerFeedforwards, driveFeedforwards);
+          }
+
+          @Override
+          public void pack(ByteBuffer bb, SwerveSetpoint value) {
+            ChassisSpeeds.struct.pack(bb, value.chassisSpeeds);
+            Struct.packArray(bb, value.moduleStates, SwerveModuleState.struct);
+            Struct.packArray(bb, value.steerFeedforwardsRadPerSec);
+            Struct.packArray(bb, value.driveFeedforwardsAmps);
+          }
+
+          @Override
+          public Struct<?>[] getNested() {
+            return new Struct<?>[] {ChassisSpeeds.struct, SwerveModuleState.struct};
+          }
+        };
+  }
 
   /**
    * Find the root of the generic 2D parametric function 'func' using the regula falsi technique.
@@ -239,6 +291,10 @@ public class SwerveSetpointGenerator {
       ChassisSpeeds desiredChassisSpeeds,
       double voltage,
       double dt) {
+    Logger.recordOutput(
+        "Swerve/Setpoint Generator/Internal State/Last Setpoint",
+        SwerveSetpoint.struct,
+        prevSetpoint);
     Logger.recordOutput(
         "Swerve/Setpoint Generator/Internal State/Desired chassis speeds", desiredChassisSpeeds);
 
@@ -536,7 +592,9 @@ public class SwerveSetpointGenerator {
     // Use kinematics to convert chassis accelerations to module accelerations
     var chassisAccel =
         new ChassisSpeeds(chassisAccelVec.getX(), chassisAccelVec.getY(), chassisAngularAccel);
+    Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Chassis Accel", chassisAccel);
     var accelStates = kinematics.toSwerveModuleStates(chassisAccel);
+    Logger.recordOutput("Swerve/Setpoint Generator/Internal State/Accel States", accelStates);
 
     var maxVelSteps = new double[4];
     for (int i = 0; i < 4; i++) {
@@ -639,7 +697,10 @@ public class SwerveSetpointGenerator {
     }
     SwerveDriveKinematics.desaturateWheelSpeeds(retStates, maxDriveVelocity);
 
-    return new SwerveSetpoint(
-        kinematics.toChassisSpeeds(retStates), retStates, steerFeedforwards, driveFeedforwards);
+    var setpoint =
+        new SwerveSetpoint(
+            kinematics.toChassisSpeeds(retStates), retStates, steerFeedforwards, driveFeedforwards);
+    Logger.recordOutput("Swerve/Setpoint Generator/Setpoint", SwerveSetpoint.struct, setpoint);
+    return setpoint;
   }
 }

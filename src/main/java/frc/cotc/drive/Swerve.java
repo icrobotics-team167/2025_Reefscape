@@ -178,21 +178,6 @@ public class Swerve extends SubsystemBase {
 
   @Override
   public void periodic() {
-    Logger.recordOutput(
-        "Swerve/Setpoint Generator/Setpoint/Output Speeds", lastSetpoint.chassisSpeeds());
-    Logger.recordOutput(
-        "Swerve/Setpoint Generator/Setpoint/Module Setpoints", lastSetpoint.moduleStates());
-    Logger.recordOutput(
-        "Swerve/Setpoint Generator/Setpoint/Steer Feedforwards",
-        lastSetpoint.steerFeedforwardsRadPerSec());
-    for (int i = 0; i < 4; i++) {
-      lastDriveFeedforwards[i].angle = lastSetpoint.moduleStates()[i].angle;
-      lastDriveFeedforwards[i].speedMetersPerSecond =
-          lastSetpoint.driveFeedforwardsAmps()[i] / currentVisualizationScalar;
-    }
-    Logger.recordOutput(
-        "Swerve/Setpoint Generator/Setpoint/Drive feedforwards", lastDriveFeedforwards);
-
     swerveIO.updateInputs(inputs);
     Logger.processInputs("Swerve", inputs);
     robotRelativeSpeeds = getRobotChassisSpeeds();
