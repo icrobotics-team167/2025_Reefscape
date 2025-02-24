@@ -90,9 +90,12 @@ public class Autos {
     addRoutine("ChoreoDriveTest", () -> choreoDriveTest(factory, swerve));
   }
 
-  private final Pose2d sourceRight = new Pose2d(1.758, .7, Rotation2d.fromDegrees(54));
+  private final Pose2d sourceRight = new Pose2d(1.61, .67, Rotation2d.fromDegrees(54));
   private final Pose2d sourceLeft =
-      new Pose2d(1.758, Constants.FIELD_WIDTH_METERS - .7, Rotation2d.fromDegrees(-54));
+      new Pose2d(
+          sourceRight.getX(),
+          Constants.FIELD_WIDTH_METERS - sourceRight.getY(),
+          sourceRight.getRotation().unaryMinus());
 
   private AutoRoutine cycleFromE(
       AutoFactory factory, Swerve swerve, Superstructure superstructure) {
