@@ -7,6 +7,8 @@
 
 package frc.cotc;
 
+import static edu.wpi.first.wpilibj2.command.Commands.parallel;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -22,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -104,10 +107,6 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
-    //    var primaryLeft = new CommandJoystick(0);
-    //    var primaryRight = new CommandJoystick(1);
-    //    var secondaryLeft = new CommandJoystick(2);
-    //    var secondaryRight = new CommandJoystick(3);
     var primary = new CommandXboxControllerWithRumble(0);
 
     var swerve = getSwerve(mode);
@@ -141,8 +140,18 @@ public class Robot extends LoggedRobot {
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
     RobotModeTriggers.disabled().whileTrue(swerve.stop());
-    primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
-    primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
+    primary
+        .leftTrigger()
+        .and(superstructure::hasCoral)
+        .whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
+    primary
+        .rightTrigger()
+        .and(superstructure::hasCoral)
+        .whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
+    new Trigger(() -> swerve.nearSource() && !superstructure.hasCoral())
+        .whileTrue(
+            parallel(
+                superstructure.intake(), swerve.sourceAlign(driveTranslationalControlSupplier)));
     //    primary.y().whileTrue(superstructure.lvl4(() -> true));
     //    primary.x().whileTrue(superstructure.lvl3(() -> true));
     //    primary.b().whileTrue(superstructure.lvl2(() -> true));
