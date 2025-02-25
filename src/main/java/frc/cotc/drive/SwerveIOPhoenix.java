@@ -42,6 +42,7 @@ import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
+import frc.cotc.util.ReefLocations;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -96,7 +97,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                             * ((CONSTANTS.MASS_KG / 4) * 9.81)
                             * CONSTANTS.WHEEL_DIAMETER_METERS
                             / 2)),
-            80);
+            100);
   }
 
   private final Module[] modules = new Module[4];
@@ -476,6 +477,25 @@ public class SwerveIOPhoenix implements SwerveIO {
       notifier = new Notifier(this::run);
       notifier.setName("Phoenix Sim Thread");
 
+      double startX = 7.62;
+      double startY = MathUtil.interpolate(2, Constants.FIELD_WIDTH_METERS - 2, Math.random());
+      groundTruthOdometry =
+          new SwerveDriveOdometry(
+              kinematics,
+              new Rotation2d(),
+              new SwerveModulePosition[] {
+                new SwerveModulePosition(),
+                new SwerveModulePosition(),
+                new SwerveModulePosition(),
+                new SwerveModulePosition()
+              },
+              new Pose2d(
+                  startX,
+                  startY,
+                  new Rotation2d(
+                      ReefLocations.BLUE_REEF.getX() - startX,
+                      ReefLocations.BLUE_REEF.getY() - startY)));
+
       Robot.groundTruthPoseSupplier =
           () -> {
             synchronized (groundTruthOdometry) {
@@ -514,20 +534,7 @@ public class SwerveIOPhoenix implements SwerveIO {
             new Translation2d(-CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2),
             new Translation2d(
                 -CONSTANTS.TRACK_LENGTH_METERS / 2, -CONSTANTS.TRACK_WIDTH_METERS / 2));
-    private final SwerveDriveOdometry groundTruthOdometry =
-        new SwerveDriveOdometry(
-            kinematics,
-            new Rotation2d(),
-            new SwerveModulePosition[] {
-              new SwerveModulePosition(),
-              new SwerveModulePosition(),
-              new SwerveModulePosition(),
-              new SwerveModulePosition()
-            },
-            new Pose2d(
-                7.62,
-                MathUtil.interpolate(2, Constants.FIELD_WIDTH_METERS - 2, Math.random()),
-                Rotation2d.fromDegrees(180 - MathUtil.interpolate(-30, 30, Math.random()))));
+    private final SwerveDriveOdometry groundTruthOdometry;
     private double yawDeg = 0;
     private double filteredCurrentDraw = 0;
     private double lastTime;
