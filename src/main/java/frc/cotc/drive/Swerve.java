@@ -401,6 +401,9 @@ public class Swerve extends SubsystemBase {
             run(
                 () -> {
                   var targetAngle = Units.degreesToRadians(54);
+                  if (Robot.isOnRed()) {
+                    targetAngle = PI - targetAngle;
+                  }
                   if (poseEstimator.getEstimatedPosition().getY()
                       > Constants.FIELD_WIDTH_METERS / 2) {
                     targetAngle *= -1;
