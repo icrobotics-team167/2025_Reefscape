@@ -23,6 +23,7 @@ public class Superstructure extends SubsystemBase {
     this.coralOuttake = new CoralOuttake(coralOuttakeIO);
 
     elevator.setDefaultCommand(elevator.retract());
+    coralOuttake.setDefaultCommand(coralOuttake.beep());
   }
 
   public Command lvl1() {

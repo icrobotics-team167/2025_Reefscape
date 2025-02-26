@@ -37,4 +37,8 @@ public class CoralOuttake extends SubsystemBase {
         .finallyDo(io::brake)
         .withName("Outtake");
   }
+
+  Command beep() {
+    return run(io::beep).withTimeout(.5).andThen(run(io::brake).withTimeout(.5)).withName("Beep");
+  }
 }

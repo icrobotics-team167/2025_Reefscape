@@ -11,6 +11,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MusicTone;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -84,5 +85,12 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   @Override
   public void brake() {
     motor.stopMotor();
+  }
+
+  private final MusicTone beepControlRequest = new MusicTone(1000);
+
+  @Override
+  public void beep() {
+    motor.setControl(beepControlRequest);
   }
 }
