@@ -152,7 +152,7 @@ public class Robot extends LoggedRobot {
         .rightTrigger()
         .and(superstructure::hasCoral)
         .whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
-    new Trigger(() -> swerve.nearSource() && !superstructure.hasCoral())
+    new Trigger(() -> swerve.nearSource() && !superstructure.hasCoral() && DriverStation.isTeleop())
         .whileTrue(
             parallel(
                 superstructure.intake(), swerve.sourceAlign(driveTranslationalControlSupplier)));
