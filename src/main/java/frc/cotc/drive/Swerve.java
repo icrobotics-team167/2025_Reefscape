@@ -336,15 +336,16 @@ public class Swerve extends SubsystemBase {
 
   public Command resetGyro() {
     return runOnce(
-        () -> {
-          var gyroAngle =
-              Robot.isOnRed()
-                  ? poseEstimator.getEstimatedPosition().getRotation().rotateBy(Rotation2d.kPi)
-                  : poseEstimator.getEstimatedPosition().getRotation();
-          swerveIO.resetGyro(gyroAngle);
-          poseEstimator.resetPosition(
-              gyroAngle, getLatestModulePositions(), poseEstimator.getEstimatedPosition());
-        });
+            () -> {
+              var gyroAngle =
+                  Robot.isOnRed()
+                      ? poseEstimator.getEstimatedPosition().getRotation().rotateBy(Rotation2d.kPi)
+                      : poseEstimator.getEstimatedPosition().getRotation();
+              swerveIO.resetGyro(gyroAngle);
+              poseEstimator.resetPosition(
+                  gyroAngle, getLatestModulePositions(), poseEstimator.getEstimatedPosition());
+            })
+        .withName("Reset Gyro");
   }
 
   public void followChoreoTrajectory(SwerveSample sample) {

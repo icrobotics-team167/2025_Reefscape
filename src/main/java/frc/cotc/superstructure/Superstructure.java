@@ -27,33 +27,37 @@ public class Superstructure extends SubsystemBase {
 
   public Command lvl1() {
     return expose(
-        deadline(
-            waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(), waitSeconds(.5)),
-            elevator.lvl1()));
+            deadline(
+                waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(), waitSeconds(.5)),
+                elevator.lvl1()))
+        .withName("Lvl 1 Scoring");
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
     return expose(
-        deadline(
-            waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                .andThen(coralOuttake.score(), waitSeconds(.5)),
-            elevator.lvl2()));
+            deadline(
+                waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                    .andThen(coralOuttake.score(), waitSeconds(.5)),
+                elevator.lvl2()))
+        .withName("Lvl 2 Scoring");
   }
 
   public Command lvl3(BooleanSupplier driveBaseAtTarget) {
     return expose(
-        deadline(
-            waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                .andThen(coralOuttake.score(), waitSeconds(.5)),
-            elevator.lvl3()));
+            deadline(
+                waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                    .andThen(coralOuttake.score(), waitSeconds(.5)),
+                elevator.lvl3()))
+        .withName("Lvl 3 Scoring");
   }
 
   public Command lvl4(BooleanSupplier driveBaseAtTarget) {
     return expose(
-        deadline(
-            waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                .andThen(coralOuttake.score(), waitSeconds(.75)),
-            elevator.lvl4()));
+            deadline(
+                waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                    .andThen(coralOuttake.score(), waitSeconds(.75)),
+                elevator.lvl4()))
+        .withName("Lvl 4 Scoring");
   }
 
   public Command elevatorManualControl(DoubleSupplier control) {
@@ -61,7 +65,7 @@ public class Superstructure extends SubsystemBase {
   }
 
   public Command intake() {
-    return expose(coralOuttake.intake());
+    return expose(coralOuttake.intake()).withName("Intake");
   }
 
   public boolean hasCoral() {

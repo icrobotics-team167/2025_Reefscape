@@ -99,31 +99,31 @@ class Elevator extends SubsystemBase {
   }
 
   Command retract() {
-    return goToPos(0);
+    return goToPos(0).withName("Retract");
   }
 
   Command lvl1() {
-    return goToPos(.3);
+    return goToPos(.3).withName("Lvl 1");
   }
 
   Command lvl2() {
-    return goToPos(.5);
+    return goToPos(.5).withName("Lvl 2");
   }
 
   Command lvl3() {
-    return goToPos(.9);
+    return goToPos(.9).withName("Lvl 3");
   }
 
   Command lvl4() {
-    return goToPos(1.5);
+    return goToPos(1.5).withName("Lvl 4");
   }
 
   Command manualControl(DoubleSupplier control) {
-    return run(
-        () ->
+    return run(() ->
             io.runVoltage(
                 control.getAsDouble()
-                    + (inputs.posMeters <= switchPoint ? firstStageKg : secondStageKg)));
+                    + (inputs.posMeters <= switchPoint ? firstStageKg : secondStageKg)))
+        .withName("Manual Control");
   }
 
   private double targetHeight = 0;
