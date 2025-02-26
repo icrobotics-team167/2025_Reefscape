@@ -28,35 +28,39 @@ public class Superstructure extends SubsystemBase {
   public Command lvl1() {
     return expose(
             deadline(
-                waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(), waitSeconds(.5)),
-                elevator.lvl1()))
+                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(), waitSeconds(.5)),
+                    elevator.lvl1())
+                .withName("Lvl 1 Scoring"))
         .withName("Lvl 1 Scoring");
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
     return expose(
             deadline(
-                waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                    .andThen(coralOuttake.score(), waitSeconds(.5)),
-                elevator.lvl2()))
+                    waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                        .andThen(coralOuttake.score(), waitSeconds(.5)),
+                    elevator.lvl2())
+                .withName("Lvl 2 Scoring"))
         .withName("Lvl 2 Scoring");
   }
 
   public Command lvl3(BooleanSupplier driveBaseAtTarget) {
     return expose(
             deadline(
-                waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                    .andThen(coralOuttake.score(), waitSeconds(.5)),
-                elevator.lvl3()))
+                    waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                        .andThen(coralOuttake.score(), waitSeconds(.5)),
+                    elevator.lvl3())
+                .withName("Lvl 3 Scoring"))
         .withName("Lvl 3 Scoring");
   }
 
   public Command lvl4(BooleanSupplier driveBaseAtTarget) {
     return expose(
             deadline(
-                waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                    .andThen(coralOuttake.score(), waitSeconds(.75)),
-                elevator.lvl4()))
+                    waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                        .andThen(coralOuttake.score(), waitSeconds(.75)),
+                    elevator.lvl4())
+                .withName("Lvl 4 Scoring"))
         .withName("Lvl 4 Scoring");
   }
 

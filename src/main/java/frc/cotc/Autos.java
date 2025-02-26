@@ -115,46 +115,53 @@ public class Autos {
             deadline(
                     superstructure.lvl4(swerve::atTargetPose),
                     reefRepulsorCommand.goTo(ReefBranch.E))
-                .andThen(eToSource.spawnCmd()));
+                .andThen(eToSource.spawnCmd())
+                .withName("Score At E"));
 
     eToSource
         .done()
         .onTrue(
             sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToD.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.D)))
-                    .andThen(dToSource.spawnCmd())));
+                    superstructure
+                        .intake()
+                        .withTimeout(1)
+                        .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
+                    superstructure
+                        .lvl4(swerve::atTargetPose)
+                        .deadlineFor(
+                            sourceToD.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.D)))
+                        .andThen(dToSource.spawnCmd()))
+                .withName("Score At D"));
 
     dToSource
         .done()
         .onTrue(
             sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToC.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.C)))
-                    .andThen(cToSource.spawnCmd())));
+                    superstructure
+                        .intake()
+                        .withTimeout(1)
+                        .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
+                    superstructure
+                        .lvl4(swerve::atTargetPose)
+                        .deadlineFor(
+                            sourceToC.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.C)))
+                        .andThen(cToSource.spawnCmd()))
+                .withName("Score At C"));
 
     cToSource
         .done()
         .onTrue(
             sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToB.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.B)))
-                    .andThen(bToSource.spawnCmd())));
+                    superstructure
+                        .intake()
+                        .withTimeout(1)
+                        .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
+                    superstructure
+                        .lvl4(swerve::atTargetPose)
+                        .deadlineFor(
+                            sourceToB.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.B)))
+                        .andThen(bToSource.spawnCmd()))
+                .withName("Score At B"));
 
     return routine;
   }
@@ -177,46 +184,53 @@ public class Autos {
             deadline(
                     superstructure.lvl4(swerve::atTargetPose),
                     reefRepulsorCommand.goTo(ReefBranch.J))
-                .andThen(jToSource.spawnCmd()));
+                .andThen(jToSource.spawnCmd())
+                .withName("Score At J"));
 
     jToSource
         .done()
         .onTrue(
             sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToK.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.K)))
-                    .andThen(kToSource.spawnCmd())));
+                    superstructure
+                        .intake()
+                        .withTimeout(1)
+                        .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
+                    superstructure
+                        .lvl4(swerve::atTargetPose)
+                        .deadlineFor(
+                            sourceToK.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.K)))
+                        .andThen(kToSource.spawnCmd()))
+                .withName("Score At K"));
 
     kToSource
         .done()
         .onTrue(
             sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToL.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.L)))
-                    .andThen(lToSource.spawnCmd())));
+                    superstructure
+                        .intake()
+                        .withTimeout(1)
+                        .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
+                    superstructure
+                        .lvl4(swerve::atTargetPose)
+                        .deadlineFor(
+                            sourceToL.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.L)))
+                        .andThen(lToSource.spawnCmd()))
+                .withName("Score At L"));
 
     lToSource
         .done()
         .onTrue(
             sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToA.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.A)))
-                    .andThen(aToSource.spawnCmd())));
+                    superstructure
+                        .intake()
+                        .withTimeout(1)
+                        .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
+                    superstructure
+                        .lvl4(swerve::atTargetPose)
+                        .deadlineFor(
+                            sourceToA.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.A)))
+                        .andThen(aToSource.spawnCmd()))
+                .withName("Score At A"));
 
     return routine;
   }

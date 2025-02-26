@@ -165,6 +165,9 @@ public class Robot extends LoggedRobot {
       }
       i++;
     }
+    if (i == 1) {
+      nameBuilder.append("None");
+    }
     return nameBuilder.toString();
   }
 
