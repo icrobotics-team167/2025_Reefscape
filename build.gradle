@@ -1,3 +1,5 @@
+import com.diffplug.spotless.LineEnding
+
 plugins {
     id "java"
     id "com.peterabeles.gversion" version "1.10.3"
@@ -164,6 +166,7 @@ createVersionFile.dependsOn(eventDeploy)
 // Spotless formatting
 project.compileJava.dependsOn(spotlessApply)
 spotless {
+    lineEndings(LineEnding.UNIX)
     java {
         target fileTree(".") {
             include "**/*.java"

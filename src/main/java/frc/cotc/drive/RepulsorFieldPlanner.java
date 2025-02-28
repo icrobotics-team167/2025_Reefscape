@@ -11,6 +11,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.ReefLocations;
 import java.util.ArrayList;
@@ -199,36 +200,35 @@ public class RepulsorFieldPlanner {
     }
   }
 
-  static final double FIELD_LENGTH = 17.6022;
-  static final double FIELD_WIDTH = 8.1026;
-
   static final double SOURCE_X = 1.75;
   static final double SOURCE_Y = 1.25;
   static final List<Obstacle> FIELD_OBSTACLES =
       List.of(
           // Reef
-          new TeardropObstacle(ReefLocations.BLUE_REEF, 1, 2, .83, 3, 2),
-          new TeardropObstacle(ReefLocations.RED_REEF, 1, 2, .83, 3, 2),
+          new TeardropObstacle(ReefLocations.BLUE_REEF, 1, 2.5, .83, 3, 2),
+          new TeardropObstacle(ReefLocations.RED_REEF, 1, 2.5, .83, 3, 2),
           // Walls
           new HorizontalObstacle(0.0, 0.5, .5, true),
-          new HorizontalObstacle(FIELD_WIDTH, 0.5, .5, false),
+          new HorizontalObstacle(Constants.FIELD_WIDTH_METERS, 0.5, .5, false),
           new VerticalObstacle(0.0, 0.5, .5, true),
-          new VerticalObstacle(FIELD_LENGTH, 0.5, .5, false),
+          new VerticalObstacle(Constants.FIELD_LENGTH_METERS, 0.5, .5, false),
           // Sources
           new LineObstacle(new Translation2d(0, SOURCE_Y), new Translation2d(SOURCE_X, 0), .5, .5),
           new LineObstacle(
-              new Translation2d(0, FIELD_WIDTH - SOURCE_Y),
-              new Translation2d(SOURCE_X, FIELD_WIDTH),
+              new Translation2d(0, Constants.FIELD_WIDTH_METERS - SOURCE_Y),
+              new Translation2d(SOURCE_X, Constants.FIELD_WIDTH_METERS),
               .5,
               .5),
           new LineObstacle(
-              new Translation2d(FIELD_LENGTH, SOURCE_Y),
-              new Translation2d(FIELD_LENGTH - SOURCE_X, 0),
+              new Translation2d(Constants.FIELD_LENGTH_METERS, SOURCE_Y),
+              new Translation2d(Constants.FIELD_LENGTH_METERS - SOURCE_X, 0),
               .5,
               .5),
           new LineObstacle(
-              new Translation2d(FIELD_LENGTH, FIELD_WIDTH - SOURCE_Y),
-              new Translation2d(FIELD_LENGTH - SOURCE_X, FIELD_WIDTH),
+              new Translation2d(
+                  Constants.FIELD_LENGTH_METERS, Constants.FIELD_WIDTH_METERS - SOURCE_Y),
+              new Translation2d(
+                  Constants.FIELD_LENGTH_METERS - SOURCE_X, Constants.FIELD_WIDTH_METERS),
               .5,
               .5));
 
@@ -249,7 +249,9 @@ public class RepulsorFieldPlanner {
     for (int x = 0; x <= ARROWS_X; x++) {
       for (int y = 0; y <= ARROWS_Y; y++) {
         var translation =
-            new Translation2d(x * FIELD_LENGTH / ARROWS_X, y * FIELD_WIDTH / ARROWS_Y);
+            new Translation2d(
+                x * Constants.FIELD_LENGTH_METERS / ARROWS_X,
+                y * Constants.FIELD_WIDTH_METERS / ARROWS_Y);
         var force = getObstacleForce(translation, goal);
         if (force.getNorm() > 1e-6) {
           var rotation = force.getAngle();

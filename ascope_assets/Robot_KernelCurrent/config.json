@@ -1,0 +1,67 @@
+{
+  "name": "Kernel Current",
+  "rotations": [
+  {
+      "axis": "x",
+      "degrees": 90
+    },
+    {
+      "axis": "z",
+      "degrees": -90
+    }
+  ],
+  "position": [
+    0,
+    0,
+    0.045
+  ],
+  "cameras": [
+    {
+      "name": "Front Left",
+      "rotations": [
+        {
+          "axis": "y",
+          "degrees": -15.0
+        },
+        {
+          "axis": "z",
+          "degrees": -30.0
+        }
+      ],
+      "position": [
+        0.288925,
+        0.288925,
+        0.20955
+      ],
+      "resolution": [
+        1280,
+        800
+      ],
+      "fov": 70
+    },
+    {
+      "name": "Front Right",
+      "rotations": [
+        {
+          "axis": "y",
+          "degrees": -15.0
+        },
+        {
+          "axis": "z",
+          "degrees": 30.0
+        }
+      ],
+      "position": [
+        0.288925,
+        -0.288925,
+        0.20955
+      ],
+      "resolution": [
+        1280,
+        800
+      ],
+      "fov": 70
+    }
+  ],
+  "components": []
+}

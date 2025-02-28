@@ -38,34 +38,36 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.CircularBuffer;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
-import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
   private static final double DRIVE_GEAR_RATIO;
+  private static final boolean[] DRIVE_INVERTS;
   private static final double[] STEER_GEAR_RATIOS;
   private static final double WHEEL_CIRCUMFERENCE_METERS;
 
   static {
     CONSTANTS = new SwerveModuleConstantsAutoLogged();
 
-    CONSTANTS.TRACK_WIDTH_METERS = Units.inchesToMeters(22.75);
-    CONSTANTS.TRACK_LENGTH_METERS = Units.inchesToMeters(22.75);
+    CONSTANTS.TRACK_WIDTH_METERS = Constants.FRAME_WIDTH_METERS - Units.inchesToMeters(2.625 * 2);
+    CONSTANTS.TRACK_LENGTH_METERS = Constants.FRAME_LENGTH_METERS - Units.inchesToMeters(2.625 * 2);
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
-    CONSTANTS.WHEEL_COF = 1;
+    CONSTANTS.WHEEL_COF = 1.5;
 
     DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
+    DRIVE_INVERTS = new boolean[] {false, true, false, true};
 
     var MK4N_STEER_GEAR_RATIO = 18.75;
     var MK4I_STEER_GEAR_RATIO = 150.0 / 7;
     STEER_GEAR_RATIOS =
         new double[] {
-          MK4I_STEER_GEAR_RATIO, MK4I_STEER_GEAR_RATIO, MK4N_STEER_GEAR_RATIO, MK4N_STEER_GEAR_RATIO
+          MK4N_STEER_GEAR_RATIO, MK4N_STEER_GEAR_RATIO, MK4I_STEER_GEAR_RATIO, MK4I_STEER_GEAR_RATIO
         };
 
     var STEER_MOTOR_MAX_SPEED = Units.rotationsPerMinuteToRadiansPerSecond(6000);
@@ -78,16 +80,14 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG = Units.lbsToKilograms(80);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(115 + 17 + 9);
 
-    double linearKa = 1;
-    double angularKa = 1;
     CONSTANTS.MOI_KG_METERS_SQUARED =
         CONSTANTS.MASS_KG
             * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2)
-            * (Robot.isReal() ? angularKa / linearKa : 1);
+            * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2);
 
-    CONSTANTS.ANGULAR_SPEED_FUDGING = .5;
+    CONSTANTS.ANGULAR_SPEED_FUDGING = .75;
 
     CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS =
         Math.min(
@@ -98,7 +98,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                             * ((CONSTANTS.MASS_KG / 4) * 9.81)
                             * CONSTANTS.WHEEL_DIAMETER_METERS
                             / 2)),
-            100);
+            80);
   }
 
   private final Module[] modules = new Module[4];
@@ -255,7 +255,10 @@ public class SwerveIOPhoenix implements SwerveIO {
       var driveConfig = new TalonFXConfiguration();
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-      driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+      driveConfig.MotorOutput.Inverted =
+          Robot.isReal() && DRIVE_INVERTS[id]
+              ? InvertedValue.Clockwise_Positive
+              : InvertedValue.CounterClockwise_Positive;
       driveConfig.CurrentLimits.StatorCurrentLimit =
           CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + driveFeedbackOverhead;
       driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
@@ -282,32 +285,24 @@ public class SwerveIOPhoenix implements SwerveIO {
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
       if (Robot.isReal()) {
-        driveConfig.Slot0.kV = 1;
+        driveConfig.Slot0.kV = 2.25;
+        driveConfig.Slot0.kP = 15;
 
-        steerConfig.Slot0.kP = 100;
-        steerConfig.Slot0.kD = 1;
+        steerConfig.Slot0.kP = 80;
+        steerConfig.Slot0.kD = 0.1;
 
         switch (id) {
-          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.465087890625;
-          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.30615234375;
-          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.330322265625;
-          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.260009765625;
+          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
+          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = -0.295654296875;
+          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
+          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.41015625;
         }
       } else {
+        driveConfig.Slot0.kP = 10;
+
         steerConfig.Slot0.kP = 600;
         steerConfig.Slot0.kD = 2.5;
       }
-      driveConfig.Slot0.kP =
-          GainsCalculator.getVelocityPGain(
-              driveConfig.Slot0.kV,
-              WHEEL_CIRCUMFERENCE_METERS
-                  / (4
-                      * (CONSTANTS.DRIVE_MOTOR.KtNMPerAmp / (CONSTANTS.WHEEL_DIAMETER_METERS / 2))
-                      / CONSTANTS.MASS_KG),
-              driveFeedbackOverhead,
-              .05,
-              .001,
-              .001);
 
       driveMotor.getConfigurator().apply(driveConfig);
       steerMotor.getConfigurator().apply(steerConfig);
@@ -338,6 +333,11 @@ public class SwerveIOPhoenix implements SwerveIO {
           steerControlRequest
               .withPosition(desiredState.angle.getRotations())
               .withVelocity(steerFeedforwardRotPerSec));
+    }
+
+    void brake() {
+      driveMotor.setControl(brakeControlRequest);
+      steerMotor.setControl(brakeControlRequest);
     }
 
     private final VoltageOut steerCharacterization = new VoltageOut(0).withEnableFOC(false);
@@ -531,9 +531,9 @@ public class SwerveIOPhoenix implements SwerveIO {
               new SwerveModulePosition()
             },
             new Pose2d(
-                Math.random() * 14 + 1,
-                Math.random() * 7 + 1,
-                new Rotation2d((Math.random() * 2 - 1) * PI)));
+                7.62,
+                MathUtil.interpolate(2, Constants.FIELD_WIDTH_METERS - 2, Math.random()),
+                Rotation2d.fromDegrees(180 - MathUtil.interpolate(-30, 30, Math.random()))));
     private double yawDeg = 0;
     private double filteredCurrentDraw = 0;
     private double lastTime;
@@ -587,7 +587,6 @@ public class SwerveIOPhoenix implements SwerveIO {
         steerMotorSim = module.steerMotor.getSimState();
         encoderSim = module.encoder.getSimState();
 
-        driveMotorSim.Orientation = ChassisReference.CounterClockwise_Positive;
         steerMotorSim.Orientation = ChassisReference.Clockwise_Positive;
         encoderSim.Orientation = ChassisReference.CounterClockwise_Positive;
 

@@ -8,19 +8,25 @@
 package frc.cotc;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
+import frc.cotc.superstructure.*;
 import frc.cotc.util.CommandXboxControllerWithRumble;
 import frc.cotc.util.PhoenixBatchRefresher;
 import frc.cotc.util.ReefLocations;
@@ -28,6 +34,7 @@ import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.*;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -99,28 +106,120 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
-    var swerve = getSwerve(mode);
+    registerCommandSchedulerLogging();
+
     var primary = new CommandXboxControllerWithRumble(0);
+
+    var swerve = getSwerve(mode);
+    var superstructure = getSuperstructure(mode);
+
+    Supplier<Translation2d> driveTranslationalControlSupplier =
+        () -> {
+          double xControl = -primary.getLeftY();
+          double yControl = -primary.getLeftX();
+          double magnitude = Math.hypot(xControl, yControl);
+          if (magnitude > 1) {
+            xControl /= magnitude;
+            yControl /= magnitude;
+          } else if (magnitude > 1e-6) {
+            double scalar = Math.pow(MathUtil.applyDeadband(magnitude, .06) / magnitude, 2);
+            xControl *= scalar;
+            yControl *= scalar;
+          }
+          return new Translation2d(xControl, yControl);
+        };
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
     swerve.setDefaultCommand(
         swerve.teleopDrive(
-            () -> -primary.getLeftY(),
-            () -> -primary.getLeftX(),
-            .06,
-            2,
-            () -> -primary.getRightX(),
-            .05,
-            2));
+            driveTranslationalControlSupplier,
+            () -> {
+              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
+              return Math.copySign(rawInput * rawInput, rawInput);
+            }));
     //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+    RobotModeTriggers.disabled().whileTrue(swerve.stop());
+    primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
+    primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
+    //    primary.y().whileTrue(superstructure.lvl4(() -> true));
+    //    primary.x().whileTrue(superstructure.lvl3(() -> true));
+    //    primary.b().whileTrue(superstructure.lvl2(() -> true));
+    //    primary.a().whileTrue(superstructure.lvl1());
+    //    primary.rightBumper().whileTrue(superstructure.intake());
 
-    primary.b().whileTrue(swerve.reefAlign(true));
-    primary.x().whileTrue(swerve.reefAlign(false));
-
-    autos = new Autos(swerve);
+    autos = new Autos(swerve, superstructure);
     ReefLocations.log();
+  }
+
+  private final StringBuilder nameBuilder = new StringBuilder();
+
+  private String getSubsystemNames(Set<Subsystem> subsystems) {
+    nameBuilder.setLength(0);
+    int i = 1;
+    for (var subsystem : subsystems) {
+      nameBuilder.append(subsystem.getName());
+      if (i != subsystems.size()) {
+        nameBuilder.append(" & ");
+      }
+      i++;
+    }
+    return nameBuilder.toString();
+  }
+
+  private void registerCommandSchedulerLogging() {
+    CommandScheduler.getInstance()
+        .onCommandInitialize(
+            command ->
+                Logger.recordOutput(
+                    "CommandScheduler/"
+                        + getSubsystemNames(command.getRequirements())
+                        + "/"
+                        + command.getName()
+                        + "/State",
+                    "Initializing"));
+    CommandScheduler.getInstance()
+        .onCommandExecute(
+            command ->
+                Logger.recordOutput(
+                    "CommandScheduler/"
+                        + getSubsystemNames(command.getRequirements())
+                        + "/"
+                        + command.getName()
+                        + "/State",
+                    "Running"));
+    CommandScheduler.getInstance()
+        .onCommandFinish(
+            command ->
+                Logger.recordOutput(
+                    "CommandScheduler/"
+                        + getSubsystemNames(command.getRequirements())
+                        + "/"
+                        + command.getName()
+                        + "/State",
+                    "Finished"));
+    CommandScheduler.getInstance()
+        .onCommandInterrupt(
+            (command, interrupter) -> {
+              if (interrupter.isEmpty()) {
+                Logger.recordOutput(
+                    "CommandScheduler/"
+                        + getSubsystemNames(command.getRequirements())
+                        + "/"
+                        + command.getName()
+                        + "/State",
+                    "Interrupted");
+              } else {
+                Logger.recordOutput(
+                    "CommandScheduler/"
+                        + getSubsystemNames(command.getRequirements())
+                        + "/"
+                        + command.getName()
+                        + "/State",
+                    "Interrupted by: " + interrupter.get().getName());
+              }
+            });
   }
 
   private Swerve getSwerve(Mode mode) {
@@ -149,7 +248,7 @@ public class Robot extends LoggedRobot {
             new FiducialPoseEstimator.IO[] {
               new FiducialPoseEstimator.IO(
                   new FiducialPoseEstimatorIOPhoton(
-                      "FrontLeftCamera",
+                      "FrontLeft",
                       new Transform3d(
                           Units.inchesToMeters(22.75 / 2),
                           Units.inchesToMeters(22.75 / 2),
@@ -157,36 +256,17 @@ public class Robot extends LoggedRobot {
                           new Rotation3d(
                               0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
                   "FrontLeft"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "FrontRightCamera",
-                      new Transform3d(
-                          Units.inchesToMeters(22.75 / 2),
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                  "FrontRight"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "BackLeftCamera",
-                      new Transform3d(
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(135)))),
-                  "BackLeft"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "BackRightCamera",
-                      new Transform3d(
-                          -Units.inchesToMeters(22.75 / 2),
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-135)))),
-                  "BackRight")
+              //              new FiducialPoseEstimator.IO(
+              //                  new FiducialPoseEstimatorIOPhoton(
+              //                      "FrontRight",
+              //                      new Transform3d(
+              //                          Units.inchesToMeters(22.75 / 2),
+              //                          -Units.inchesToMeters(22.75 / 2),
+              //                          Units.inchesToMeters(8.25),
+              //                          new Rotation3d(
+              //                              0, Units.degreesToRadians(-15),
+              // Units.degreesToRadians(0)))),
+              //                  "FrontRight")
             };
 
         cameraNames.names = new String[visionIOs.length];
@@ -209,6 +289,20 @@ public class Robot extends LoggedRobot {
     return new Swerve(swerveIO, visionIOs);
   }
 
+  private Superstructure getSuperstructure(Mode mode) {
+    switch (mode) {
+      case REAL -> {
+        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix());
+      }
+      case SIM -> {
+        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIO() {});
+      }
+      default -> {
+        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {});
+      }
+    }
+  }
+
   private Command autoCommand;
 
   @Override
@@ -225,6 +319,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    Threads.setCurrentThreadPriority(true, 99);
+
     PhoenixBatchRefresher.refresh();
     // Runs the Scheduler. This is responsible for polling buttons, adding newly-scheduled commands,
     // running already-scheduled commands, removing finished or interrupted commands, and running
@@ -234,6 +330,10 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput(
         "LoggedRobot/MemoryUsageMb",
         (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6);
+    Logger.recordOutput("IsOnRed", isOnRed());
+    SmartDashboard.putData(CommandScheduler.getInstance());
+
+    Threads.setCurrentThreadPriority(false, 10);
   }
 
   @Override

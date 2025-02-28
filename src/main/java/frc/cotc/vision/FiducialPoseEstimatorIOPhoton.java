@@ -109,7 +109,9 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
     }
 
     public static void update() {
-      visionSystemSim.update(Robot.groundTruthPoseSupplier.get());
+      if (Robot.groundTruthPoseSupplier != null && visionSystemSim != null) {
+        visionSystemSim.update(Robot.groundTruthPoseSupplier.get());
+      }
     }
 
     private static final HashMap<String, SimCameraProperties> propertiesHashMap = new HashMap<>();
