@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.superstructure;
+package frc.cotc.arm;
 
 import frc.cotc.util.MotorCurrentDraws;
 import org.littletonrobotics.junction.AutoLog;
@@ -42,9 +42,9 @@ public interface ElevatorIO {
       posMeters = table.get("posMeters", 0.0);
       velMetersPerSec = table.get("velMetersPerSec", 0.0);
       leftMotorCurrentDraws =
-              table.get("leftMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
+          table.get("leftMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
       rightMotorCurrentDraws =
-              table.get("rightMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
+          table.get("rightMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
     }
   }
 

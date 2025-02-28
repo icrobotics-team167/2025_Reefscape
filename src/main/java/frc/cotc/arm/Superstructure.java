@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.superstructure;
+package frc.cotc.arm;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -15,58 +15,58 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 public class Superstructure extends SubsystemBase {
-    private final Elevator elevator;
-    private final CoralOuttake coralOuttake;
+  private final Elevator elevator;
+  private final CoralOuttake coralOuttake;
 
-    public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO) {
-        this.elevator = new Elevator(elevatorIO);
-        this.coralOuttake = new CoralOuttake(coralOuttakeIO);
+  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO) {
+    this.elevator = new Elevator(elevatorIO);
+    this.coralOuttake = new CoralOuttake(coralOuttakeIO);
 
-        elevator.setDefaultCommand(elevator.retract());
-    }
+    elevator.setDefaultCommand(elevator.retract());
+  }
 
-    public Command lvl1() {
-        return expose(
-                deadline(
-                        waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(), waitSeconds(.25)),
-                        elevator.l1()));
-    }
+  public Command lvl1() {
+    return expose(
+        deadline(
+            waitUntil(elevator::atTargetPos).andThen(coralOuttake.out(), waitSeconds(.25)),
+            elevator.lvl1()));
+  }
 
-    public Command lvl2(BooleanSupplier driveBaseAtTarget) {
-        return expose(
-                deadline(
-                        waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                                .andThen(coralOuttake.score()),
-                        elevator.l2()));
-    }
+  public Command lvl2(BooleanSupplier driveBaseAtTarget) {
+    return expose(
+        deadline(
+            waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                .andThen(coralOuttake.out()),
+            elevator.lvl2()));
+  }
 
-    public Command lvl3(BooleanSupplier driveBaseAtTarget) {
-        return expose(
-                deadline(
-                        waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                                .andThen(coralOuttake.score()),
-                        elevator.l3()));
-    }
+  public Command lvl3(BooleanSupplier driveBaseAtTarget) {
+    return expose(
+        deadline(
+            waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                .andThen(coralOuttake.out()),
+            elevator.lvl3()));
+  }
 
-    public Command lvl4(BooleanSupplier driveBaseAtTarget) {
-        return expose(
-                deadline(
-                        waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                                .andThen(coralOuttake.score(), waitSeconds(.25)),
-                        elevator.l4()));
-    }
+  public Command lvl4(BooleanSupplier driveBaseAtTarget) {
+    return expose(
+        deadline(
+            waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
+                .andThen(coralOuttake.out(), waitSeconds(.25)),
+            elevator.lvl4()));
+  }
 
-    public Command elevatorManualControl(DoubleSupplier control) {
-        return expose(elevator.manualControl(control));
-    }
+  public Command elevatorManualControl(DoubleSupplier control) {
+    return expose(elevator.manualControl(control));
+  }
 
-    public Command intake() {
-        return expose(coralOuttake.intake());
-    }
+  public Command intake() {
+    return expose(coralOuttake.in());
+  }
 
-    private Command expose(Command internal) {
-        var proxied = internal.asProxy();
-        proxied.addRequirements(this);
-        return proxied;
-    }
+  private Command expose(Command internal) {
+    var proxied = internal.asProxy();
+    proxied.addRequirements(this);
+    return proxied;
+  }
 }
