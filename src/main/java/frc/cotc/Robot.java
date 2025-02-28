@@ -138,7 +138,6 @@ public class Robot extends LoggedRobot {
               var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
               return Math.copySign(rawInput * rawInput, rawInput);
             }));
-    //    primary.povDown().whileTrue(swerve.stopInX());
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
     RobotModeTriggers.disabled().whileTrue(swerve.stop());
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));

@@ -44,6 +44,7 @@ public class Swerve extends SubsystemBase {
   private final SwerveIO.SwerveIOInputs inputs;
 
   private final SwerveSetpointGenerator setpointGenerator;
+  private final Rotation2d[] stopInXAngles;
   private final SwerveSetpoint stopInXSetpoint;
   private SwerveSetpoint lastSetpoint;
 
@@ -97,30 +98,21 @@ public class Swerve extends SubsystemBase {
             CONSTANTS.MOI_KG_METERS_SQUARED,
             CONSTANTS.WHEEL_DIAMETER_METERS,
             CONSTANTS.WHEEL_COF);
+    stopInXAngles =
+        new Rotation2d[] {
+          new Rotation2d(CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2),
+          new Rotation2d(CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2),
+          new Rotation2d(-CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2),
+          new Rotation2d(-CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2)
+        };
     stopInXSetpoint =
         new SwerveSetpoint(
             new ChassisSpeeds(),
             new SwerveModuleState[] {
-              new SwerveModuleState(
-                  0,
-                  new Rotation2d(
-                      Math.atan2(
-                          CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2))),
-              new SwerveModuleState(
-                  0,
-                  new Rotation2d(
-                      Math.atan2(
-                          -CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2))),
-              new SwerveModuleState(
-                  0,
-                  new Rotation2d(
-                      Math.atan2(
-                          CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2))),
-              new SwerveModuleState(
-                  0,
-                  new Rotation2d(
-                      Math.atan2(
-                          -CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2)))
+              new SwerveModuleState(0, stopInXAngles[0]),
+              new SwerveModuleState(0, stopInXAngles[1]),
+              new SwerveModuleState(0, stopInXAngles[2]),
+              new SwerveModuleState(0, stopInXAngles[3])
             },
             new double[4],
             new double[4]);
@@ -150,14 +142,6 @@ public class Swerve extends SubsystemBase {
     yawController = new PIDController(15, 0, 1);
     yawController.enableContinuousInput(-PI, PI);
   }
-
-  private final SwerveModuleState[] lastDriveFeedforwards =
-      new SwerveModuleState[] {
-        new SwerveModuleState(),
-        new SwerveModuleState(),
-        new SwerveModuleState(),
-        new SwerveModuleState()
-      };
 
   private ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
   private ChassisSpeeds fieldRelativeSpeeds = new ChassisSpeeds();
@@ -341,16 +325,12 @@ public class Swerve extends SubsystemBase {
         .withName("Teleop Drive");
   }
 
-  public Command stopInX() {
+  public Command stop() {
     return run(() -> {
-          swerveIO.drive(stopInXSetpoint);
+          swerveIO.stop(stopInXAngles);
           lastSetpoint = stopInXSetpoint;
         })
-        .ignoringDisable(true);
-  }
-
-  public Command stop() {
-    return run(swerveIO::stop).ignoringDisable(true);
+        .ignoringDisable(true).withName("Stop");
   }
 
   public Command resetGyro() {
