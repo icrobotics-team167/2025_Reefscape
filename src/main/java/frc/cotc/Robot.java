@@ -109,6 +109,7 @@ public class Robot extends LoggedRobot {
     registerCommandSchedulerLogging();
 
     var primary = new CommandXboxControllerWithRumble(0);
+    var secondary = new CommandXboxControllerWithRumble(1);
 
     var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
@@ -142,10 +143,10 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.disabled().whileTrue(swerve.stop());
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
     primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
-    //    primary.y().whileTrue(superstructure.lvl4(() -> true));
-    //    primary.x().whileTrue(superstructure.lvl3(() -> true));
-    //    primary.b().whileTrue(superstructure.lvl2(() -> true));
-    //    primary.a().whileTrue(superstructure.lvl1());
+    secondary.y().whileTrue(superstructure.lvl4(swerve::atTargetPose));
+    secondary.x().whileTrue(superstructure.lvl3(swerve::atTargetPose));
+    secondary.b().whileTrue(superstructure.lvl2(swerve::atTargetPose));
+    secondary.a().whileTrue(superstructure.lvl1());
     //    primary.rightBumper().whileTrue(superstructure.intake());
 
     autos = new Autos(swerve, superstructure);
