@@ -154,8 +154,7 @@ public class Robot extends LoggedRobot {
         .whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
     new Trigger(() -> swerve.nearSource() && !superstructure.hasCoral() && DriverStation.isTeleop())
         .whileTrue(
-            parallel(superstructure.intake(),
-            swerve.sourceAlign(driveTranslationalControlSupplier))
+            parallel(superstructure.intake(), swerve.sourceAlign(driveTranslationalControlSupplier))
                 .withName("Auto Intake"));
     //    primary.y().whileTrue(superstructure.lvl4(() -> true));
     //    primary.x().whileTrue(superstructure.lvl3(() -> true));

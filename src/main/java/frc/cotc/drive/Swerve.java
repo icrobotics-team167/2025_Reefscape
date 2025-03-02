@@ -148,7 +148,7 @@ public class Swerve extends SubsystemBase {
 
     xController = new PIDController(7.5, 0, 0);
     yController = new PIDController(7.5, 0, 0);
-    yawController = new PIDController(10, 0, 1);
+    yawController = new PIDController(7.5, 0, .75);
     yawController.enableContinuousInput(-PI, PI);
   }
 
