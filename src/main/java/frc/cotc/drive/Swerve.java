@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
@@ -139,7 +140,7 @@ public class Swerve extends SubsystemBase {
 
     xController = new PIDController(7.5, 0, 0);
     yController = new PIDController(7.5, 0, 0);
-    yawController = new PIDController(15, 0, 1);
+    yawController = new PIDController(7.5, 0, .75);
     yawController.enableContinuousInput(-PI, PI);
   }
 
@@ -282,18 +283,6 @@ public class Swerve extends SubsystemBase {
                       omegaSupplier.getAsDouble() * maxAngularSpeedRadPerSec),
                   inputs.gyroYaw);
 
-          var translationalMagnitude =
-              Math.hypot(
-                  commandedRobotSpeeds.vxMetersPerSecond, commandedRobotSpeeds.vyMetersPerSecond);
-          if (translationalMagnitude > maxLinearSpeedMetersPerSec) {
-            commandedRobotSpeeds.vxMetersPerSecond *=
-                maxLinearSpeedMetersPerSec / translationalMagnitude;
-            commandedRobotSpeeds.vyMetersPerSecond *=
-                maxLinearSpeedMetersPerSec / translationalMagnitude;
-
-            translationalMagnitude = maxLinearSpeedMetersPerSec;
-          }
-
           if (accelLimitMpss > 0) {
             double desiredAccelXMpss =
                 (commandedRobotSpeeds.vxMetersPerSecond
@@ -316,7 +305,7 @@ public class Swerve extends SubsystemBase {
           }
 
           commandedRobotSpeeds.omegaRadiansPerSecond *=
-              1 - (translationalMagnitude / maxLinearSpeedMetersPerSec) * angularSpeedFudgeFactor;
+              1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
 
           var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
           swerveIO.drive(setpoint);
@@ -383,6 +372,50 @@ public class Swerve extends SubsystemBase {
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
             < .5
         && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 10;
+  }
+
+  @AutoLogOutput
+  public boolean nearSource() {
+    double maxX = 3.5;
+    if (Robot.isOnRed()) {
+      return poseEstimator.getEstimatedPosition().getX() > (Constants.FIELD_WIDTH_METERS - maxX);
+    } else {
+      return poseEstimator.getEstimatedPosition().getX() < maxX;
+    }
+  }
+
+  public Command sourceAlign(Supplier<Translation2d> translationalControlSupplier) {
+    return runOnce(yawController::reset)
+        .andThen(
+            run(
+                () -> {
+                  var targetAngle = Units.degreesToRadians(54);
+                  if (Robot.isOnRed()) {
+                    targetAngle = PI - targetAngle;
+                  }
+                  if (poseEstimator.getEstimatedPosition().getY()
+                      > Constants.FIELD_WIDTH_METERS / 2) {
+                    targetAngle *= -1;
+                  }
+
+                  var translationalControl = translationalControlSupplier.get();
+
+                  var commandedRobotSpeeds =
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          new ChassisSpeeds(
+                              translationalControl.getX() * maxLinearSpeedMetersPerSec,
+                              translationalControl.getY() * maxLinearSpeedMetersPerSec,
+                              yawController.calculate(
+                                  poseEstimator.getEstimatedPosition().getRotation().getRadians(),
+                                  targetAngle)),
+                          inputs.gyroYaw);
+
+                  var setpoint =
+                      setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
+                  swerveIO.drive(setpoint);
+                  lastSetpoint = setpoint;
+                }))
+        .withName("SourceAlign");
   }
 
   public Command followRepulsorField(Pose2d goal) {

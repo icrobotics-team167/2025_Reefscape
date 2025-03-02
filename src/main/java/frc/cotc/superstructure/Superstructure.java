@@ -68,6 +68,10 @@ public class Superstructure extends SubsystemBase {
     return expose(coralOuttake.intake()).withName("Intake");
   }
 
+  public boolean hasCoral() {
+    return coralOuttake.hasCoral();
+  }
+
   private Command expose(Command internal) {
     var proxied = internal.asProxy();
     proxied.addRequirements(this);

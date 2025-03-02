@@ -7,6 +7,8 @@
 
 package frc.cotc;
 
+import static edu.wpi.first.wpilibj2.command.Commands.parallel;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -147,7 +150,10 @@ public class Robot extends LoggedRobot {
     secondary.x().whileTrue(superstructure.lvl3(swerve::atTargetPose));
     secondary.b().whileTrue(superstructure.lvl2(swerve::atTargetPose));
     secondary.a().whileTrue(superstructure.lvl1());
-    //    primary.rightBumper().whileTrue(superstructure.intake());
+    new Trigger(() -> swerve.nearSource() && !superstructure.hasCoral() && DriverStation.isTeleop())
+        .whileTrue(
+            parallel(superstructure.intake(), swerve.sourceAlign(driveTranslationalControlSupplier))
+                .withName("Auto Intake"));
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
