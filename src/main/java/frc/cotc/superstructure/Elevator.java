@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.cotc.Robot;
 import frc.cotc.util.GainsCalculator;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -50,7 +49,7 @@ class Elevator extends SubsystemBase {
             constants.kG_firstStage / 9.81,
             12 - constants.kG_firstStage,
             .01,
-            .2,
+            .1,
             Robot.defaultPeriodSecs,
             0.001);
     secondStageKg = constants.kG_secondStage;
@@ -60,7 +59,7 @@ class Elevator extends SubsystemBase {
             constants.kG_secondStage / 9.81,
             12 - constants.kG_secondStage,
             .01,
-            .2,
+            .1,
             Robot.defaultPeriodSecs,
             0.001);
 
@@ -97,6 +96,7 @@ class Elevator extends SubsystemBase {
         .getRoot("coralBase", 0, 0)
         .setPosition(Units.inchesToMeters(28 - 6), inputs.posMeters + Units.inchesToMeters(20.5));
     Logger.recordOutput("Superstructure/Elevator/Visualization", visualization);
+    Logger.recordOutput("Superstructure/Elevator/atTargetPos", atTargetPos());
   }
 
   Command retract() {
@@ -108,15 +108,15 @@ class Elevator extends SubsystemBase {
   }
 
   Command lvl2() {
-    return goToPos(.5).withName("Lvl 2");
+    return goToPos(.48).withName("Lvl 2");
   }
 
   Command lvl3() {
-    return goToPos(.9).withName("Lvl 3");
+    return goToPos(0.86).withName("Lvl 3");
   }
 
   Command lvl4() {
-    return goToPos(1.5).withName("Lvl 4");
+    return goToPos(1.4746).withName("Lvl 4");
   }
 
   Command manualControl(DoubleSupplier control) {
@@ -129,7 +129,6 @@ class Elevator extends SubsystemBase {
 
   private double targetHeight = 0;
 
-  @AutoLogOutput(key = "Superstructure/Elevator/atTargetPos")
   boolean atTargetPos() {
     return Math.abs(inputs.posMeters - targetHeight) < .025
         && Math.abs(inputs.velMetersPerSec) < .5;
