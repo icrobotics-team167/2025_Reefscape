@@ -124,7 +124,6 @@ public class Autos {
             sequence(
                     superstructure
                         .intake()
-                        .withTimeout(1)
                         .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
                     superstructure
                         .lvl4(swerve::atTargetPose)
@@ -139,7 +138,6 @@ public class Autos {
             sequence(
                     superstructure
                         .intake()
-                        .withTimeout(1)
                         .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
                     superstructure
                         .lvl4(swerve::atTargetPose)
@@ -154,7 +152,6 @@ public class Autos {
             sequence(
                     superstructure
                         .intake()
-                        .withTimeout(1)
                         .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
                     superstructure
                         .lvl4(swerve::atTargetPose)
