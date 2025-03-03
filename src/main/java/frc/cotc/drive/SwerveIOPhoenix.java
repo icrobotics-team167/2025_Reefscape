@@ -207,6 +207,13 @@ public class SwerveIOPhoenix implements SwerveIO {
   }
 
   @Override
+  public void stop(Rotation2d[] angles) {
+    for (int i = 0; i < 4; i++) {
+      modules[i].brake(angles[i]);
+    }
+  }
+
+  @Override
   public void initSysId() {
     var signalsToSpeedUp = new BaseStatusSignal[8];
     for (int i = 0; i < 4; i++) {
@@ -295,8 +302,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       } else {
         driveConfig.Slot0.kP = 10;
 
-        steerConfig.Slot0.kP = 600;
-        steerConfig.Slot0.kD = 2.5;
+        steerConfig.Slot0.kP = 400;
+        steerConfig.Slot0.kD = 1.5;
       }
 
       driveMotor.getConfigurator().apply(driveConfig);
@@ -330,9 +337,9 @@ public class SwerveIOPhoenix implements SwerveIO {
               .withVelocity(steerFeedforwardRotPerSec));
     }
 
-    void brake() {
+    void brake(Rotation2d angle) {
       driveMotor.setControl(brakeControlRequest);
-      steerMotor.setControl(brakeControlRequest);
+      steerMotor.setControl(steerControlRequest.withPosition(angle.getRotations()));
     }
 
     private final VoltageOut steerCharacterization = new VoltageOut(0).withEnableFOC(false);

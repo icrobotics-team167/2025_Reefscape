@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class CoralOuttake extends SubsystemBase {
+class CoralOuttake extends SubsystemBase {
   private final CoralOuttakeIO io;
   private final CoralOuttakeIO.CoralOuttakeIOInputs inputs =
       new CoralOuttakeIO.CoralOuttakeIOInputs();
@@ -33,8 +33,16 @@ public class CoralOuttake extends SubsystemBase {
   Command score() {
     return run(io::outtake)
         .onlyWhile(() -> inputs.hasCoral)
-        .withTimeout(.5)
+        //        .withTimeout(.5)
         .finallyDo(io::brake)
         .withName("Outtake");
+  }
+
+  Command agitate() {
+    return run(io::agitate).finallyDo(io::brake).withName("Agitate");
+  }
+
+  boolean hasCoral() {
+    return inputs.hasCoral;
   }
 }
