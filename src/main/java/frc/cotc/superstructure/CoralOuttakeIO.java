@@ -15,17 +15,21 @@ public interface CoralOuttakeIO {
   class CoralOuttakeIOInputs implements LoggableInputs {
     boolean hasCoral;
 
+    double velocityPercent;
+
     MotorCurrentDraws currentDraws = new MotorCurrentDraws();
 
     @Override
     public void toLog(LogTable table) {
       table.put("hasCoral", hasCoral);
+      table.put("velocityPercent", velocityPercent);
       table.put("currentDraws", MotorCurrentDraws.struct, currentDraws);
     }
 
     @Override
     public void fromLog(LogTable table) {
       hasCoral = table.get("hasCoral", false);
+      velocityPercent = table.get("velocityPercent", 0.0);
       currentDraws = table.get("currentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
     }
   }
