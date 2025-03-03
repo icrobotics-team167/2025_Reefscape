@@ -81,6 +81,13 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     motor.setControl(outtakeControl);
   }
 
+  private final VoltageOut agitateControl = new VoltageOut(-12);
+
+  @Override
+  public void agitate() {
+    motor.setControl(agitateControl);
+  }
+
   @Override
   public void brake() {
     motor.stopMotor();

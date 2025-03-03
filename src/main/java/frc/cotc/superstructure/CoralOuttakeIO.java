@@ -36,5 +36,7 @@ public interface CoralOuttakeIO {
 
   default void outtake() {}
 
+  default void agitate() {}
+
   default void brake() {}
 }

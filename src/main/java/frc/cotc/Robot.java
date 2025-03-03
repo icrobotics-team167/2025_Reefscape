@@ -7,8 +7,6 @@
 
 package frc.cotc;
 
-import static edu.wpi.first.wpilibj2.command.Commands.parallel;
-
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -25,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -133,6 +130,9 @@ public class Robot extends LoggedRobot {
           return new Translation2d(xControl, yControl);
         };
 
+    RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
+    RobotModeTriggers.disabled().whileTrue(swerve.stop());
+
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
     swerve.setDefaultCommand(
@@ -141,19 +141,26 @@ public class Robot extends LoggedRobot {
             () -> {
               var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
               return Math.copySign(rawInput * rawInput, rawInput);
-            }));
-    RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-    RobotModeTriggers.disabled().whileTrue(swerve.stop());
+            },
+            primary.leftBumper()));
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
     primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
-    secondary.y().whileTrue(superstructure.lvl4(swerve::atTargetPose));
-    secondary.x().whileTrue(superstructure.lvl3(swerve::atTargetPose));
-    secondary.b().whileTrue(superstructure.lvl2(swerve::atTargetPose));
-    secondary.a().whileTrue(superstructure.lvl1());
-    new Trigger(() -> swerve.nearSource() && !superstructure.hasCoral() && DriverStation.isTeleop())
+    primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
+
+    secondary
+        .y()
         .whileTrue(
-            parallel(superstructure.intake(), swerve.sourceAlign(driveTranslationalControlSupplier))
-                .withName("Auto Intake"));
+            superstructure.lvl4(() -> swerve.atTargetPose() && secondary.povUp().getAsBoolean()));
+    secondary
+        .x()
+        .whileTrue(
+            superstructure.lvl3(() -> swerve.atTargetPose() && secondary.povUp().getAsBoolean()));
+    secondary
+        .b()
+        .whileTrue(
+            superstructure.lvl2(() -> swerve.atTargetPose() && secondary.povUp().getAsBoolean()));
+    secondary.a().whileTrue(superstructure.lvl1());
+    secondary.povDown().whileTrue(superstructure.agitate());
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();

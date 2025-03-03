@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.cotc.Robot;
 import frc.cotc.util.GainsCalculator;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -128,6 +129,7 @@ class Elevator extends SubsystemBase {
 
   private double targetHeight = 0;
 
+  @AutoLogOutput(key = "Superstructure/Elevator/atTargetPos")
   boolean atTargetPos() {
     return Math.abs(inputs.posMeters - targetHeight) < .025
         && Math.abs(inputs.velMetersPerSec) < .5;

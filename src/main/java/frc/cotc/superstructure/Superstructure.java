@@ -23,6 +23,7 @@ public class Superstructure extends SubsystemBase {
     this.coralOuttake = new CoralOuttake(coralOuttakeIO);
 
     elevator.setDefaultCommand(elevator.retract());
+    coralOuttake.setDefaultCommand(coralOuttake.intake());
   }
 
   public Command lvl1() {
@@ -66,6 +67,10 @@ public class Superstructure extends SubsystemBase {
 
   public Command intake() {
     return expose(coralOuttake.intake()).withName("Intake");
+  }
+
+  public Command agitate() {
+    return expose(coralOuttake.agitate()).withName("Agitate");
   }
 
   public boolean hasCoral() {

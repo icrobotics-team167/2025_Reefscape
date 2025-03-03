@@ -34,6 +34,7 @@ import frc.cotc.Robot;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -140,7 +141,7 @@ public class Swerve extends SubsystemBase {
 
     xController = new PIDController(7.5, 0, 0);
     yController = new PIDController(7.5, 0, 0);
-    yawController = new PIDController(7.5, 0, .75);
+    yawController = new PIDController(4, 0, .2);
     yawController.enableContinuousInput(-PI, PI);
   }
 
@@ -271,7 +272,9 @@ public class Swerve extends SubsystemBase {
   private double accelLimitMpss = -1;
 
   public Command teleopDrive(
-      Supplier<Translation2d> translationalControlSupplier, DoubleSupplier omegaSupplier) {
+      Supplier<Translation2d> translationalControlSupplier,
+      DoubleSupplier omegaSupplier,
+      BooleanSupplier slowMode) {
     return run(() -> {
           var translationalControl = translationalControlSupplier.get();
 
@@ -307,6 +310,10 @@ public class Swerve extends SubsystemBase {
           commandedRobotSpeeds.omegaRadiansPerSecond *=
               1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
 
+          if (slowMode.getAsBoolean()) {
+            commandedRobotSpeeds = commandedRobotSpeeds.times(.5);
+          }
+
           var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
           swerveIO.drive(setpoint);
           lastSetpoint = setpoint;
@@ -319,7 +326,8 @@ public class Swerve extends SubsystemBase {
           swerveIO.stop(stopInXAngles);
           lastSetpoint = stopInXSetpoint;
         })
-        .ignoringDisable(true).withName("Stop");
+        .ignoringDisable(true)
+        .withName("Stop");
   }
 
   public Command resetGyro() {
