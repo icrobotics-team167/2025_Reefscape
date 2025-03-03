@@ -7,6 +7,8 @@
 
 package frc.cotc.superstructure;
 
+import static edu.wpi.first.wpilibj2.command.Commands.*;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
@@ -27,19 +29,17 @@ class CoralOuttake extends SubsystemBase {
   }
 
   Command intake() {
-    return run(io::intake).until(() -> inputs.hasCoral).finallyDo(io::brake).withName("Intake");
+    return run(io::intake).until(() -> inputs.hasCoral).withName("Intake");
   }
 
-  Command score() {
+  Command score(double extraTime) {
     return run(io::outtake)
-        .onlyWhile(() -> inputs.hasCoral)
-        //        .withTimeout(.5)
-        .finallyDo(io::brake)
+        .withDeadline(waitUntil(() -> !inputs.hasCoral).andThen(waitSeconds(extraTime)))
         .withName("Outtake");
   }
 
   Command agitate() {
-    return run(io::agitate).finallyDo(io::brake).withName("Agitate");
+    return run(io::agitate).withName("Agitate");
   }
 
   boolean hasCoral() {

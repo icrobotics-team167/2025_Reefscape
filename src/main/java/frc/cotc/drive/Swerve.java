@@ -383,13 +383,13 @@ public class Swerve extends SubsystemBase {
   }
 
   @AutoLogOutput
-  public boolean nearSource() {
-    double maxX = 3.5;
-    if (Robot.isOnRed()) {
-      return poseEstimator.getEstimatedPosition().getX() > (Constants.FIELD_WIDTH_METERS - maxX);
-    } else {
-      return poseEstimator.getEstimatedPosition().getX() < maxX;
+  public boolean nearingTargetPose() {
+    if (targetPose == null) {
+      return false;
     }
+    var error = targetPose.minus(poseEstimator.getEstimatedPosition());
+    return error.getTranslation().getNorm() < 1.25
+        && Math.abs(error.getRotation().getDegrees()) < 30;
   }
 
   public Command sourceAlign(Supplier<Translation2d> translationalControlSupplier) {

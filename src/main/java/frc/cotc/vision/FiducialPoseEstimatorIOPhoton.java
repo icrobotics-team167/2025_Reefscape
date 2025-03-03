@@ -105,6 +105,7 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
       cameraSim.enableProcessedStream(false);
       cameraSim.enableRawStream(false);
       cameraSim.enableDrawWireframe(false);
+      cameraSim.setMaxSightRange(6);
       visionSystemSim.addCamera(cameraSim, transform);
     }
 
