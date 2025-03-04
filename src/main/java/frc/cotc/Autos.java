@@ -159,7 +159,8 @@ public class Autos {
               waitUntil(superstructure::hasCoral)
                   // .withTimeout(.5) // ONLY RUN IN SIM
                   .deadlineFor(sourcePathfinding.goTo(source))
-                  .andThen(sourceToReef[i].spawnCmd()));
+                  .andThen(sourceToReef[i].spawnCmd())
+                  .withName("Source" + source.name()));
 
       sourceToReef[i]
           .atTimeBeforeEnd(.75)
@@ -169,7 +170,8 @@ public class Autos {
                   .deadlineFor(
                       waitUntil(sourceToReef[i].done())
                           .andThen(reefPathfinding.goTo(cyclingBranches[i]).asProxy()))
-                  .andThen(nextCycleSpwnCmd[i]));
+                  .andThen(nextCycleSpwnCmd[i])
+                  .withName("ScoreAt" + cyclingBranches[i].name()));
     }
 
     return routine;
