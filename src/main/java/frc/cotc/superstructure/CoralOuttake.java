@@ -38,6 +38,10 @@ class CoralOuttake extends SubsystemBase {
         .withName("Outtake");
   }
 
+  Command hold() {
+    return run(io::brake).withName("Hold");
+  }
+
   Command agitate() {
     return run(io::agitate).withName("Agitate");
   }

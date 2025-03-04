@@ -310,7 +310,7 @@ public class Robot extends LoggedRobot {
         return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix());
       }
       case SIM -> {
-        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIO() {});
+        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIOSim());
       }
       default -> {
         return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {});

@@ -11,8 +11,8 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 
 public class Superstructure extends SubsystemBase {
   private final Elevator elevator;
@@ -24,12 +24,13 @@ public class Superstructure extends SubsystemBase {
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
+    new Trigger(coralOuttake::hasCoral).whileTrue(coralOuttake.hold());
   }
 
   public Command lvl1() {
     return expose(
             deadline(
-                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(.5)),
+                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(.5).asProxy()),
                     elevator.lvl1())
                 .withName("Lvl 1 Scoring"))
         .withName("Lvl 1 Scoring");
@@ -39,7 +40,7 @@ public class Superstructure extends SubsystemBase {
     return expose(
             deadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.5)),
+                        .andThen(coralOuttake.score(.5).asProxy()),
                     elevator.lvl2())
                 .withName("Lvl 2 Scoring"))
         .withName("Lvl 2 Scoring");
@@ -49,7 +50,7 @@ public class Superstructure extends SubsystemBase {
     return expose(
             deadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.5)),
+                        .andThen(coralOuttake.score(.5).asProxy()),
                     elevator.lvl3())
                 .withName("Lvl 3 Scoring"))
         .withName("Lvl 3 Scoring");
@@ -59,18 +60,10 @@ public class Superstructure extends SubsystemBase {
     return expose(
             deadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.75)),
+                        .andThen(coralOuttake.score(.75).asProxy()),
                     elevator.lvl4())
                 .withName("Lvl 4 Scoring"))
         .withName("Lvl 4 Scoring");
-  }
-
-  public Command elevatorManualControl(DoubleSupplier control) {
-    return expose(elevator.manualControl(control));
-  }
-
-  public Command intake() {
-    return expose(coralOuttake.intake()).withName("Intake");
   }
 
   public Command agitate() {
