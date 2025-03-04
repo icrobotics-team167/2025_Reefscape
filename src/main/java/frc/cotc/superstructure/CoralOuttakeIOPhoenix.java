@@ -18,7 +18,6 @@ import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
-import edu.wpi.first.math.util.Units;
 
 public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   private final TalonFX motor;
