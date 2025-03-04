@@ -156,9 +156,8 @@ public class Autos {
       reefToSource[i]
           .done()
           .onTrue(
-              superstructure
-                  .intake()
-                  .until(superstructure::hasCoral)
+              waitUntil(superstructure::hasCoral)
+                  // .withTimeout(.5) // ONLY RUN IN SIM
                   .deadlineFor(sourcePathfinding.goTo(source))
                   .andThen(sourceToReef[i].spawnCmd()));
 
