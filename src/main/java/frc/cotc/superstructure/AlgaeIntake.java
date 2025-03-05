@@ -25,4 +25,8 @@ class AlgaeIntake extends SubsystemBase {
   Command outtake() {
     return run(io::outtake).finallyDo(io::brake);
   }
+
+  boolean hasAlgae() {
+    return inputs.hasAlgae;
+  }
 }

@@ -10,6 +10,7 @@ package frc.cotc.superstructure;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -72,7 +73,7 @@ public class Superstructure extends SubsystemBase {
         .withName("Lvl 4 Scoring");
   }
 
-  public Command intake() {
+  public Command intakeCoral() {
     return expose(coralOuttake.intake()).withName("Intake");
   }
 
