@@ -22,7 +22,7 @@ import java.util.TreeMap;
  * A copy of {@link edu.wpi.first.math.estimator.SwerveDrivePoseEstimator} to allow for on-the-fly
  * drive std dev tuning.
  */
-public class SwervePoseEstimator {
+class SwervePoseEstimator {
   private final SwerveDriveOdometry odometry;
 
   private static final double BUFFER_DURATION = 1.5;

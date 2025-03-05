@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class Ramp extends SubsystemBase {
+class Ramp extends SubsystemBase {
   private final RampIO io;
   private RampIO.RampIOInputs inputs = new RampIO.RampIOInputs();
 

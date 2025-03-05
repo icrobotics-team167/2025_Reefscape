@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class AlgaeClaw extends SubsystemBase {
+class AlgaeClaw extends SubsystemBase {
   private final AlgaeClawIO io;
   private final AlgaeClawIO.AlgaeClawIOInputs inputs = new AlgaeClawIO.AlgaeClawIOInputs();
 

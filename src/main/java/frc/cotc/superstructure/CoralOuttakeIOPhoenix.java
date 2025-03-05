@@ -23,9 +23,7 @@ import frc.cotc.util.PhoenixBatchRefresher;
 public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   private final TalonFX motor;
 
-  private final BaseStatusSignal statorSignal;
-  private final BaseStatusSignal supplySignal;
-  private final BaseStatusSignal velSignal;
+  private final BaseStatusSignal statorSignal, supplySignal, velSignal;
   private final StatusSignal<Boolean> detectedSignal;
 
   public CoralOuttakeIOPhoenix() {

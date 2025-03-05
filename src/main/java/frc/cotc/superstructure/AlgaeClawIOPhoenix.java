@@ -22,10 +22,7 @@ import frc.cotc.util.PhoenixBatchRefresher;
 public class AlgaeClawIOPhoenix implements AlgaeClawIO {
   private final TalonFX motor;
 
-  private final BaseStatusSignal posSignal;
-  private final BaseStatusSignal velSignal;
-  private final BaseStatusSignal statorSignal;
-  private final BaseStatusSignal supplySignal;
+  private final BaseStatusSignal posSignal,velSignal,statorSignal,supplySignal;
 
   public AlgaeClawIOPhoenix() {
     motor = new TalonFX(3);
@@ -37,8 +34,8 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     config.CurrentLimits.SupplyCurrentLimit = 20;
     config.Feedback.SensorToMechanismRatio = (32.0 / 18.0) * 81;
     config.Slot0.kV = 12.0 / ((7530.0 / 60.0) / config.Feedback.SensorToMechanismRatio);
-    config.Slot0.kS = 0;
-    config.Slot0.kG = .1;
+    config.Slot0.kS = 0.25;
+    config.Slot0.kG = .032;
     config.Slot0.kA = (config.Slot0.kG / 9.81) * Units.inchesToMeters(12) * 2 * Math.PI;
     var gains =
         GainsCalculator.getPositionGains(

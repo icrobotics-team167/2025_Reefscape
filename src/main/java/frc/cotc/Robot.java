@@ -307,14 +307,27 @@ public class Robot extends LoggedRobot {
     switch (mode) {
       case REAL -> {
         return new Superstructure(
-            new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix());
+            new ElevatorIOPhoenix(),
+            new CoralOuttakeIOPhoenix(),
+            new RampIOPhoenix(),
+            new AlgaeClawIOPhoenix(),
+            new AlgaeIntakeIOPhoenix());
       }
       case SIM -> {
         return new Superstructure(
-            new ElevatorIOPhoenix(), new CoralOuttakeIO() {}, new RampIOPhoenix());
+            new ElevatorIOPhoenix(),
+            new CoralOuttakeIO() {},
+            new RampIOPhoenix(),
+            new AlgaeClawIO() {},
+            new AlgaeIntakeIO() {});
       }
       default -> {
-        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
+        return new Superstructure(
+            new ElevatorIO() {},
+            new CoralOuttakeIO() {},
+            new RampIO() {},
+            new AlgaeClawIO() {},
+            new AlgaeIntakeIO() {});
       }
     }
   }
