@@ -11,19 +11,24 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 public class Superstructure extends SubsystemBase {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
+  private final Ramp ramp;
 
-  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO) {
-    this.elevator = new Elevator(elevatorIO);
-    this.coralOuttake = new CoralOuttake(coralOuttakeIO);
+  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO) {
+    elevator = new Elevator(elevatorIO);
+    coralOuttake = new CoralOuttake(coralOuttakeIO);
+    ramp = new Ramp(rampIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
+    ramp.setDefaultCommand(ramp.hold());
+    RobotModeTriggers.disabled().onFalse(ramp.lower());
   }
 
   public Command lvl1() {
@@ -71,6 +76,10 @@ public class Superstructure extends SubsystemBase {
 
   public Command agitate() {
     return expose(coralOuttake.agitate()).withName("Agitate");
+  }
+
+  public Command readyClimb() {
+    return expose(ramp.raise());
   }
 
   public boolean hasCoral() {

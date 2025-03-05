@@ -93,8 +93,13 @@ public class Autos {
   private AutoRoutine scoreAtG(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
     var routine = factory.newRoutine("ScoreAtG");
 
-    routine.active().onTrue(parallel(reefRepulsorCommand.goTo(ReefBranch.G),
-      waitUntil(swerve::nearSource), superstructure.lvl4(swerve::atTargetPose)));
+    routine
+        .active()
+        .onTrue(
+            parallel(
+                reefRepulsorCommand.goTo(ReefBranch.G),
+                waitUntil(swerve::nearSource),
+                superstructure.lvl4(swerve::atTargetPose)));
 
     return routine;
   }

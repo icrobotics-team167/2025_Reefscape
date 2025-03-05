@@ -146,6 +146,7 @@ public class Robot extends LoggedRobot {
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
     primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
     primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
+    //    primary.povUp().onTrue(superstructure.readyClimb());
 
     secondary
         .y()
@@ -304,13 +305,15 @@ public class Robot extends LoggedRobot {
   private Superstructure getSuperstructure(Mode mode) {
     switch (mode) {
       case REAL -> {
-        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix());
+        return new Superstructure(
+            new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix());
       }
       case SIM -> {
-        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIO() {});
+        return new Superstructure(
+            new ElevatorIOPhoenix(), new CoralOuttakeIO() {}, new RampIOPhoenix());
       }
       default -> {
-        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {});
+        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
       }
     }
   }
