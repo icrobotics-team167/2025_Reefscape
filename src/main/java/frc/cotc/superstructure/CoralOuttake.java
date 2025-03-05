@@ -45,4 +45,8 @@ class CoralOuttake extends SubsystemBase {
   boolean hasCoral() {
     return inputs.hasCoral;
   }
+
+  boolean coralStuck() {
+    return inputs.velocityPercent < .1 && inputs.currentDraws.statorCurrent > 15;
+  }
 }

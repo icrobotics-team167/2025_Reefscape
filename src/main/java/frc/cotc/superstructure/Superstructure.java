@@ -12,6 +12,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
@@ -74,8 +75,12 @@ public class Superstructure extends SubsystemBase {
     return expose(coralOuttake.intake()).withName("Intake");
   }
 
-  public Command agitate() {
-    return expose(coralOuttake.agitate()).withName("Agitate");
+  public Command ejectStuckCoral() {
+    return expose(
+            coralOuttake
+                .agitate()
+                .withDeadline(waitUntil(() -> !coralOuttake.coralStuck()).andThen(waitSeconds(.5))))
+        .withName("Eject Stuck Coral");
   }
 
   public Command readyClimb() {
@@ -84,6 +89,10 @@ public class Superstructure extends SubsystemBase {
 
   public boolean hasCoral() {
     return coralOuttake.hasCoral();
+  }
+
+  public Trigger coralStuck() {
+    return new Trigger(coralOuttake::coralStuck);
   }
 
   private Command expose(Command internal) {

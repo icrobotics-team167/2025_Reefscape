@@ -161,7 +161,8 @@ public class Robot extends LoggedRobot {
         .whileTrue(
             superstructure.lvl2(() -> swerve.atTargetPose() && secondary.povUp().getAsBoolean()));
     secondary.a().whileTrue(superstructure.lvl1());
-    secondary.povDown().whileTrue(superstructure.agitate());
+
+    superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
