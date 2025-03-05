@@ -19,22 +19,22 @@ public class Superstructure extends SubsystemBase {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
   private final Ramp ramp;
-  private final AlgaeClaw algaeClaw;
+  private final AlgaePivot algaePivot;
   private final AlgaeIntake algaeIntake;
 
   public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO,
-                        AlgaeClawIO algaeClawIO, AlgaeIntakeIO algaeIntakeIO) {
+                        AlgaePivotIO algaePivotIO, AlgaeIntakeIO algaeIntakeIO) {
     elevator = new Elevator(elevatorIO);
     coralOuttake = new CoralOuttake(coralOuttakeIO);
     ramp = new Ramp(rampIO);
-    algaeClaw = new AlgaeClaw(algaeClawIO);
+    algaePivot = new AlgaePivot(algaePivotIO);
     algaeIntake = new AlgaeIntake(algaeIntakeIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
     RobotModeTriggers.disabled().onFalse(ramp.lower());
-    algaeClaw.setDefaultCommand(algaeClaw.stow());
+    algaePivot.setDefaultCommand(algaePivot.stow());
   }
 
   public Command lvl1() {

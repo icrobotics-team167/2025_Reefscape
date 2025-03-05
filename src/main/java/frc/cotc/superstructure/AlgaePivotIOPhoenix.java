@@ -16,15 +16,14 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import edu.wpi.first.math.util.Units;
-import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
-public class AlgaeClawIOPhoenix implements AlgaeClawIO {
+public class AlgaePivotIOPhoenix implements AlgaePivotIO {
   private final TalonFX motor;
 
   private final BaseStatusSignal posSignal,velSignal,statorSignal,supplySignal;
 
-  public AlgaeClawIOPhoenix() {
+  public AlgaePivotIOPhoenix() {
     motor = new TalonFX(3);
 
     var config = new TalonFXConfiguration();

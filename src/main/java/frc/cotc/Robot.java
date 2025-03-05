@@ -310,7 +310,7 @@ public class Robot extends LoggedRobot {
             new ElevatorIOPhoenix(),
             new CoralOuttakeIOPhoenix(),
             new RampIOPhoenix(),
-            new AlgaeClawIOPhoenix(),
+            new AlgaePivotIOPhoenix(),
             new AlgaeIntakeIOPhoenix());
       }
       case SIM -> {
@@ -318,7 +318,7 @@ public class Robot extends LoggedRobot {
             new ElevatorIOPhoenix(),
             new CoralOuttakeIO() {},
             new RampIOPhoenix(),
-            new AlgaeClawIO() {},
+            new AlgaePivotIO() {},
             new AlgaeIntakeIO() {});
       }
       default -> {
@@ -326,7 +326,7 @@ public class Robot extends LoggedRobot {
             new ElevatorIO() {},
             new CoralOuttakeIO() {},
             new RampIO() {},
-            new AlgaeClawIO() {},
+            new AlgaePivotIO() {},
             new AlgaeIntakeIO() {});
       }
     }

@@ -11,7 +11,7 @@ import frc.cotc.util.MotorCurrentDraws;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-public interface AlgaeClawIO {
+public interface AlgaePivotIO {
   class AlgaeClawIOInputs implements LoggableInputs {
     double posRad;
     double velRadPerSec;
