@@ -79,7 +79,8 @@ public class Superstructure extends SubsystemBase {
     return expose(
             coralOuttake
                 .agitate()
-                .withDeadline(waitUntil(() -> !coralOuttake.coralStuck()).andThen(waitSeconds(.5))))
+                .withDeadline(waitUntil(() -> !coralOuttake.coralStuck()).andThen(waitSeconds(.5)))
+                .withName("Eject Stuck Coral"))
         .withName("Eject Stuck Coral");
   }
 
