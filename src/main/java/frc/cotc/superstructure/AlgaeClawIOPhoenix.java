@@ -36,18 +36,8 @@ public class AlgaeClawIOPhoenix implements AlgaeClawIO {
     config.Slot0.kV = 12.0 / ((7530.0 / 60.0) / config.Feedback.SensorToMechanismRatio);
     config.Slot0.kS = 0.25;
     config.Slot0.kG = .032;
-    config.Slot0.kA = (config.Slot0.kG / 9.81) * Units.inchesToMeters(12) * 2 * Math.PI;
-    var gains =
-        GainsCalculator.getPositionGains(
-            config.Slot0.kV,
-            config.Slot0.kA,
-            12 - config.Slot0.kG - config.Slot0.kS,
-            2.0 / 360,
-            10.0 / 360,
-            .001,
-            .001);
-    config.Slot0.kP = gains.kP();
-    config.Slot0.kD = gains.kD();
+    config.Slot0.kP = 48;
+    config.Slot0.kD = 1;
     config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
     config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
     motor.getConfigurator().apply(config);
