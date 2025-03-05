@@ -58,7 +58,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     leftSupply = leftMotor.getSupplyCurrent(false);
     rightStator = rightMotor.getStatorCurrent(false);
     rightSupply = rightMotor.getSupplyCurrent(false);
-    PhoenixBatchRefresher.register(
+    PhoenixBatchRefresher.registerCanivore(
         posSignal, velSignal, leftStator, leftSupply, rightStator, rightSupply);
     BaseStatusSignal.setUpdateFrequencyForAll(100, posSignal, velSignal);
     BaseStatusSignal.setUpdateFrequencyForAll(50, leftStator, leftSupply, rightStator, rightSupply);

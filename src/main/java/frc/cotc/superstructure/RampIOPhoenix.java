@@ -64,7 +64,7 @@ public class RampIOPhoenix implements RampIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(50, velocitySignal, statorSignal, supplySignal);
     motor.optimizeBusUtilization(5, .01);
-    PhoenixBatchRefresher.register(velocitySignal, statorSignal, supplySignal);
+    PhoenixBatchRefresher.registerCanivore(velocitySignal, statorSignal, supplySignal);
   }
 
   @Override
