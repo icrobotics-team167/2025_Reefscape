@@ -83,181 +83,18 @@ public class Autos {
           return swerve.followRepulsorField(pose);
         };
 
-    addRoutine("CycleFromE", () -> cycleFromE(factory, swerve, superstructure));
-    addRoutine("CycleFromJ", () -> cycleFromJ(factory, swerve, superstructure));
-    addRoutine("L&K", () -> lAndK(factory, swerve, superstructure));
-    addRoutine("DriveTest", () -> driveTest(factory, swerve));
-    addRoutine("ChoreoDriveTest", () -> choreoDriveTest(factory, swerve));
+    addRoutine("ScoreAtG", () -> scoreAtG(factory, swerve, superstructure));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.758, .7, Rotation2d.fromDegrees(54));
   private final Pose2d sourceLeft =
       new Pose2d(1.758, Constants.FIELD_WIDTH_METERS - .7, Rotation2d.fromDegrees(-54));
 
-  private AutoRoutine cycleFromE(
-      AutoFactory factory, Swerve swerve, Superstructure superstructure) {
-    var routine = factory.newRoutine("CycleFromE");
+  private AutoRoutine scoreAtG(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
+    var routine = factory.newRoutine("ScoreAtG");
 
-    var eToSource = getTrajectory(routine, ReefBranch.E, Source.R);
-    var sourceToC = getTrajectory(routine, Source.R, ReefBranch.C);
-    var cToSource = getTrajectory(routine, ReefBranch.C, Source.R);
-    var sourceToD = getTrajectory(routine, Source.R, ReefBranch.D);
-    var dToSource = getTrajectory(routine, ReefBranch.D, Source.R);
-    var sourceToB = getTrajectory(routine, Source.R, ReefBranch.B);
-    var bToSource = getTrajectory(routine, ReefBranch.B, Source.R);
-
-    routine
-        .active()
-        .onTrue(
-            deadline(
-                    superstructure.lvl4(swerve::atTargetPose),
-                    reefRepulsorCommand.goTo(ReefBranch.E))
-                .andThen(eToSource.spawnCmd()));
-
-    eToSource
-        .done()
-        .onTrue(
-            sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToD.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.D)))
-                    .andThen(dToSource.spawnCmd())));
-
-    dToSource
-        .done()
-        .onTrue(
-            sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToC.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.C)))
-                    .andThen(cToSource.spawnCmd())));
-
-    cToSource
-        .done()
-        .onTrue(
-            sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.R)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToB.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.B)))
-                    .andThen(bToSource.spawnCmd())));
-
-    return routine;
-  }
-
-  private AutoRoutine cycleFromJ(
-      AutoFactory factory, Swerve swerve, Superstructure superstructure) {
-    var routine = factory.newRoutine("CycleFromJ");
-
-    var jToSource = getTrajectory(routine, ReefBranch.J, Source.L);
-    var sourceToL = getTrajectory(routine, Source.L, ReefBranch.L);
-    var lToSource = getTrajectory(routine, ReefBranch.L, Source.L);
-    var sourceToK = getTrajectory(routine, Source.L, ReefBranch.K);
-    var kToSource = getTrajectory(routine, ReefBranch.K, Source.L);
-    var sourceToA = getTrajectory(routine, Source.L, ReefBranch.A);
-    var aToSource = getTrajectory(routine, ReefBranch.A, Source.L);
-
-    routine
-        .active()
-        .onTrue(
-            deadline(
-                    superstructure.lvl4(swerve::atTargetPose),
-                    reefRepulsorCommand.goTo(ReefBranch.J))
-                .andThen(jToSource.spawnCmd()));
-
-    jToSource
-        .done()
-        .onTrue(
-            sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToK.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.K)))
-                    .andThen(kToSource.spawnCmd())));
-
-    kToSource
-        .done()
-        .onTrue(
-            sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToL.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.L)))
-                    .andThen(lToSource.spawnCmd())));
-
-    lToSource
-        .done()
-        .onTrue(
-            sequence(
-                superstructure
-                    .intake()
-                    .withTimeout(1)
-                    .deadlineFor(sourceRepulsorCommand.goTo(Source.L)),
-                superstructure
-                    .lvl4(swerve::atTargetPose)
-                    .deadlineFor(sourceToA.cmd().andThen(reefRepulsorCommand.goTo(ReefBranch.A)))
-                    .andThen(aToSource.spawnCmd())));
-
-    return routine;
-  }
-
-  private AutoRoutine lAndK(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
-    var routine = factory.newRoutine("lAndK");
-
-    routine
-        .active()
-        .onTrue(
-            superstructure
-                .lvl4(swerve::atTargetPose)
-                .deadlineFor(reefRepulsorCommand.goTo(ReefBranch.L)));
-
-    return routine;
-  }
-
-  private AutoRoutine driveTest(AutoFactory factory, Swerve swerve) {
-    var routine = factory.newRoutine("driveTest");
-
-    routine
-        .active()
-        .onTrue(
-            sequence(
-                reefRepulsorCommand.goTo(ReefBranch.J).until(swerve::atTargetPose),
-                sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose),
-                reefRepulsorCommand.goTo(ReefBranch.K).until(swerve::atTargetPose),
-                sourceRepulsorCommand.goTo(Source.L).until(swerve::atTargetPose)));
-
-    return routine;
-  }
-
-  private AutoRoutine choreoDriveTest(AutoFactory factory, Swerve swerve) {
-    var routine = factory.newRoutine("driveTest");
-
-    var jToSource = getTrajectory(routine, ReefBranch.J, Source.L);
-
-    routine
-        .active()
-        .onTrue(
-            reefRepulsorCommand
-                .goTo(ReefBranch.J)
-                .until(swerve::atTargetPose)
-                .andThen(jToSource.cmd()));
+    routine.active().onTrue(parallel(reefRepulsorCommand.goTo(ReefBranch.G),
+      waitUntil(swerve::nearSource), superstructure.lvl4(swerve::atTargetPose)));
 
     return routine;
   }
