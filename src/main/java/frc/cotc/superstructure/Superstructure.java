@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 
 public class Superstructure extends SubsystemBase {
   private final Elevator elevator;
@@ -65,10 +64,6 @@ public class Superstructure extends SubsystemBase {
                     .andThen(coralOuttake.score(), waitSeconds(.75)),
                 elevator.lvl4()))
         .withName("Lvl 4 Scoring");
-  }
-
-  public Command elevatorManualControl(DoubleSupplier control) {
-    return expose(elevator.manualControl(control));
   }
 
   public Command intake() {
