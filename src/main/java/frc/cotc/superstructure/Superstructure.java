@@ -97,10 +97,6 @@ public class Superstructure extends Mechanism {
         .withName("Intake High Algae");
   }
 
-  public Command lowAlgaeManualOverride(DoubleSupplier control) {
-    return expose(algaeClaw.)
-  }
-
   public Command processorScore() {
     return expose(algaeClaw.processorScore()).withName("Processor Score");
   }
