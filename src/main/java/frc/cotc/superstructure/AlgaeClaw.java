@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.util.Mechanism;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 public class AlgaeClaw extends Mechanism {
   private final AlgaePivot algaePivot;
@@ -54,8 +55,8 @@ public class AlgaeClaw extends Mechanism {
         .withName("Hold if has algae");
   }
 
-  Command rezero() {
-    return expose(algaePivot.rezero());
+  Command rezero(DoubleSupplier overrideControl) {
+    return expose(algaePivot.rezero(overrideControl));
   }
 
   Trigger hasAlgae() {

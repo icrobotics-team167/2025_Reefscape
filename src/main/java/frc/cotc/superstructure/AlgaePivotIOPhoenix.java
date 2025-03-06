@@ -80,13 +80,13 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
   }
 
   @Override
-  public void lowerSlow() {
-    motor.setVoltage(-1);
+  public void manualOverride(double voltage) {
+    motor.setVoltage(voltage);
   }
 
   @Override
   public void resetAlgae() {
-    motor.setPosition(Units.degreesToRotations(-75));
+    motor.setPosition(Units.degreesToRotations(-80));
   }
 
   private static class Sim {

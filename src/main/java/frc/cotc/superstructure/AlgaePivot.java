@@ -12,6 +12,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
+import java.util.function.DoubleSupplier;
 
 class AlgaePivot extends SubsystemBase {
   private final AlgaePivotIO io;
@@ -40,11 +41,11 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command stow() {
-    return run(() -> setTargetPos(Units.degreesToRadians(-75))).withName("Stow");
+    return run(() -> setTargetPos(Units.degreesToRadians(-80))).withName("Stow");
   }
 
-  Command rezero() {
-    return run(io::lowerSlow).finallyDo(io::resetAlgae);
+  Command rezero(DoubleSupplier overrideControl) {
+    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 2)).finallyDo(io::resetAlgae);
   }
 
   private double targetPosRad;
