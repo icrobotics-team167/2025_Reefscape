@@ -9,20 +9,18 @@ package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.StaticBrake;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Notifier;
 import frc.cotc.Robot;
 import frc.cotc.util.ContinuousElevatorSim;
-import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class ElevatorIOPhoenix implements ElevatorIO {
@@ -34,7 +32,6 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private static final double metersPerRotation;
 
   private static final ElevatorIOConstantsAutoLogged constants;
-  private static final double maxHeightMeters = 1.53551952554;
 
   static {
     gearRatio = (50.0 / 12.0) * (52.0 / 20.0);
@@ -44,7 +41,11 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     metersPerRotation = teeth * pitch;
 
     constants = new ElevatorIOConstantsAutoLogged();
+    constants.kV = 12.0 / ((5800.0 / 60.0) / gearRatio * metersPerRotation);
+    constants.kG_firstStage = .176;
+    constants.kG_secondStage = .192;
     constants.switchPointMeters = 0.76981640676;
+    constants.maxHeightMeters = 1.53551952554;
   }
 
   public ElevatorIOPhoenix() {
@@ -70,28 +71,12 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.CurrentLimits.SupplyCurrentLimit = 50;
     config.CurrentLimits.SupplyCurrentLowerLimit = 10;
     config.CurrentLimits.SupplyCurrentLowerTime = 1.5;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = maxHeightMeters / metersPerRotation;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        constants.maxHeightMeters / metersPerRotation;
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-    config.Slot0.kV = 12 / ((5800.0 / 60.0) / gearRatio);
-    config.Slot0.kG = .18;
-    config.Slot0.kA = (config.Slot0.kG / 9.81) * metersPerRotation;
-    var slot0gains =
-        GainsCalculator.getPositionGains(
-            config.Slot0.kV, config.Slot0.kA, 12 - config.Slot0.kG, .01, .075, .001, .001);
-    config.Slot0.kP = slot0gains.kP();
-    config.Slot0.kD = slot0gains.kD();
-    config.Slot1.kV = config.Slot0.kV;
-    config.Slot1.kG = .192;
-    config.Slot1.kA = (config.Slot1.kG / 9.81) * metersPerRotation;
-    var slot1gains =
-        GainsCalculator.getPositionGains(
-            config.Slot1.kV, config.Slot1.kA, 12 - config.Slot0.kG, .01, .075, .001, .001);
-    config.Slot1.kP = slot1gains.kP();
-    config.Slot1.kD = slot1gains.kD();
 
     leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -101,9 +86,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
       new Sim(
               leftMotor,
               rightMotor,
-              config.Slot0.kV / metersPerRotation,
-              config.Slot0.kA / metersPerRotation,
-              config.Slot1.kA / metersPerRotation)
+              constants.kV,
+              constants.kG_firstStage / 9.81,
+              constants.kG_secondStage / 9.81)
           .start();
     }
   }
@@ -140,19 +125,12 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     inputs.rightMotorCurrentDraws.mutateFromSignals(rightStator, rightSupply);
   }
 
-  private final PositionVoltage positionControl = new PositionVoltage(0);
+  private final VoltageOut voltageControl = new VoltageOut(0);
 
   @Override
-  public void goToPos(double posMeters) {
-    posMeters = MathUtil.clamp(posMeters, 0, maxHeightMeters);
-    if (posSignal.getValueAsDouble() * metersPerRotation > constants.switchPointMeters) {
-      positionControl.Slot = 1;
-    } else {
-      positionControl.Slot = 0;
-    }
-    positionControl.Position = posMeters / metersPerRotation;
-    leftMotor.setControl(positionControl);
-    rightMotor.setControl(positionControl);
+  public void runVoltage(double volts) {
+    leftMotor.setControl(voltageControl.withOutput(volts));
+    rightMotor.setControl(voltageControl.withOutput(volts));
   }
 
   private final StaticBrake brakeControl = new StaticBrake();
@@ -183,7 +161,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
               LinearSystemId.identifyPositionSystem(kV, firstStage_kA),
               LinearSystemId.identifyPositionSystem(kV, secondStage_kA),
               constants.switchPointMeters,
-              maxHeightMeters);
+              constants.maxHeightMeters);
     }
 
     private final double dt = 1.0 / 250;

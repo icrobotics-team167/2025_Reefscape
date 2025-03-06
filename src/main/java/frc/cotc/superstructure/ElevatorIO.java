@@ -15,7 +15,11 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 public interface ElevatorIO {
   @AutoLog
   class ElevatorIOConstants {
+    double kV;
+    double kG_firstStage;
+    double kG_secondStage;
     double switchPointMeters;
+    double maxHeightMeters;
   }
 
   class ElevatorIOInputs implements LoggableInputs {
@@ -50,7 +54,7 @@ public interface ElevatorIO {
 
   default void updateInputs(ElevatorIOInputs inputs) {}
 
-  default void goToPos(double posMeters) {}
+  default void runVoltage(double volts) {}
 
   default void brake() {}
 }

@@ -7,11 +7,16 @@
 
 package frc.cotc.superstructure;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.cotc.Robot;
+import frc.cotc.util.GainsCalculator;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -20,7 +25,13 @@ class Elevator extends SubsystemBase {
   private final ElevatorIO io;
   private final ElevatorIO.ElevatorIOInputs inputs = new ElevatorIO.ElevatorIOInputs();
 
+  private final double firstStageKg;
+  private final GainsCalculator.PDGains firstStageGains;
+  private final double secondStageKg;
+  private final GainsCalculator.PDGains secondStageGains;
+
   private final double switchPoint;
+  private final double maxHeight;
 
   private final LoggedMechanism2d visualization;
   private final LoggedMechanismLigament2d stage1Ligament;
@@ -31,8 +42,29 @@ class Elevator extends SubsystemBase {
 
     var constants = io.getConstants();
     Logger.processInputs("Superstructure/Elevator/CONSTANTS", constants);
+    firstStageKg = constants.kG_firstStage;
+    firstStageGains =
+        GainsCalculator.getPositionGains(
+            constants.kV,
+            constants.kG_firstStage / 9.81,
+            12 - constants.kG_firstStage,
+            .01,
+            .1,
+            Robot.defaultPeriodSecs,
+            0.001);
+    secondStageKg = constants.kG_secondStage;
+    secondStageGains =
+        GainsCalculator.getPositionGains(
+            constants.kV,
+            constants.kG_secondStage / 9.81,
+            12 - constants.kG_secondStage,
+            .01,
+            .1,
+            Robot.defaultPeriodSecs,
+            0.001);
 
     switchPoint = constants.switchPointMeters;
+    maxHeight = constants.maxHeightMeters;
 
     visualization = new LoggedMechanism2d(Units.inchesToMeters(28), 3);
     stage1Ligament = new LoggedMechanismLigament2d("stage1", 1, 90, 5, new Color8Bit(255, 0, 0));
@@ -91,6 +123,14 @@ class Elevator extends SubsystemBase {
     return goToPos(.18).withName("High Algae");
   }
 
+  Command manualControl(DoubleSupplier control) {
+    return run(() ->
+            io.runVoltage(
+                control.getAsDouble()
+                    + (inputs.posMeters <= switchPoint ? firstStageKg : secondStageKg)))
+        .withName("Manual Control");
+  }
+
   private double targetHeight = 0;
 
   boolean atTargetPos() {
@@ -98,21 +138,36 @@ class Elevator extends SubsystemBase {
         && Math.abs(inputs.velMetersPerSec) < .5;
   }
 
+  private final PIDController feedbackController = new PIDController(0, 0, 0);
+
   private Command goToPos(double posMeters) {
     return runOnce(
             () -> {
+              feedbackController.reset();
               targetHeight = posMeters;
               Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
             })
         .andThen(
             run(
                 () -> {
+                  var gains = inputs.posMeters <= switchPoint ? firstStageGains : secondStageGains;
+                  var ff = inputs.posMeters <= switchPoint ? firstStageKg : secondStageKg;
+
+                  feedbackController.setPID(gains.kP(), 0, gains.kD());
+                  var feedbackVoltage =
+                      feedbackController.calculate(
+                          inputs.posMeters, MathUtil.clamp(posMeters, 0, maxHeight));
+                  if (inputs.posMeters < .2) {
+                    feedbackVoltage *= MathUtil.interpolate(.5, 1, inputs.posMeters / .2);
+                  }
+                  Logger.recordOutput("Superstructure/Elevator/Feedback", feedbackVoltage);
+
                   if (posMeters == 0
-                      && inputs.posMeters < .025
-                      && Math.abs(inputs.velMetersPerSec) < .1) {
+                      && MathUtil.isNear(0, inputs.posMeters, .01)
+                      && MathUtil.isNear(0, inputs.velMetersPerSec, .05)) {
                     io.brake();
                   } else {
-                    io.goToPos(posMeters);
+                    io.runVoltage(MathUtil.clamp(feedbackVoltage + ff, -12, 12));
                   }
                 }));
   }
