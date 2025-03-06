@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.util.Mechanism;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 public class Superstructure extends Mechanism {
   private final Elevator elevator;
@@ -94,6 +95,18 @@ public class Superstructure extends Mechanism {
     return expose(
             parallel(elevator.highAlgae(), algaeClaw.reefIntake()).withName("Intake High Algae"))
         .withName("Intake High Algae");
+  }
+
+  public Command intakeLowAlgae(DoubleSupplier control) {
+    return expose(algaeClaw.manualOverride(control).withName("Low Algae Manual Override"))
+        .withName("Low Algae Manual Override");
+  }
+
+  public Command intakeHighAlgae(DoubleSupplier control) {
+    return expose(
+            parallel(elevator.highAlgae(), algaeClaw.reefIntake())
+                .withName("Low Algae Manual Override"))
+        .withName("High Algae Manual Override");
   }
 
   public Command processorScore() {
