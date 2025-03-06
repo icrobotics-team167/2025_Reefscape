@@ -173,6 +173,7 @@ public class Robot extends LoggedRobot {
         .whileTrue(superstructure.intakeHighAlgae())
         .onFalse(superstructure.raiseIfHasAlgae());
     secondary.leftTrigger().whileTrue(superstructure.rezeroAlgae());
+    secondary.leftBumper().whileTrue(superstructure.netScore());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
