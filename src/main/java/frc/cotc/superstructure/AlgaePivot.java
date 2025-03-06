@@ -11,8 +11,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.Logger;
 
 class AlgaePivot extends SubsystemBase {
   private final AlgaePivotIO io;
@@ -37,15 +37,16 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command barge() {
-    return run(() -> setTargetPos(Units.degreesToRadians(135))).withName("Barge");
+    return run(() -> setTargetPos(Units.degreesToRadians(145))).withName("Barge");
   }
 
   Command stow() {
-    return run(() -> setTargetPos(Units.degreesToRadians(-80))).withName("Stow");
+    return run(() -> setTargetPos(Units.degreesToRadians(-75))).withName("Stow");
   }
 
   Command rezero(DoubleSupplier overrideControl) {
-    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 2)).finallyDo(io::resetAlgae);
+    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 2))
+        .finallyDo(io::resetAlgae);
   }
 
   private double targetPosRad;

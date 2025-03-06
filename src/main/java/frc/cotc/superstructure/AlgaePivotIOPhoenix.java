@@ -86,7 +86,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
 
   @Override
   public void resetAlgae() {
-    motor.setPosition(Units.degreesToRotations(-80));
+    motor.setPosition(Units.degreesToRotations(-75));
   }
 
   private static class Sim {
