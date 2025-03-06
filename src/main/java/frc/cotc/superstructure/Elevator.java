@@ -108,11 +108,11 @@ class Elevator extends SubsystemBase {
   }
 
   Command lvl2() {
-    return goToPos(.48).withName("Lvl 2");
+    return goToPos(.5).withName("Lvl 2");
   }
 
   Command lvl3() {
-    return goToPos(0.86).withName("Lvl 3");
+    return goToPos(0.9).withName("Lvl 3");
   }
 
   Command lvl4() {
