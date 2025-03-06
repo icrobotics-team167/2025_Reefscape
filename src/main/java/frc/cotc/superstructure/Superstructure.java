@@ -95,6 +95,14 @@ public class Superstructure extends Mechanism {
         .withName("Intake High Algae");
   }
 
+  public Command processorScore() {
+    return expose(algaeClaw.processorScore()).withName("Processor Score");
+  }
+
+  public Command netScore() {
+    return expose(algaeClaw.bargeScore(elevator::atTargetPos).deadlineFor(elevator.lvl4()));
+  }
+
   public Command readyClimb() {
     return expose(ramp.raise());
   }
