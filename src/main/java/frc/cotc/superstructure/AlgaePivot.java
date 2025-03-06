@@ -7,6 +7,7 @@
 
 package frc.cotc.superstructure;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -27,18 +28,31 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command intake() {
-    return run(() -> io.setTargetPos(Units.degreesToRadians(-40))).withName("Intake");
+    return run(() -> setTargetPos(Units.degreesToRadians(-40))).withName("Intake");
   }
 
   Command processor() {
-    return run(() -> io.setTargetPos(Units.degreesToRadians(-50))).withName("Processor");
+    return run(() -> setTargetPos(Units.degreesToRadians(-50))).withName("Processor");
   }
 
   Command barge() {
-    return run(() -> io.setTargetPos(Units.degreesToRadians(45))).withName("Barge");
+    return run(() -> setTargetPos(Units.degreesToRadians(45))).withName("Barge");
   }
 
   Command stow() {
-    return run(() -> io.setTargetPos(Units.degreesToRadians(-75))).withName("Stow");
+    return run(() -> setTargetPos(Units.degreesToRadians(-75))).withName("Stow");
+  }
+
+  private double targetPosRad;
+
+  private void setTargetPos(double posRad) {
+    targetPosRad = posRad;
+    io.setTargetPos(posRad);
+    Logger.recordOutput("Superstructure/AlgaeClaw/Pivot/targetPosRad", targetPosRad);
+  }
+
+  boolean atTargetPos() {
+    return MathUtil.isNear(targetPosRad, inputs.posRad, Units.degreesToRadians(5))
+        && MathUtil.isNear(0, inputs.velRadPerSec, Units.degreesToRadians(10));
   }
 }

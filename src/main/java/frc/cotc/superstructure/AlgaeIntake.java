@@ -19,11 +19,11 @@ class AlgaeIntake extends SubsystemBase {
   }
 
   Command intake() {
-    return run(io::intake).finallyDo(io::brake);
+    return run(io::intake).finallyDo(io::brake).withName("Intake");
   }
 
   Command outtake() {
-    return run(io::outtake).finallyDo(io::brake);
+    return run(io::outtake).finallyDo(io::brake).withName("Outtake");
   }
 
   boolean hasAlgae() {
