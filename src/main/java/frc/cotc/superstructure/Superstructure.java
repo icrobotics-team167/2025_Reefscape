@@ -105,7 +105,7 @@ public class Superstructure extends Mechanism {
   }
 
   public Command netScore() {
-    return expose(algaeClaw.bargeScore(elevator::atTargetPos).deadlineFor(elevator.lvl4()));
+    return expose(algaeClaw.bargeScore(elevator::atTargetPos).deadlineFor(elevator.lvl3()));
   }
 
   public Command raiseIfHasAlgae() {
