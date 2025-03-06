@@ -66,9 +66,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
 
     var config = new TalonFXConfiguration();
     config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.CurrentLimits.StatorCurrentLimit = 80;
-    config.CurrentLimits.SupplyCurrentLimit = 40;
-    config.CurrentLimits.SupplyCurrentLowerLimit = 5;
+    config.CurrentLimits.StatorCurrentLimit = 50;
+    config.CurrentLimits.SupplyCurrentLimit = 50;
+    config.CurrentLimits.SupplyCurrentLowerLimit = 10;
     config.CurrentLimits.SupplyCurrentLowerTime = 1.5;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = maxHeightMeters / metersPerRotation;
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
@@ -77,7 +77,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     config.Slot0.kV = 12 / ((5800.0 / 60.0) / gearRatio);
-    config.Slot0.kG = .176;
+    config.Slot0.kG = .18;
     config.Slot0.kA = (config.Slot0.kG / 9.81) * metersPerRotation;
     var slot0gains =
         GainsCalculator.getPositionGains(
