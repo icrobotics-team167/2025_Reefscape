@@ -34,7 +34,6 @@ public class AlgaeIntake extends SubsystemBase {
 
   public Command outtake() {
     return run(io::outtake)
-        .withDeadline(waitUntil(() -> !inputs.hasAlgae).andThen(waitSeconds(.5)))
         .finallyDo(io::brake)
         .withName("Outtake");
   }
