@@ -7,9 +7,6 @@
 
 package frc.cotc.superstructure;
 
-import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
-import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
@@ -33,9 +30,7 @@ public class AlgaeIntake extends SubsystemBase {
   }
 
   public Command outtake() {
-    return run(io::outtake)
-        .finallyDo(io::brake)
-        .withName("Outtake");
+    return run(io::outtake).finallyDo(io::brake).withName("Outtake");
   }
 
   boolean hasAlgae() {
