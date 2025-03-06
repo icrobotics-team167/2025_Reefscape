@@ -14,11 +14,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-class AlgaeIntake extends SubsystemBase {
+public class AlgaeIntake extends SubsystemBase {
   private final AlgaeIntakeIO io;
   private final AlgaeIntakeIO.AlgaeIntakeIOInputs inputs = new AlgaeIntakeIO.AlgaeIntakeIOInputs();
 
-  AlgaeIntake(AlgaeIntakeIO io) {
+  public AlgaeIntake(AlgaeIntakeIO io) {
     this.io = io;
   }
 
@@ -28,11 +28,11 @@ class AlgaeIntake extends SubsystemBase {
     Logger.processInputs("Superstructure/AlgaeIntake", inputs);
   }
 
-  Command intake() {
+  public Command intake() {
     return run(io::intake).finallyDo(io::brake).withName("Intake");
   }
 
-  Command outtake() {
+  public Command outtake() {
     return run(io::outtake)
         .withDeadline(waitUntil(() -> !inputs.hasAlgae).andThen(waitSeconds(.5)))
         .finallyDo(io::brake)

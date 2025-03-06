@@ -7,18 +7,16 @@
 
 package frc.cotc.superstructure;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
-class AlgaePivot extends SubsystemBase {
+public class AlgaePivot extends SubsystemBase {
   private final AlgaePivotIO io;
   private final AlgaePivotIO.AlgaeClawIOInputs inputs = new AlgaePivotIO.AlgaeClawIOInputs();
 
-  AlgaePivot(AlgaePivotIO io) {
+  public AlgaePivot(AlgaePivotIO io) {
     this.io = io;
   }
 
@@ -28,37 +26,7 @@ class AlgaePivot extends SubsystemBase {
     Logger.processInputs("Superstructure/AlgaeClaw", inputs);
   }
 
-  Command intake() {
-    return run(() -> setTargetPos(Units.degreesToRadians(-10))).withName("Intake");
-  }
-
-  Command processor() {
-    return run(() -> setTargetPos(Units.degreesToRadians(-50))).withName("Processor");
-  }
-
-  Command barge() {
-    return run(() -> setTargetPos(Units.degreesToRadians(155))).withName("Barge");
-  }
-
-  Command stow() {
-    return run(() -> setTargetPos(Units.degreesToRadians(-75))).withName("Stow");
-  }
-
-  Command rezero(DoubleSupplier overrideControl) {
-    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 2))
-        .finallyDo(io::resetAlgae);
-  }
-
-  private double targetPosRad;
-
-  private void setTargetPos(double posRad) {
-    targetPosRad = posRad;
-    io.setTargetPos(posRad);
-    Logger.recordOutput("Superstructure/AlgaeClaw/Pivot/targetPosRad", targetPosRad);
-  }
-
-  boolean atTargetPos() {
-    return MathUtil.isNear(targetPosRad, inputs.posRad, Units.degreesToRadians(5))
-        && MathUtil.isNear(0, inputs.velRadPerSec, Units.degreesToRadians(10));
+  public Command manualControl(DoubleSupplier overrideControl) {
+    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 2));
   }
 }

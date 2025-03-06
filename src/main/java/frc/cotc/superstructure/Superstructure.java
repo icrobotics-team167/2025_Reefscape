@@ -14,24 +14,16 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.util.Mechanism;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 
 public class Superstructure extends Mechanism {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
   private final Ramp ramp;
-  private final AlgaeClaw algaeClaw;
 
-  public Superstructure(
-      ElevatorIO elevatorIO,
-      CoralOuttakeIO coralOuttakeIO,
-      RampIO rampIO,
-      AlgaePivotIO algaePivotIO,
-      AlgaeIntakeIO algaeIntakeIO) {
+  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO) {
     elevator = new Elevator(elevatorIO);
     coralOuttake = new CoralOuttake(coralOuttakeIO);
     ramp = new Ramp(rampIO);
-    algaeClaw = new AlgaeClaw(algaePivotIO, algaeIntakeIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
@@ -87,30 +79,12 @@ public class Superstructure extends Mechanism {
         .withName("Eject Stuck Coral");
   }
 
-  public Command intakeLowAlgae() {
-    return expose(algaeClaw.reefIntake()).withName("Intake Low Algae");
+  public Command highAlgae() {
+    return expose(elevator.highAlgae());
   }
 
-  public Command intakeHighAlgae() {
-    return expose(
-            parallel(elevator.highAlgae(), algaeClaw.reefIntake()).withName("Intake High Algae"))
-        .withName("Intake High Algae");
-  }
-
-  public Command rezeroAlgae(DoubleSupplier overrideControl) {
-    return expose(algaeClaw.rezero(overrideControl));
-  }
-
-  public Command processorScore() {
-    return expose(algaeClaw.processorScore()).withName("Processor Score");
-  }
-
-  public Command netScore() {
-    return expose(algaeClaw.bargeScore(elevator::atTargetPos).deadlineFor(elevator.lvl3()));
-  }
-
-  public Command raiseIfHasAlgae() {
-    return expose(algaeClaw.holdIfHasAlgae());
+  public Command net() {
+    return expose(elevator.net());
   }
 
   public Command readyClimb() {

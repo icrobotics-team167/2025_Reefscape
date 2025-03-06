@@ -123,6 +123,10 @@ class Elevator extends SubsystemBase {
     return goToPos(.18).withName("High Algae");
   }
 
+  Command net() {
+    return goToPos(1.1).withName("High Algae");
+  }
+
   Command manualControl(DoubleSupplier control) {
     return run(() ->
             io.runVoltage(

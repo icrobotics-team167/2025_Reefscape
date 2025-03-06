@@ -113,6 +113,10 @@ public class Robot extends LoggedRobot {
 
     var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
+    var algaePivot =
+        new AlgaePivot(Robot.isReal() ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
+    var algaeIntake =
+        new AlgaeIntake(Robot.isReal() ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -164,16 +168,12 @@ public class Robot extends LoggedRobot {
             superstructure.lvl2(
                 () -> swerve.atTargetPose() || secondary.rightBumper().getAsBoolean()));
     secondary.a().whileTrue(superstructure.lvl1());
-    secondary
-        .povDown()
-        .whileTrue(superstructure.intakeLowAlgae())
-        .onFalse(superstructure.raiseIfHasAlgae());
-    secondary
-        .povUp()
-        .whileTrue(superstructure.intakeHighAlgae())
-        .onFalse(superstructure.raiseIfHasAlgae());
-    secondary.leftTrigger().whileTrue(superstructure.rezeroAlgae(() -> -secondary.getLeftY()));
-    secondary.leftBumper().whileTrue(superstructure.netScore());
+
+    algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
+    secondary.leftTrigger().whileTrue(algaeIntake.intake());
+    secondary.leftBumper().whileTrue(algaeIntake.outtake());
+    secondary.povDown().whileTrue(superstructure.highAlgae());
+    secondary.povUp().whileTrue(superstructure.net());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
@@ -320,27 +320,14 @@ public class Robot extends LoggedRobot {
     switch (mode) {
       case REAL -> {
         return new Superstructure(
-            new ElevatorIOPhoenix(),
-            new CoralOuttakeIOPhoenix(),
-            new RampIOPhoenix(),
-            new AlgaePivotIOPhoenix(),
-            new AlgaeIntakeIOPhoenix());
+            new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix());
       }
       case SIM -> {
         return new Superstructure(
-            new ElevatorIOPhoenix(),
-            new CoralOuttakeIO() {},
-            new RampIOPhoenix(),
-            new AlgaePivotIO() {},
-            new AlgaeIntakeIO() {});
+            new ElevatorIOPhoenix(), new CoralOuttakeIO() {}, new RampIOPhoenix());
       }
       default -> {
-        return new Superstructure(
-            new ElevatorIO() {},
-            new CoralOuttakeIO() {},
-            new RampIO() {},
-            new AlgaePivotIO() {},
-            new AlgaeIntakeIO() {});
+        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
       }
     }
   }
