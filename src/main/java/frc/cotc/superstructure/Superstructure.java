@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.util.Mechanism;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 
 public class Superstructure extends Mechanism {
   private final Elevator elevator;
