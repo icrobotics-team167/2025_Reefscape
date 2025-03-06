@@ -166,25 +166,13 @@ public class Robot extends LoggedRobot {
     secondary.a().whileTrue(superstructure.lvl1());
     secondary
         .povDown()
-        .and(secondary.leftTrigger().negate())
         .whileTrue(superstructure.intakeLowAlgae())
         .onFalse(superstructure.raiseIfHasAlgae());
     secondary
         .povUp()
-        .and(secondary.leftTrigger().negate())
         .whileTrue(superstructure.intakeHighAlgae())
         .onFalse(superstructure.raiseIfHasAlgae());
-    secondary
-        .povDown()
-        .and(secondary.leftTrigger())
-        .whileTrue(superstructure.intakeLowAlgae(() -> -secondary.getLeftY()))
-        .onFalse(superstructure.raiseIfHasAlgae());
-    secondary
-        .povUp()
-        .and(secondary.leftTrigger())
-        .whileTrue(superstructure.intakeHighAlgae(() -> -secondary.getLeftY()))
-        .onFalse(superstructure.raiseIfHasAlgae());
-    secondary.leftBumper().whileTrue(superstructure.netScore());
+    secondary.leftTrigger().whileTrue(superstructure.rezeroAlgae());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 

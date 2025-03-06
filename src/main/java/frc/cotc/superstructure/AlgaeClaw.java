@@ -55,11 +55,8 @@ public class AlgaeClaw extends Mechanism {
         .withName("Hold if has algae");
   }
 
-  Command manualOverride(DoubleSupplier control) {
-    return expose(
-            parallel(algaePivot.manualOverride(control), algaeIntake.intake())
-                .withName("Manual Override"))
-        .withName("Manual Override");
+  Command rezero() {
+    return expose(algaePivot.rezero());
   }
 
   Trigger hasAlgae() {

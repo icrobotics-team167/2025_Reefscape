@@ -38,5 +38,7 @@ public interface AlgaePivotIO {
 
   default void setTargetPos(double angleRad) {}
 
-  default void manualOverride(double volts) {}
+  default void lowerSlow() {}
+
+  default void resetAlgae() {}
 }
