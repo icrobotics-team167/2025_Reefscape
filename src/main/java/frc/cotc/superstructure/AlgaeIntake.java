@@ -1,4 +1,14 @@
+// Copyright (c) 2024 FRC 167
+// https://github.com/icrobotics-team167
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
 package frc.cotc.superstructure;
+
+import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
+import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,7 +33,10 @@ class AlgaeIntake extends SubsystemBase {
   }
 
   Command outtake() {
-    return run(io::outtake).finallyDo(io::brake).withName("Outtake");
+    return run(io::outtake)
+        .withDeadline(waitUntil(() -> !inputs.hasAlgae).andThen(waitSeconds(.5)))
+        .finallyDo(io::brake)
+        .withName("Outtake");
   }
 
   boolean hasAlgae() {
