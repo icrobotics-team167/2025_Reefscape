@@ -80,14 +80,16 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.Slot0.kG = .176;
     config.Slot0.kA = (config.Slot0.kG / 9.81) * metersPerRotation;
     var slot0gains =
-        GainsCalculator.getPositionGains(config.Slot0.kV, config.Slot0.kA, 12, .01, .1, .001, .001);
+        GainsCalculator.getPositionGains(
+            config.Slot0.kV, config.Slot0.kA, 12 - config.Slot0.kG, .01, .075, .001, .001);
     config.Slot0.kP = slot0gains.kP();
     config.Slot0.kD = slot0gains.kD();
     config.Slot1.kV = config.Slot0.kV;
     config.Slot1.kG = .192;
     config.Slot1.kA = (config.Slot1.kG / 9.81) * metersPerRotation;
     var slot1gains =
-        GainsCalculator.getPositionGains(config.Slot1.kV, config.Slot1.kA, 12, .01, .1, .001, .001);
+        GainsCalculator.getPositionGains(
+            config.Slot1.kV, config.Slot1.kA, 12 - config.Slot0.kG, .01, .075, .001, .001);
     config.Slot1.kP = slot1gains.kP();
     config.Slot1.kD = slot1gains.kD();
 
