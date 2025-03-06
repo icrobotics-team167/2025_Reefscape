@@ -42,7 +42,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     config.Slot0.kV = 12.0 / ((7530.0 / 60.0) / config.Feedback.SensorToMechanismRatio);
     config.Slot0.kG = .32;
     config.Slot0.kA = config.Slot0.kG / 9.81 * 2 * Math.PI * Units.inchesToMeters(12);
-    config.Slot0.kP = 48;
+    config.Slot0.kP = 96;
     config.Slot0.kD = 1;
     config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
     config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;

@@ -28,7 +28,7 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command intake() {
-    return run(() -> setTargetPos(Units.degreesToRadians(-40))).withName("Intake");
+    return run(() -> setTargetPos(Units.degreesToRadians(-10))).withName("Intake");
   }
 
   Command processor() {
