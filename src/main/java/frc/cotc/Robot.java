@@ -170,7 +170,7 @@ public class Robot extends LoggedRobot {
     secondary.a().whileTrue(superstructure.lvl1());
 
     algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
-    secondary.leftTrigger().whileTrue(algaeIntake.intake());
+    algaeIntake.setDefaultCommand(algaeIntake.intake());
     secondary.leftBumper().whileTrue(algaeIntake.outtake());
     secondary.povDown().whileTrue(superstructure.highAlgae());
     secondary.povUp().whileTrue(superstructure.net());
