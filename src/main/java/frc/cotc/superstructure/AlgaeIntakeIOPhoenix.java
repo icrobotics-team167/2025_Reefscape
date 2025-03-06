@@ -30,7 +30,7 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
     var detectorConfig = new CANrangeConfiguration();
     detectorConfig.FovParams.FOVRangeX = 6.75;
     detectorConfig.FovParams.FOVRangeY = 6.75;
-    detectorConfig.ProximityParams.ProximityThreshold = Units.inchesToMeters(3);
+    detectorConfig.ProximityParams.ProximityThreshold = Units.inchesToMeters(12);
     detector.getConfigurator().apply(detectorConfig);
 
     detectedSignal = detector.getIsDetected(false);
