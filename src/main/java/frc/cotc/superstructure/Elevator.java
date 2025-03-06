@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -100,10 +99,11 @@ class Elevator extends SubsystemBase {
   }
 
   private Command goToPos(double posMeters) {
-    return runOnce(() -> {
-      targetHeight = posMeters;
-      Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
-    })
+    return runOnce(
+            () -> {
+              targetHeight = posMeters;
+              Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
+            })
         .andThen(
             run(
                 () -> {
