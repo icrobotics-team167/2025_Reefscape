@@ -37,4 +37,6 @@ public interface AlgaePivotIO {
   default void updateInputs(AlgaeClawIOInputs inputs) {}
 
   default void setTargetPos(double angleRad) {}
+
+  default void manualOverride(double volts) {}
 }

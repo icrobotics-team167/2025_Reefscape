@@ -12,6 +12,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
+import java.util.function.DoubleSupplier;
 
 class AlgaePivot extends SubsystemBase {
   private final AlgaePivotIO io;
@@ -41,6 +42,10 @@ class AlgaePivot extends SubsystemBase {
 
   Command stow() {
     return run(() -> setTargetPos(Units.degreesToRadians(-75))).withName("Stow");
+  }
+
+  Command manualOverride(DoubleSupplier control) {
+    return run(() -> io.manualOverride(control.getAsDouble()));
   }
 
   private double targetPosRad;

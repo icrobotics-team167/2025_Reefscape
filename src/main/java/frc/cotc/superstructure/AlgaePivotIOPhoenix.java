@@ -79,6 +79,11 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     motor.setControl(positionControl.withPosition(Units.radiansToRotations(angleRad)));
   }
 
+  @Override
+  public void manualOverride(double volts) {
+    motor.setVoltage(volts);
+  }
+
   private static class Sim {
     private final TalonFXSimState motorSim;
     private final SingleJointedArmSim armSim;
