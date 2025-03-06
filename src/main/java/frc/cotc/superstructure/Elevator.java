@@ -72,23 +72,23 @@ class Elevator extends SubsystemBase {
   }
 
   Command lvl1() {
-    return goToPos(.38).withName("Lvl 1");
+    return goToPos(.3).withName("Lvl 1");
   }
 
   Command lvl2() {
-    return goToPos(.56).withName("Lvl 2");
+    return goToPos(.48).withName("Lvl 2");
   }
 
   Command lvl3() {
-    return goToPos(0.92).withName("Lvl 3");
+    return goToPos(0.86).withName("Lvl 3");
   }
 
   Command lvl4() {
-    return goToPos(1.53).withName("Lvl 4");
+    return goToPos(1.4746).withName("Lvl 4");
   }
 
   Command highAlgae() {
-    return goToPos(.26).withName("High Algae");
+    return goToPos(.18).withName("High Algae");
   }
 
   private double targetHeight = 0;
