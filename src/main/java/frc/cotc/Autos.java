@@ -97,8 +97,7 @@ public class Autos {
                 Source.R,
                 ReefBranch.E,
                 ReefBranch.D,
-                ReefBranch.C,
-                ReefBranch.B));
+                ReefBranch.C));
     addRoutine(
         "CycleFromJ",
         () ->
@@ -109,8 +108,7 @@ public class Autos {
                 Source.L,
                 ReefBranch.J,
                 ReefBranch.K,
-                ReefBranch.L,
-                ReefBranch.A));
+                ReefBranch.L));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.61, .67, Rotation2d.fromDegrees(54));
