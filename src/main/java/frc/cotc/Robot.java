@@ -151,15 +151,18 @@ public class Robot extends LoggedRobot {
     secondary
         .y()
         .whileTrue(
-            superstructure.lvl4(() -> swerve.atTargetPose() || secondary.povUp().getAsBoolean()));
+            superstructure.lvl4(
+                () -> swerve.atTargetPose() || secondary.rightBumper().getAsBoolean()));
     secondary
         .x()
         .whileTrue(
-            superstructure.lvl3(() -> swerve.atTargetPose() || secondary.povUp().getAsBoolean()));
+            superstructure.lvl3(
+                () -> swerve.atTargetPose() || secondary.rightBumper().getAsBoolean()));
     secondary
         .b()
         .whileTrue(
-            superstructure.lvl2(() -> swerve.atTargetPose() || secondary.povUp().getAsBoolean()));
+            superstructure.lvl2(
+                () -> swerve.atTargetPose() || secondary.rightBumper().getAsBoolean()));
     secondary.a().whileTrue(superstructure.lvl1());
     secondary
         .povDown()
