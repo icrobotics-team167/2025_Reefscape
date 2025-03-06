@@ -35,7 +35,7 @@ import org.littletonrobotics.junction.Logger;
  * robot will converge to the desired setpoint quickly while avoiding any intermediate state that is
  * kinematically infeasible (and can result in wheel slip or robot heading drift as a result).
  */
-public class SwerveSetpointGenerator {
+class SwerveSetpointGenerator {
   private final SwerveDriveKinematics kinematics;
   private final Translation2d[] moduleLocations;
   private final DCMotor driveMotor;

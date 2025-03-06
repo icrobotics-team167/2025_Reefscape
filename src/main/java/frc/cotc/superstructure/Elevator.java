@@ -108,15 +108,23 @@ class Elevator extends SubsystemBase {
   }
 
   Command lvl2() {
-    return goToPos(.48).withName("Lvl 2");
+    return goToPos(.5).withName("Lvl 2");
   }
 
   Command lvl3() {
-    return goToPos(0.86).withName("Lvl 3");
+    return goToPos(0.9).withName("Lvl 3");
   }
 
   Command lvl4() {
-    return goToPos(1.4746).withName("Lvl 4");
+    return goToPos(1.53).withName("Lvl 4");
+  }
+
+  Command highAlgae() {
+    return goToPos(.58).withName("High Algae");
+  }
+
+  Command net() {
+    return goToPos(1.1).withName("High Algae");
   }
 
   Command manualControl(DoubleSupplier control) {
@@ -141,6 +149,7 @@ class Elevator extends SubsystemBase {
             () -> {
               feedbackController.reset();
               targetHeight = posMeters;
+              Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
             })
         .andThen(
             run(

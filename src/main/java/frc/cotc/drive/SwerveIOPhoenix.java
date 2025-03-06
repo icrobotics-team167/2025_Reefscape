@@ -131,7 +131,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     signals[32] = gyro.getYaw(false);
     signals[33] = gyro.getAngularVelocityZWorld(false);
 
-    PhoenixBatchRefresher.register(signals);
+    PhoenixBatchRefresher.registerCanivore(signals);
 
     odometryThread = new OdometryThread(modules, gyro, 250);
 

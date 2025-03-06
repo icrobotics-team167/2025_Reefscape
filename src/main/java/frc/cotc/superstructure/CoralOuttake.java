@@ -38,15 +38,15 @@ class CoralOuttake extends SubsystemBase {
         .withName("Outtake");
   }
 
-  Command hold() {
-    return run(io::brake).withName("Hold");
-  }
-
   Command agitate() {
     return run(io::agitate).withName("Agitate");
   }
 
   boolean hasCoral() {
     return inputs.hasCoral;
+  }
+
+  boolean coralStuck() {
+    return inputs.velocityPercent < .1 && inputs.currentDraws.statorCurrent > 15;
   }
 }

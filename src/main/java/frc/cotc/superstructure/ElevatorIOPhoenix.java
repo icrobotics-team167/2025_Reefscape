@@ -59,7 +59,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     leftSupply = leftMotor.getSupplyCurrent(false);
     rightStator = rightMotor.getStatorCurrent(false);
     rightSupply = rightMotor.getSupplyCurrent(false);
-    PhoenixBatchRefresher.register(
+    PhoenixBatchRefresher.registerCanivore(
         posSignal, velSignal, leftStator, leftSupply, rightStator, rightSupply);
     BaseStatusSignal.setUpdateFrequencyForAll(100, posSignal, velSignal);
     BaseStatusSignal.setUpdateFrequencyForAll(50, leftStator, leftSupply, rightStator, rightSupply);
@@ -67,9 +67,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
 
     var config = new TalonFXConfiguration();
     config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.CurrentLimits.StatorCurrentLimit = 30;
-    config.CurrentLimits.SupplyCurrentLimit = 30;
-    config.CurrentLimits.SupplyCurrentLowerLimit = 5;
+    config.CurrentLimits.StatorCurrentLimit = 50;
+    config.CurrentLimits.SupplyCurrentLimit = 50;
+    config.CurrentLimits.SupplyCurrentLowerLimit = 10;
     config.CurrentLimits.SupplyCurrentLowerTime = 1.5;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         constants.maxHeightMeters / metersPerRotation;
@@ -77,6 +77,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
     leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     rightMotor.getConfigurator().apply(config);

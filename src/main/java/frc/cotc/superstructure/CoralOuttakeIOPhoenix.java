@@ -18,12 +18,12 @@ import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
+import frc.cotc.util.PhoenixBatchRefresher;
 
 public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   private final TalonFX motor;
 
-  private final BaseStatusSignal statorSignal;
-  private final BaseStatusSignal supplySignal;
+  private final BaseStatusSignal statorSignal, supplySignal, velSignal;
   private final StatusSignal<Boolean> detectedSignal;
 
   public CoralOuttakeIOPhoenix() {
@@ -50,31 +50,35 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
 
     statorSignal = motor.getStatorCurrent(false);
     supplySignal = motor.getSupplyCurrent(false);
+    velSignal = motor.getVelocity(false);
     detectedSignal = detector.getIsDetected(false);
 
     BaseStatusSignal.setUpdateFrequencyForAll(50, statorSignal, supplySignal);
     detectedSignal.setUpdateFrequency(100);
     motor.optimizeBusUtilization(5, .1);
     detector.optimizeBusUtilization(5, .1);
+
+    PhoenixBatchRefresher.registerRio(statorSignal, supplySignal, velSignal, detectedSignal);
   }
 
   @Override
   public void updateInputs(CoralOuttakeIOInputs inputs) {
-    BaseStatusSignal.refreshAll(statorSignal, supplySignal, detectedSignal);
-
     inputs.hasCoral = detectedSignal.getValue();
+
+    double maxVel = 7543.0 / 60.0;
+    inputs.velocityPercent = velSignal.getValueAsDouble() / maxVel;
 
     inputs.currentDraws.mutateFromSignals(statorSignal, supplySignal);
   }
 
-  private final VoltageOut intakeControl = new VoltageOut(4).withIgnoreHardwareLimits(false);
+  private final VoltageOut intakeControl = new VoltageOut(5).withIgnoreHardwareLimits(false);
 
   @Override
   public void intake() {
     motor.setControl(intakeControl);
   }
 
-  private final VoltageOut outtakeControl = new VoltageOut(6).withIgnoreHardwareLimits(true);
+  private final VoltageOut outtakeControl = new VoltageOut(7).withIgnoreHardwareLimits(true);
 
   @Override
   public void outtake() {

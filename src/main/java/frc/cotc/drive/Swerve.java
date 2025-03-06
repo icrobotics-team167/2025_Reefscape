@@ -559,17 +559,7 @@ public class Swerve extends SubsystemBase {
 
   private Pose2d getBranchPose(int reefWall, boolean left) {
     var branches = Robot.isOnRed() ? ReefLocations.RED_POSES : ReefLocations.BLUE_POSES;
-    switch (reefWall) {
-      case 5, 0, 1 -> {
-        return branches[reefWall * 2 + (left ? 0 : 1)];
-      }
-        // The front 3's left-right works fine, but the back 3's left-right needs
-        // swapping since from the driver's perspective it's swapped
-      case 2, 3, 4 -> {
-        return branches[reefWall * 2 + (left ? 1 : 0)];
-      }
-      default -> throw new IndexOutOfBoundsException();
-    }
+    return branches[reefWall * 2 + (left ? 0 : 1)];
   }
 
   /**

@@ -113,6 +113,10 @@ public class Robot extends LoggedRobot {
 
     var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
+    var algaePivot =
+        new AlgaePivot(Robot.isReal() ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
+    var algaeIntake =
+        new AlgaeIntake(Robot.isReal() ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -146,21 +150,32 @@ public class Robot extends LoggedRobot {
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
     primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
     primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
+    //    primary.povUp().onTrue(superstructure.readyClimb());
 
     secondary
         .y()
         .whileTrue(
-            superstructure.lvl4(() -> swerve.atTargetPose() && secondary.povUp().getAsBoolean()));
+            superstructure.lvl4(
+                () -> swerve.atTargetPose() || secondary.rightBumper().getAsBoolean()));
     secondary
         .x()
         .whileTrue(
-            superstructure.lvl3(() -> swerve.atTargetPose() && secondary.povUp().getAsBoolean()));
+            superstructure.lvl3(
+                () -> swerve.atTargetPose() || secondary.rightBumper().getAsBoolean()));
     secondary
         .b()
         .whileTrue(
-            superstructure.lvl2(() -> swerve.atTargetPose() && secondary.povUp().getAsBoolean()));
+            superstructure.lvl2(
+                () -> swerve.atTargetPose() || secondary.rightBumper().getAsBoolean()));
     secondary.a().whileTrue(superstructure.lvl1());
-    secondary.povDown().whileTrue(superstructure.agitate());
+
+    algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
+    algaeIntake.setDefaultCommand(algaeIntake.intake());
+    secondary.leftBumper().whileTrue(algaeIntake.outtake());
+    secondary.povDown().whileTrue(superstructure.highAlgae());
+    secondary.povUp().whileTrue(superstructure.net());
+
+    superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
@@ -307,13 +322,15 @@ public class Robot extends LoggedRobot {
   private Superstructure getSuperstructure(Mode mode) {
     switch (mode) {
       case REAL -> {
-        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix());
+        return new Superstructure(
+            new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix());
       }
       case SIM -> {
-        return new Superstructure(new ElevatorIOPhoenix(), new CoralOuttakeIOSim());
+        return new Superstructure(
+            new ElevatorIOPhoenix(), new CoralOuttakeIOSim(), new RampIOPhoenix());
       }
       default -> {
-        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {});
+        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
       }
     }
   }

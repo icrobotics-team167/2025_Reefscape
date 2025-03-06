@@ -86,6 +86,7 @@ public class Autos {
           return swerve.followRepulsorField(pose).withName("Source Align " + source.name());
         };
 
+    addRoutine("ScoreAtG", () -> scoreAtG(factory, swerve, superstructure));
     addRoutine(
         "CycleFromE",
         () ->
@@ -118,6 +119,20 @@ public class Autos {
           sourceRight.getX(),
           Constants.FIELD_WIDTH_METERS - sourceRight.getY(),
           sourceRight.getRotation().unaryMinus());
+
+  private AutoRoutine scoreAtG(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
+    var routine = factory.newRoutine("ScoreAtG");
+
+    routine
+        .active()
+        .onTrue(
+            parallel(
+                reefPathfinding.goTo(ReefBranch.G),
+                waitUntil(swerve::nearingTargetPose)
+                    .andThen(superstructure.lvl4(swerve::atTargetPose))));
+
+    return routine;
+  }
 
   private AutoRoutine createRoutine(
       AutoFactory factory,

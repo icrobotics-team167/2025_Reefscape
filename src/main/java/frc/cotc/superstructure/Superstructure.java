@@ -10,21 +10,25 @@ package frc.cotc.superstructure;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.cotc.util.Mechanism;
 import java.util.function.BooleanSupplier;
 
-public class Superstructure extends SubsystemBase {
+public class Superstructure extends Mechanism {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
+  private final Ramp ramp;
 
-  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO) {
-    this.elevator = new Elevator(elevatorIO);
-    this.coralOuttake = new CoralOuttake(coralOuttakeIO);
+  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO) {
+    elevator = new Elevator(elevatorIO);
+    coralOuttake = new CoralOuttake(coralOuttakeIO);
+    ramp = new Ramp(rampIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
-    new Trigger(coralOuttake::hasCoral).whileTrue(coralOuttake.hold());
+    ramp.setDefaultCommand(ramp.hold());
+    RobotModeTriggers.disabled().onFalse(ramp.lower());
   }
 
   public Command lvl1() {
@@ -66,17 +70,32 @@ public class Superstructure extends SubsystemBase {
         .withName("Lvl 4 Scoring");
   }
 
-  public Command agitate() {
-    return expose(coralOuttake.agitate()).withName("Agitate");
+  public Command ejectStuckCoral() {
+    return expose(
+            coralOuttake
+                .agitate()
+                .withDeadline(waitUntil(() -> !coralOuttake.coralStuck()).andThen(waitSeconds(.5)))
+                .withName("Eject Stuck Coral"))
+        .withName("Eject Stuck Coral");
+  }
+
+  public Command highAlgae() {
+    return expose(elevator.highAlgae());
+  }
+
+  public Command net() {
+    return expose(elevator.net());
+  }
+
+  public Command readyClimb() {
+    return expose(ramp.raise());
+  }
+
+  public Trigger coralStuck() {
+    return new Trigger(coralOuttake::coralStuck);
   }
 
   public boolean hasCoral() {
     return coralOuttake.hasCoral();
-  }
-
-  private Command expose(Command internal) {
-    var proxied = internal.asProxy();
-    proxied.addRequirements(this);
-    return proxied;
   }
 }
