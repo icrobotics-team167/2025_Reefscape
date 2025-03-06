@@ -17,7 +17,7 @@ import frc.cotc.util.ReefLocations;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RepulsorFieldPlanner {
+class RepulsorFieldPlanner {
   private abstract static class Obstacle {
     double strength;
     boolean positive;

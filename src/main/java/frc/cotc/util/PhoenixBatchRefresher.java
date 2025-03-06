@@ -24,16 +24,25 @@ import com.ctre.phoenix6.StatusSignal;
 public final class PhoenixBatchRefresher {
   private PhoenixBatchRefresher() {}
 
-  private static BaseStatusSignal[] registeredSignals = new BaseStatusSignal[0];
+  private static BaseStatusSignal[] registeredCanivoreSignals = new BaseStatusSignal[0];
+  private static BaseStatusSignal[] registeredRioSignals = new BaseStatusSignal[0];
 
   public static void refresh() {
-    BaseStatusSignal.refreshAll(registeredSignals);
+    BaseStatusSignal.refreshAll(registeredCanivoreSignals);
+    BaseStatusSignal.refreshAll(registeredRioSignals);
   }
 
-  public static void register(BaseStatusSignal... signals) {
-    var newSignals = new BaseStatusSignal[registeredSignals.length + signals.length];
-    System.arraycopy(registeredSignals, 0, newSignals, 0, registeredSignals.length);
-    System.arraycopy(signals, 0, newSignals, registeredSignals.length, signals.length);
-    registeredSignals = newSignals;
+  public static void registerCanivore(BaseStatusSignal... signals) {
+    var newSignals = new BaseStatusSignal[registeredCanivoreSignals.length + signals.length];
+    System.arraycopy(registeredCanivoreSignals, 0, newSignals, 0, registeredCanivoreSignals.length);
+    System.arraycopy(signals, 0, newSignals, registeredCanivoreSignals.length, signals.length);
+    registeredCanivoreSignals = newSignals;
+  }
+
+  public static void registerRio(BaseStatusSignal... signals) {
+    var newSignals = new BaseStatusSignal[registeredRioSignals.length + signals.length];
+    System.arraycopy(registeredRioSignals, 0, newSignals, 0, registeredRioSignals.length);
+    System.arraycopy(signals, 0, newSignals, registeredRioSignals.length, signals.length);
+    registeredRioSignals = newSignals;
   }
 }

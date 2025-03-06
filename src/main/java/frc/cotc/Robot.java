@@ -161,6 +161,15 @@ public class Robot extends LoggedRobot {
         .whileTrue(
             superstructure.lvl2(() -> swerve.atTargetPose() || secondary.povUp().getAsBoolean()));
     secondary.a().whileTrue(superstructure.lvl1());
+    secondary
+        .povDown()
+        .whileTrue(superstructure.intakeLowAlgae())
+        .onFalse(superstructure.raiseIfHasAlgae());
+    secondary
+        .povUp()
+        .whileTrue(superstructure.intakeHighAlgae())
+        .onFalse(superstructure.raiseIfHasAlgae());
+    secondary.leftBumper().whileTrue(superstructure.netScore());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
@@ -307,14 +316,27 @@ public class Robot extends LoggedRobot {
     switch (mode) {
       case REAL -> {
         return new Superstructure(
-            new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix());
+            new ElevatorIOPhoenix(),
+            new CoralOuttakeIOPhoenix(),
+            new RampIOPhoenix(),
+            new AlgaePivotIOPhoenix(),
+            new AlgaeIntakeIOPhoenix());
       }
       case SIM -> {
         return new Superstructure(
-            new ElevatorIOPhoenix(), new CoralOuttakeIO() {}, new RampIOPhoenix());
+            new ElevatorIOPhoenix(),
+            new CoralOuttakeIO() {},
+            new RampIOPhoenix(),
+            new AlgaePivotIO() {},
+            new AlgaeIntakeIO() {});
       }
       default -> {
-        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
+        return new Superstructure(
+            new ElevatorIO() {},
+            new CoralOuttakeIO() {},
+            new RampIO() {},
+            new AlgaePivotIO() {},
+            new AlgaeIntakeIO() {});
       }
     }
   }

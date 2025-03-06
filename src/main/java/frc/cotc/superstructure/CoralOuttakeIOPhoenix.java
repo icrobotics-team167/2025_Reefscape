@@ -18,13 +18,12 @@ import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
+import frc.cotc.util.PhoenixBatchRefresher;
 
 public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   private final TalonFX motor;
 
-  private final BaseStatusSignal statorSignal;
-  private final BaseStatusSignal supplySignal;
-  private final BaseStatusSignal velSignal;
+  private final BaseStatusSignal statorSignal, supplySignal, velSignal;
   private final StatusSignal<Boolean> detectedSignal;
 
   public CoralOuttakeIOPhoenix() {
@@ -58,12 +57,12 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     detectedSignal.setUpdateFrequency(100);
     motor.optimizeBusUtilization(5, .1);
     detector.optimizeBusUtilization(5, .1);
+
+    PhoenixBatchRefresher.registerRio(statorSignal, supplySignal, velSignal, detectedSignal);
   }
 
   @Override
   public void updateInputs(CoralOuttakeIOInputs inputs) {
-    BaseStatusSignal.refreshAll(statorSignal, supplySignal, velSignal, detectedSignal);
-
     inputs.hasCoral = detectedSignal.getValue();
 
     double maxVel = 7543.0 / 60.0;
