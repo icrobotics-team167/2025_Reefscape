@@ -92,7 +92,6 @@ class Elevator extends SubsystemBase {
     return goToPos(.26).withName("High Algae");
   }
 
-  @AutoLogOutput(key = "Superstructure/Elevator/Target Height")
   private double targetHeight = 0;
 
   boolean atTargetPos() {
@@ -101,7 +100,10 @@ class Elevator extends SubsystemBase {
   }
 
   private Command goToPos(double posMeters) {
-    return runOnce(() -> targetHeight = posMeters)
+    return runOnce(() -> {
+      targetHeight = posMeters;
+      Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
+    })
         .andThen(
             run(
                 () -> {
