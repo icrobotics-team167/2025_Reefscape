@@ -36,7 +36,7 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command barge() {
-    return run(() -> setTargetPos(Units.degreesToRadians(45))).withName("Barge");
+    return run(() -> setTargetPos(Units.degreesToRadians(90))).withName("Barge");
   }
 
   Command stow() {

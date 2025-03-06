@@ -13,7 +13,6 @@ import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.util.Units;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
@@ -25,12 +24,12 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
   public AlgaeIntakeIOPhoenix() {
     motor = new TalonFX(4);
     //noinspection resource
-    var detector = new CANrange(2);
+    var detector = new CANrange(3);
 
     var detectorConfig = new CANrangeConfiguration();
     detectorConfig.FovParams.FOVRangeX = 6.75;
     detectorConfig.FovParams.FOVRangeY = 6.75;
-    detectorConfig.ProximityParams.ProximityThreshold = Units.inchesToMeters(12);
+    detectorConfig.ProximityParams.ProximityThreshold = .4;
     detector.getConfigurator().apply(detectorConfig);
 
     detectedSignal = detector.getIsDetected(false);

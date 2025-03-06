@@ -161,8 +161,14 @@ public class Robot extends LoggedRobot {
         .whileTrue(
             superstructure.lvl2(() -> swerve.atTargetPose() || secondary.povUp().getAsBoolean()));
     secondary.a().whileTrue(superstructure.lvl1());
-    secondary.povDown().whileTrue(superstructure.intakeLowAlgae());
-    secondary.povUp().whileTrue(superstructure.intakeHighAlgae());
+    secondary
+        .povDown()
+        .whileTrue(superstructure.intakeLowAlgae())
+        .onFalse(superstructure.raiseIfHasAlgae());
+    secondary
+        .povUp()
+        .whileTrue(superstructure.intakeHighAlgae())
+        .onFalse(superstructure.raiseIfHasAlgae());
     secondary.leftBumper().whileTrue(superstructure.netScore());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());

@@ -91,7 +91,8 @@ public class Superstructure extends Mechanism {
   }
 
   public Command intakeHighAlgae() {
-    return expose(parallel(elevator.highAlgae(), algaeClaw.reefIntake()).withName("Intake High Algae"))
+    return expose(
+            parallel(elevator.highAlgae(), algaeClaw.reefIntake()).withName("Intake High Algae"))
         .withName("Intake High Algae");
   }
 
@@ -101,6 +102,10 @@ public class Superstructure extends Mechanism {
 
   public Command netScore() {
     return expose(algaeClaw.bargeScore(elevator::atTargetPos).deadlineFor(elevator.lvl4()));
+  }
+
+  public Command raiseIfHasAlgae() {
+    return expose(algaeClaw.holdIfHasAlgae());
   }
 
   public Command readyClimb() {
