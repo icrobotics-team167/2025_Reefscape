@@ -25,9 +25,9 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
   public AlgaeIntakeIOPhoenix() {
     motor = new TalonFX(4);
     var motorConfig = new TalonFXConfiguration();
-    motorConfig.CurrentLimits.StatorCurrentLimit = 15;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 5;
-    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 1;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 30;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
     motorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
     motor.getConfigurator().apply(motorConfig);
 
