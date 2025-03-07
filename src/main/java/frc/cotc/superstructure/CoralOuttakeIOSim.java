@@ -8,6 +8,7 @@
 package frc.cotc.superstructure;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -43,7 +44,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
     state = SimState.BRAKE;
   }
 
-  private boolean hasCoralSim = false;
+  private boolean hasCoralSim = true;
 
   private enum SimState {
     INTAKING,
@@ -54,12 +55,14 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
 
   private SimState state = SimState.BRAKE;
 
+  private final Debouncer debouncer = new Debouncer(.6);
+
   private void update() {
     Logger.recordOutput("Superstructure/Coral Outtake (Sim)/State", state.name());
     switch (state) {
       case INTAKING -> {
         if (!hasCoralSim) {
-          hasCoralSim = nearSource();
+          hasCoralSim = debouncer.calculate(nearSource());
         }
       }
       case SCORING, AGITATING -> hasCoralSim = false;

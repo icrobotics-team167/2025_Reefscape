@@ -86,13 +86,27 @@ public class Autos {
           return swerve.followRepulsorField(pose).withName("Source Align " + source.name());
         };
 
-    addRoutine("ScoreAtG", () -> scoreAtG(factory, swerve, superstructure));
+    addRoutine("1AtG", () -> scoreAtG(factory, swerve, superstructure));
     addRoutine(
-        "CycleFromE",
-        () -> createRoutine(factory, swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D));
+        "2FromE",
+        () ->
+            generateChoreoRoutine(
+                factory, swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D));
     addRoutine(
-        "CycleFromJ",
-        () -> createRoutine(factory, swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K));
+        "2FromJ",
+        () ->
+            generateChoreoRoutine(
+                factory, swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K));
+    addRoutine(
+        "3FromE",
+        () ->
+            generateRepulsorRoutine(
+                swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D, ReefBranch.C));
+    addRoutine(
+        "3FromJ",
+        () ->
+            generateRepulsorRoutine(
+                swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K, ReefBranch.L));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.61, .67, Rotation2d.fromDegrees(54));
@@ -102,7 +116,7 @@ public class Autos {
           Constants.FIELD_WIDTH_METERS - sourceRight.getY(),
           sourceRight.getRotation().unaryMinus());
 
-  private AutoRoutine scoreAtG(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
+  private Command scoreAtG(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
     var routine = factory.newRoutine("ScoreAtG");
 
     routine
@@ -113,10 +127,10 @@ public class Autos {
                 waitUntil(swerve::nearingTargetPose)
                     .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))));
 
-    return routine;
+    return routine.cmd();
   }
 
-  private AutoRoutine createRoutine(
+  private Command generateChoreoRoutine(
       AutoFactory factory,
       Swerve swerve,
       Superstructure superstructure,
@@ -172,7 +186,26 @@ public class Autos {
                   .withName("ScoreAt" + cyclingBranches[i].name()));
     }
 
-    return routine;
+    return routine.cmd();
+  }
+
+  private Command generateRepulsorRoutine(
+      Swerve swerve, Superstructure superstructure, Source source, ReefBranch... reefBranches) {
+    var commands = new Command[reefBranches.length * 2];
+
+    for (int i = 0; i < reefBranches.length; i++) {
+      commands[i * 2] =
+          reefPathfinding
+              .goTo(reefBranches[i])
+              .withDeadline(
+                  waitUntil(swerve::nearingTargetPose)
+                      .andThen(superstructure.lvl4(swerve::atTargetPoseAuto)))
+              .asProxy();
+      commands[i * 2 + 1] =
+          sourcePathfinding.goTo(source).until(superstructure::hasCoral).asProxy();
+    }
+
+    return sequence(commands);
   }
 
   private String selectedCommandName = NONE_NAME;
@@ -213,9 +246,9 @@ public class Autos {
     return selectedCommand;
   }
 
-  private void addRoutine(String name, Supplier<AutoRoutine> generator) {
+  private void addRoutine(String name, Supplier<Command> generator) {
     chooser.addOption(name, name);
-    routines.put(name, () -> generator.get().cmd());
+    routines.put(name, generator);
   }
 
   private enum Source {
