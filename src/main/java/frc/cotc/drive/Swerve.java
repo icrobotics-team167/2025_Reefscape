@@ -388,8 +388,7 @@ public class Swerve extends SubsystemBase {
       return false;
     }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
-    return error.getTranslation().getNorm() < 1.25
-        && Math.abs(error.getRotation().getDegrees()) < 30;
+    return error.getTranslation().getNorm() < 1 && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
   public Command sourceAlign(Supplier<Translation2d> translationalControlSupplier) {

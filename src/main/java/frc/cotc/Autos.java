@@ -89,26 +89,10 @@ public class Autos {
     addRoutine("ScoreAtG", () -> scoreAtG(factory, swerve, superstructure));
     addRoutine(
         "CycleFromE",
-        () ->
-            createRoutine(
-                factory,
-                swerve,
-                superstructure,
-                Source.R,
-                ReefBranch.E,
-                ReefBranch.D,
-                ReefBranch.C));
+        () -> createRoutine(factory, swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D));
     addRoutine(
         "CycleFromJ",
-        () ->
-            createRoutine(
-                factory,
-                swerve,
-                superstructure,
-                Source.L,
-                ReefBranch.J,
-                ReefBranch.K,
-                ReefBranch.L));
+        () -> createRoutine(factory, swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.61, .67, Rotation2d.fromDegrees(54));
@@ -176,7 +160,7 @@ public class Autos {
                   .withName("Source" + source.name()));
 
       sourceToReef[i]
-          .atTimeBeforeEnd(.75)
+          .atTimeBeforeEnd(.5)
           .onTrue(
               superstructure
                   .lvl4(swerve::atTargetPose)
