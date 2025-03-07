@@ -34,7 +34,7 @@ public class Superstructure extends Mechanism {
   public Command lvl1() {
     return expose(
             deadline(
-                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(.5).asProxy()),
+                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(.25).asProxy()),
                     elevator.lvl1())
                 .withName("Lvl 1 Scoring"))
         .withName("Lvl 1 Scoring");
@@ -44,7 +44,7 @@ public class Superstructure extends Mechanism {
     return expose(
             deadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.5).asProxy()),
+                        .andThen(coralOuttake.score(.25).asProxy()),
                     elevator.lvl2())
                 .withName("Lvl 2 Scoring"))
         .withName("Lvl 2 Scoring");
@@ -54,7 +54,7 @@ public class Superstructure extends Mechanism {
     return expose(
             deadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.5).asProxy()),
+                        .andThen(coralOuttake.score(.25).asProxy()),
                     elevator.lvl3())
                 .withName("Lvl 3 Scoring"))
         .withName("Lvl 3 Scoring");
@@ -64,7 +64,7 @@ public class Superstructure extends Mechanism {
     return expose(
             deadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.75).asProxy()),
+                        .andThen(coralOuttake.score(.5).asProxy()),
                     elevator.lvl4())
                 .withName("Lvl 4 Scoring"))
         .withName("Lvl 4 Scoring");
