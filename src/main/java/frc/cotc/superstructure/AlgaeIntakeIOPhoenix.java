@@ -29,7 +29,7 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
     var detectorConfig = new CANrangeConfiguration();
     detectorConfig.FovParams.FOVRangeX = 6.75;
     detectorConfig.FovParams.FOVRangeY = 6.75;
-    detectorConfig.ProximityParams.ProximityThreshold = .4;
+    detectorConfig.ProximityParams.ProximityThreshold = .15;
     detector.getConfigurator().apply(detectorConfig);
 
     detectedSignal = detector.getIsDetected(false);
@@ -53,7 +53,12 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
 
   @Override
   public void intake() {
-    motor.setVoltage(4);
+    motor.setVoltage(6);
+  }
+
+  @Override
+  public void hold() {
+    motor.setVoltage(1.5);
   }
 
   @Override

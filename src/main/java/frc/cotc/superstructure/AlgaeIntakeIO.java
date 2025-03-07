@@ -34,6 +34,8 @@ public interface AlgaeIntakeIO {
 
   default void intake() {}
 
+  default void hold() {}
+
   default void outtake() {}
 
   default void brake() {}
