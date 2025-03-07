@@ -10,6 +10,7 @@ package frc.cotc.superstructure;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -23,6 +24,13 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
 
   public AlgaeIntakeIOPhoenix() {
     motor = new TalonFX(4);
+    var motorConfig = new TalonFXConfiguration();
+    motorConfig.CurrentLimits.StatorCurrentLimit = 15;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 5;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 1;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
+    motor.getConfigurator().apply(motorConfig);
+
     //noinspection resource
     var detector = new CANrange(3);
 
@@ -58,7 +66,7 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
 
   @Override
   public void hold() {
-    motor.setVoltage(1.5);
+    motor.setVoltage(1);
   }
 
   @Override

@@ -27,12 +27,14 @@ public class AlgaeIntake extends SubsystemBase {
 
   public Command intake() {
     return run(() -> {
-      if (inputs.hasAlgae) {
-        io.hold();
-      } else {
-        io.intake();
-      }
-    }).finallyDo(io::brake).withName("Intake");
+          if (inputs.hasAlgae) {
+            io.hold();
+          } else {
+            io.intake();
+          }
+        })
+        .finallyDo(io::brake)
+        .withName("Intake");
   }
 
   public Command outtake() {
