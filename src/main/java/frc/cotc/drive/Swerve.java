@@ -447,7 +447,7 @@ public class Swerve extends SubsystemBase {
                   var sample =
                       repulsorFieldPlanner.sampleField(
                           poseEstimator.getEstimatedPosition().getTranslation(),
-                          maxLinearSpeedMetersPerSec * .9,
+                          maxLinearSpeedMetersPerSec * .75,
                           1.25);
 
                   var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
