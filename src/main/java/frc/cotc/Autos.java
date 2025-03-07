@@ -111,7 +111,7 @@ public class Autos {
             parallel(
                 reefPathfinding.goTo(ReefBranch.G),
                 waitUntil(swerve::nearingTargetPose)
-                    .andThen(superstructure.lvl4(swerve::atTargetPose))));
+                    .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))));
 
     return routine;
   }
@@ -143,7 +143,8 @@ public class Autos {
         .active()
         .onTrue(
             sequence(
-                    waitUntil(swerve::nearingTargetPose), superstructure.lvl4(swerve::atTargetPose))
+                    waitUntil(swerve::nearingTargetPose),
+                    superstructure.lvl4(swerve::atTargetPoseAuto))
                 .deadlineFor(reefPathfinding.goTo(initialBranch))
                 .withName("ScoreAt" + initialBranch.name())
                 .andThen(reefToSource[0].spawnCmd())
@@ -163,7 +164,7 @@ public class Autos {
           .atTimeBeforeEnd(.5)
           .onTrue(
               superstructure
-                  .lvl4(swerve::atTargetPose)
+                  .lvl4(swerve::atTargetPoseAuto)
                   .deadlineFor(
                       waitUntil(sourceToReef[i].done())
                           .andThen(reefPathfinding.goTo(cyclingBranches[i]).asProxy()))

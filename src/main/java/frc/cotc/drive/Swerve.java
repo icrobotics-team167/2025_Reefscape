@@ -370,12 +370,26 @@ public class Swerve extends SubsystemBase {
   private Pose2d targetPose;
 
   @AutoLogOutput
-  public boolean atTargetPose() {
+  public boolean atTargetPoseTeleop() {
     if (targetPose == null) {
       return false;
     }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
+    Logger.recordOutput("Swerve/Error", error.getTranslation().getNorm());
     return error.getTranslation().getNorm() < .05
+        && Math.abs(error.getRotation().getDegrees()) < 5
+        && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
+            < .5
+        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 10;
+  }
+
+  @AutoLogOutput
+  public boolean atTargetPoseAuto() {
+    if (targetPose == null) {
+      return false;
+    }
+    var error = targetPose.minus(poseEstimator.getEstimatedPosition());
+    return error.getTranslation().getNorm() < .08
         && Math.abs(error.getRotation().getDegrees()) < 5
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
             < .5
