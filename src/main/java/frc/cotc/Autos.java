@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.cotc.drive.Swerve;
 import frc.cotc.superstructure.Superstructure;
 import frc.cotc.util.ReefLocations;
@@ -137,7 +138,11 @@ public class Autos {
     for (int i = 0; i < sourceToReef.length - 1; i++) {
       nextCycleSpwnCmd[i] = reefToSource[i + 1].spawnCmd();
     }
-    nextCycleSpwnCmd[sourceToReef.length - 1] = none();
+    nextCycleSpwnCmd[sourceToReef.length - 1] =
+        new ScheduleCommand(
+            getTrajectory(routine, cyclingBranches[cyclingBranches.length - 1], source)
+                .cmd()
+                .andThen(sourcePathfinding.goTo(source)));
 
     routine
         .active()
