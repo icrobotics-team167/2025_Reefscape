@@ -12,8 +12,6 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import frc.cotc.Constants;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs;
 import frc.cotc.vision.FiducialPoseEstimatorIO.FiducialPoseEstimatorIOInputs.FiducialPoseEstimate;
@@ -22,21 +20,8 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class FiducialPoseEstimator {
-  public static final AprilTagFieldLayout tagLayout;
-
-  static {
-//    AprilTagFieldLayout layout;
-//    try {
-//      layout =
-//          AprilTagFieldLayout.loadFromResource(
-//              Filesystem.getDeployDirectory() + "\\field_CentralMissouri.json");
-//    } catch (Exception e) {
-//      DriverStation.reportWarning("Could not load custom field! " + e.getMessage(), false);
-//      layout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
-//    }
-//    tagLayout = layout;
-    tagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
-  }
+  public static final AprilTagFieldLayout tagLayout =
+      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
   private final FiducialPoseEstimatorIO io;
   private final FiducialPoseEstimatorIOInputs inputs = new FiducialPoseEstimatorIOInputs();
