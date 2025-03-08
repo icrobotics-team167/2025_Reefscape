@@ -64,7 +64,7 @@ public class Superstructure extends Mechanism {
     return expose(
             deadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.5).asProxy()),
+                        .andThen(coralOuttake.score(.35).asProxy()),
                     elevator.lvl4())
                 .withName("Lvl 4 Scoring"))
         .withName("Lvl 4 Scoring");
