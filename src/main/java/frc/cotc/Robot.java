@@ -21,8 +21,10 @@ import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import static edu.wpi.first.wpilibj2.command.Commands.parallel;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -176,6 +178,9 @@ public class Robot extends LoggedRobot {
     secondary.povUp().whileTrue(superstructure.net());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
+
+    new Trigger(superstructure::hasCoral).onChange(parallel(primary.rumble(.2),
+      secondary.rumble(.2)));
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
