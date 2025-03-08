@@ -90,10 +90,26 @@ public class Autos {
     addRoutine("ScoreAtG", () -> scoreAtG(factory, swerve, superstructure));
     addRoutine(
         "CycleFromE",
-        () -> createRoutine(factory, swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D));
+        () ->
+            createRoutine(
+                factory,
+                swerve,
+                superstructure,
+                Source.R,
+                ReefBranch.E,
+                ReefBranch.D,
+                ReefBranch.C));
     addRoutine(
         "CycleFromJ",
-        () -> createRoutine(factory, swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K));
+        () ->
+            createRoutine(
+                factory,
+                swerve,
+                superstructure,
+                Source.L,
+                ReefBranch.J,
+                ReefBranch.K,
+                ReefBranch.L));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.61, .67, Rotation2d.fromDegrees(54));
