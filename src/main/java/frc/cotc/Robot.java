@@ -182,6 +182,7 @@ public class Robot extends LoggedRobot {
 
     new Trigger(superstructure::hasCoral)
         .onChange(parallel(primary.rumble(.2), secondary.rumble(.2)));
+    new Trigger(algaeIntake::hasAlgae).onChange(parallel(primary.rumble(.2), secondary.rumble(.2)));
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
