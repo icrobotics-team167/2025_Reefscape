@@ -97,7 +97,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                             * ((CONSTANTS.MASS_KG / 4) * 9.81)
                             * CONSTANTS.WHEEL_DIAMETER_METERS
                             / 2)),
-            120);
+            90);
   }
 
   private final Module[] modules = new Module[4];
