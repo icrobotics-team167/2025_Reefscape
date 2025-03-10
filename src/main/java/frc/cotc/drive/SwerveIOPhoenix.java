@@ -97,7 +97,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                             * ((CONSTANTS.MASS_KG / 4) * 9.81)
                             * CONSTANTS.WHEEL_DIAMETER_METERS
                             / 2)),
-            80);
+            90);
   }
 
   private final Module[] modules = new Module[4];
@@ -257,12 +257,10 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerMotor = new TalonFX(id * 3 + 1, Robot.CANIVORE_NAME);
       encoder = new CANcoder(id * 3 + 2, Robot.CANIVORE_NAME);
 
-      double driveFeedbackOverhead = 20;
       var driveConfig = new TalonFXConfiguration();
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-      driveConfig.CurrentLimits.StatorCurrentLimit =
-          CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + driveFeedbackOverhead;
+      driveConfig.CurrentLimits.StatorCurrentLimit = CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + 10;
       driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
       driveConfig.Audio.AllowMusicDurDisable = true;
 

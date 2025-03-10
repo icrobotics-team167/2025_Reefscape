@@ -41,7 +41,7 @@ public class AlgaeIntake extends SubsystemBase {
     return run(io::outtake).finallyDo(io::brake).withName("Outtake");
   }
 
-  boolean hasAlgae() {
+  public boolean hasAlgae() {
     return inputs.hasAlgae;
   }
 }
