@@ -43,9 +43,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     metersPerRotation = teeth * pitch;
 
     constants = new ElevatorIOConstantsAutoLogged();
-    constants.kV = 12.0 / ((5800 / 60.0) / gearRatio * metersPerRotation);
-    constants.kG_firstStage = .24;
-    constants.kG_secondStage = .28;
+    constants.kV = 12.0 / ((6000 / 60.0) / gearRatio * metersPerRotation);
+    constants.kG_firstStage = .32;
+    constants.kG_secondStage = .37;
     constants.switchPointMeters = 0.76981640676;
     constants.maxHeightMeters = 1.53551952554;
   }
@@ -186,7 +186,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
               LinearSystemId.identifyPositionSystem(kV, firstStage_kA),
               LinearSystemId.identifyPositionSystem(kV, secondStage_kA),
               constants.switchPointMeters,
-              constants.maxHeightMeters + 2);
+              constants.maxHeightMeters);
     }
 
     private final double dt = 1.0 / 1000;

@@ -115,7 +115,7 @@ class Elevator extends SubsystemBase {
         .andThen(
             run(
                 () -> {
-                  if (posMeters == 0 && inputs.posMeters < .1 && inputs.velMetersPerSec < .05) {
+                  if (posMeters == 0 && inputs.posMeters < .02 && inputs.velMetersPerSec < .02) {
                     io.brake();
                   } else {
                     io.setTargetPos(posMeters);
