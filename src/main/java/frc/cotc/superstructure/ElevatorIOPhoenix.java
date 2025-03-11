@@ -9,8 +9,9 @@ package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.StaticBrake;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Notifier;
 import frc.cotc.Robot;
 import frc.cotc.util.ContinuousElevatorSim;
+import frc.cotc.util.GainsCalculator;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class ElevatorIOPhoenix implements ElevatorIO {
@@ -41,9 +43,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     metersPerRotation = teeth * pitch;
 
     constants = new ElevatorIOConstantsAutoLogged();
-    constants.kV = 12.0 / ((7530.0 / 60.0) / gearRatio * metersPerRotation);
-    constants.kG_firstStage = .57;
-    constants.kG_secondStage = .65;
+    constants.kV = 12.0 / ((5800 / 60.0) / gearRatio * metersPerRotation);
+    constants.kG_firstStage = .24;
+    constants.kG_secondStage = .28;
     constants.switchPointMeters = 0.76981640676;
     constants.maxHeightMeters = 1.53551952554;
   }
@@ -77,6 +79,22 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    config.Slot0.kG = constants.kG_firstStage;
+    config.Slot0.kV = constants.kV * metersPerRotation;
+    config.Slot0.kA = constants.kG_firstStage / 9.81 * metersPerRotation;
+    var firstStageGains =
+        GainsCalculator.getPositionGains(
+            config.Slot0.kV, config.Slot0.kA, 12 - config.Slot0.kG, .01, .25, .001, 0);
+    config.Slot0.kP = firstStageGains.kP();
+    config.Slot0.kD = firstStageGains.kD();
+    config.Slot1.kG = constants.kG_secondStage;
+    config.Slot1.kV = constants.kV * metersPerRotation;
+    config.Slot1.kA = constants.kG_secondStage / 9.81 * metersPerRotation;
+    var secondStageGains =
+        GainsCalculator.getPositionGains(
+            config.Slot1.kV, config.Slot1.kA, 12 - config.Slot1.kG, .01, .25, .001, 0);
+    config.Slot1.kP = secondStageGains.kP();
+    config.Slot1.kD = secondStageGains.kD();
 
     leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -125,20 +143,27 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     inputs.rightMotorCurrentDraws.mutateFromSignals(rightStator, rightSupply);
   }
 
-  private final VoltageOut voltageControl = new VoltageOut(0);
-
-  @Override
-  public void runVoltage(double volts) {
-    leftMotor.setControl(voltageControl.withOutput(volts));
-    rightMotor.setControl(voltageControl.withOutput(volts));
-  }
-
   private final StaticBrake brakeControl = new StaticBrake();
 
   @Override
   public void brake() {
     leftMotor.setControl(brakeControl);
     rightMotor.setControl(brakeControl);
+  }
+
+  private final PositionVoltage positionControl = new PositionVoltage(0).withEnableFOC(false);
+  private final StrictFollower followerControl = new StrictFollower(13);
+
+  @Override
+  public void setTargetPos(double posMeters) {
+    leftMotor.setControl(
+        positionControl
+            .withPosition(posMeters / metersPerRotation)
+            .withSlot(
+                posSignal.getValueAsDouble() < (constants.switchPointMeters / metersPerRotation)
+                    ? 0
+                    : 1));
+    rightMotor.setControl(followerControl);
   }
 
   private static class Sim {
@@ -161,10 +186,10 @@ public class ElevatorIOPhoenix implements ElevatorIO {
               LinearSystemId.identifyPositionSystem(kV, firstStage_kA),
               LinearSystemId.identifyPositionSystem(kV, secondStage_kA),
               constants.switchPointMeters,
-              constants.maxHeightMeters);
+              constants.maxHeightMeters + 2);
     }
 
-    private final double dt = 1.0 / 250;
+    private final double dt = 1.0 / 1000;
 
     private final Notifier notifier = new Notifier(this::run);
 

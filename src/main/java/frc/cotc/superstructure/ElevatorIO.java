@@ -54,7 +54,7 @@ public interface ElevatorIO {
 
   default void updateInputs(ElevatorIOInputs inputs) {}
 
-  default void runVoltage(double volts) {}
+  default void setTargetPos(double posMeters) {}
 
   default void brake() {}
 }
