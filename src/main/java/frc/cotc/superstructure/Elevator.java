@@ -7,6 +7,7 @@
 
 package frc.cotc.superstructure;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
@@ -22,6 +23,7 @@ class Elevator extends SubsystemBase {
   private final ElevatorIO.ElevatorIOInputs inputs = new ElevatorIO.ElevatorIOInputs();
 
   private final double switchPoint;
+  private final double maxHeight;
 
   private final LoggedMechanism2d visualization;
   private final LoggedMechanismLigament2d stage1Ligament;
@@ -34,6 +36,7 @@ class Elevator extends SubsystemBase {
     Logger.processInputs("Superstructure/Elevator/CONSTANTS", constants);
 
     switchPoint = constants.switchPointMeters;
+    maxHeight = constants.maxHeightMeters;
 
     visualization = new LoggedMechanism2d(Units.inchesToMeters(28), 3);
     stage1Ligament = new LoggedMechanismLigament2d("stage1", 1, 90, 5, new Color8Bit(255, 0, 0));
@@ -106,19 +109,22 @@ class Elevator extends SubsystemBase {
   private final PIDController feedbackController = new PIDController(0, 0, 0);
 
   private Command goToPos(double posMeters) {
+    final double clampedPosMeters = MathUtil.clamp(posMeters, 0, maxHeight);
     return runOnce(
             () -> {
               feedbackController.reset();
-              targetHeight = posMeters;
+              targetHeight = clampedPosMeters;
               Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
             })
         .andThen(
             run(
                 () -> {
-                  if (posMeters == 0 && inputs.posMeters < .02 && inputs.velMetersPerSec < .02) {
+                  if (clampedPosMeters == 0
+                      && inputs.posMeters < .02
+                      && inputs.velMetersPerSec < .02) {
                     io.brake();
                   } else {
-                    io.setTargetPos(posMeters);
+                    io.setTargetPos(clampedPosMeters);
                   }
                 }));
   }

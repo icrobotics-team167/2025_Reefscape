@@ -43,9 +43,6 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     metersPerRotation = teeth * pitch;
 
     constants = new ElevatorIOConstantsAutoLogged();
-    constants.kV = 12.0 / ((6000 / 60.0) / gearRatio * metersPerRotation);
-    constants.kG_firstStage = .32;
-    constants.kG_secondStage = .37;
     constants.switchPointMeters = 0.76981640676;
     constants.maxHeightMeters = 1.53551952554;
   }
@@ -79,17 +76,17 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    config.Slot0.kG = constants.kG_firstStage;
-    config.Slot0.kV = constants.kV * metersPerRotation;
-    config.Slot0.kA = constants.kG_firstStage / 9.81 * metersPerRotation;
+    config.Slot0.kG = .32;
+    config.Slot0.kV = 12.0 / ((6000 / 60.0) / gearRatio);
+    config.Slot0.kA = config.Slot0.kG / 9.81 * metersPerRotation;
     var firstStageGains =
         GainsCalculator.getPositionGains(
             config.Slot0.kV, config.Slot0.kA, 12 - config.Slot0.kG, .01, .25, .001, 0);
     config.Slot0.kP = firstStageGains.kP();
     config.Slot0.kD = firstStageGains.kD();
-    config.Slot1.kG = constants.kG_secondStage;
-    config.Slot1.kV = constants.kV * metersPerRotation;
-    config.Slot1.kA = constants.kG_secondStage / 9.81 * metersPerRotation;
+    config.Slot1.kG = .37;
+    config.Slot1.kV = config.Slot0.kV;
+    config.Slot1.kA = config.Slot1.kG / 9.81 * metersPerRotation;
     var secondStageGains =
         GainsCalculator.getPositionGains(
             config.Slot1.kV, config.Slot1.kA, 12 - config.Slot1.kG, .01, .25, .001, 0);
@@ -104,9 +101,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
       new Sim(
               leftMotor,
               rightMotor,
-              constants.kV,
-              constants.kG_firstStage / 9.81,
-              constants.kG_secondStage / 9.81)
+              config.Slot0.kV,
+              config.Slot0.kG / 9.81,
+              config.Slot1.kG / 9.81)
           .start();
     }
   }
