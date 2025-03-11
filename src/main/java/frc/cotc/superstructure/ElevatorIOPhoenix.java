@@ -34,16 +34,16 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private static final ElevatorIOConstantsAutoLogged constants;
 
   static {
-    gearRatio = (50.0 / 12.0) * (52.0 / 20.0);
+    gearRatio = 7;
 
     var pitch = 5.0 / 1000;
     var teeth = 36;
     metersPerRotation = teeth * pitch;
 
     constants = new ElevatorIOConstantsAutoLogged();
-    constants.kV = 12.0 / ((5800.0 / 60.0) / gearRatio * metersPerRotation);
-    constants.kG_firstStage = .176;
-    constants.kG_secondStage = .192;
+    constants.kV = 12.0 / ((7530.0 / 60.0) / gearRatio * metersPerRotation);
+    constants.kG_firstStage = .57;
+    constants.kG_secondStage = .65;
     constants.switchPointMeters = 0.76981640676;
     constants.maxHeightMeters = 1.53551952554;
   }
