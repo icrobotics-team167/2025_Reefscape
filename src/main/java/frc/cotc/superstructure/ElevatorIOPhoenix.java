@@ -36,7 +36,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private static final ElevatorIOConstantsAutoLogged constants;
 
   static {
-    gearRatio = 7;
+    gearRatio = (46.0 / 16.0) * (52.0 / 20.0);
 
     var pitch = 5.0 / 1000;
     var teeth = 36;
@@ -76,7 +76,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    config.Slot0.kG = .32;
+    config.Slot0.kG = .23;
     config.Slot0.kV = 12.0 / ((5800 / 60.0) / gearRatio);
     config.Slot0.kA = config.Slot0.kG / 9.81 * metersPerRotation;
     var firstStageGains =
@@ -84,7 +84,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
             config.Slot0.kV, config.Slot0.kA, 12 - config.Slot0.kG, .01, .25, .001, 0);
     config.Slot0.kP = firstStageGains.kP();
     config.Slot0.kD = firstStageGains.kD();
-    config.Slot1.kG = .37;
+    config.Slot1.kG = .31;
     config.Slot1.kV = config.Slot0.kV;
     config.Slot1.kA = config.Slot1.kG / 9.81 * metersPerRotation;
     var secondStageGains =
