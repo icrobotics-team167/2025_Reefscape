@@ -124,7 +124,7 @@ class Elevator extends SubsystemBase {
   }
 
   Command net() {
-    return goToPos(1.1).withName("High Algae");
+    return goToPos(1.1).withName("Net");
   }
 
   Command manualControl(DoubleSupplier control) {
