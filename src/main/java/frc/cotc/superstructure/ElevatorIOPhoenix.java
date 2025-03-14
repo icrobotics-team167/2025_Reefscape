@@ -77,7 +77,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     config.Slot0.kG = .32;
-    config.Slot0.kV = 12.0 / ((6000 / 60.0) / gearRatio);
+    config.Slot0.kV = 12.0 / ((5800 / 60.0) / gearRatio);
     config.Slot0.kA = config.Slot0.kG / 9.81 * metersPerRotation;
     var firstStageGains =
         GainsCalculator.getPositionGains(
@@ -101,7 +101,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
       new Sim(
               leftMotor,
               rightMotor,
-              config.Slot0.kV,
+              config.Slot0.kV / metersPerRotation,
               config.Slot0.kG / 9.81,
               config.Slot1.kG / 9.81)
           .start();
@@ -148,7 +148,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     rightMotor.setControl(brakeControl);
   }
 
-  private final PositionVoltage positionControl = new PositionVoltage(0).withEnableFOC(false);
+  private final PositionVoltage positionControl = new PositionVoltage(0);
   private final StrictFollower followerControl = new StrictFollower(13);
 
   @Override
