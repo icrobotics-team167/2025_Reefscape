@@ -59,7 +59,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
     CONSTANTS.WHEEL_COF = 1.5;
 
-    DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
+    DRIVE_GEAR_RATIO = (50.0 / 16.0) * (19.0 / 25.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
 
     var MK4N_STEER_GEAR_RATIO = 18.75;
