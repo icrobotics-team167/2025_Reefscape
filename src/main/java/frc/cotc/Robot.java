@@ -170,7 +170,9 @@ public class Robot extends LoggedRobot {
         .whileTrue(
             superstructure.lvl2(
                 () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
-    secondary.a().whileTrue(superstructure.lvl1());
+
+
+
 
     algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
     algaeIntake.setDefaultCommand(algaeIntake.intake());

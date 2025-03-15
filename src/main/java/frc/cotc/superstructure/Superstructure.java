@@ -31,16 +31,6 @@ public class Superstructure extends Mechanism {
     RobotModeTriggers.disabled().onFalse(ramp.lower());
   }
 
-  public Command lvl1() {
-    return expose(
-            elevator
-                .lvl1()
-                .withDeadline(
-                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.scoreTrough().asProxy()))
-                .withName("Lvl 1 Scoring"))
-        .withName("Lvl 1 Scoring");
-  }
-
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
     return expose(
             elevator
