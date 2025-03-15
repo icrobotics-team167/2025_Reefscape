@@ -33,39 +33,43 @@ public class Superstructure extends Mechanism {
 
   public Command lvl1() {
     return expose(
-            deadline(
-                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(.25).asProxy()),
-                    elevator.lvl1())
+            elevator
+                .lvl1()
+                .withDeadline(
+                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(.25).asProxy()))
                 .withName("Lvl 1 Scoring"))
         .withName("Lvl 1 Scoring");
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
     return expose(
-            deadline(
+            elevator
+                .lvl2()
+                .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.25).asProxy()),
-                    elevator.lvl2())
+                        .andThen(coralOuttake.score(.25).asProxy()))
                 .withName("Lvl 2 Scoring"))
         .withName("Lvl 2 Scoring");
   }
 
   public Command lvl3(BooleanSupplier driveBaseAtTarget) {
     return expose(
-            deadline(
+            elevator
+                .lvl3()
+                .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.25).asProxy()),
-                    elevator.lvl3())
+                        .andThen(coralOuttake.score(.25).asProxy()))
                 .withName("Lvl 3 Scoring"))
         .withName("Lvl 3 Scoring");
   }
 
   public Command lvl4(BooleanSupplier driveBaseAtTarget) {
     return expose(
-            deadline(
+            elevator
+                .lvl4()
+                .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.275).asProxy()),
-                    elevator.lvl4())
+                        .andThen(coralOuttake.score(.275).asProxy()))
                 .withName("Lvl 4 Scoring"))
         .withName("Lvl 4 Scoring");
   }
