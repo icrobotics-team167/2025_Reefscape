@@ -119,7 +119,7 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
 
     static {
       var none = new SimCameraProperties();
-      none.setCalibration(1280, 800, Rotation2d.fromDegrees(70));
+      none.setCalibration(1280, 800, Rotation2d.fromDegrees(80));
       none.setCalibError(.3, .1);
       none.setFPS(20);
       none.setExposureTimeMs(10);
@@ -134,31 +134,31 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
           MatBuilder.fill(
               Nat.N3(),
               Nat.N3(),
-              917.7435751,
+              895.7697683626751,
               0.0,
-              645.1229926,
+              659.6060292695324,
               0.0,
-              916.4687196,
-              438.7684688,
+              896.0068506346151,
+              451.10507981030486,
               0.0,
               0.0,
               1.0),
           MatBuilder.fill(
               Nat.N8(),
               Nat.N1(),
-              0.04160394239,
-              -0.05934898907,
-              -0.0002104558183,
-              -0.001798832851,
-              0.005054943256,
-              -0.001768082509,
-              0.005583424767,
-              0.0009199079055));
-      frontLeft.setCalibError(.2, .01);
-      frontLeft.setFPS(20);
-      frontLeft.setExposureTimeMs(10);
-      frontLeft.setAvgLatencyMs(5);
-      frontLeft.setLatencyStdDevMs(2);
+              0.0333671674342023,
+              -0.03416433696651355,
+              0.0024363855873020036,
+              2.0703698596376814E-4,
+              -0.03158846431043834,
+              -3.3770550824757396E-4,
+              0.0036614076801956123,
+              0.002376695294547235));
+      frontLeft.setCalibError(.19, .01);
+      frontLeft.setFPS(40);
+      frontLeft.setExposureTimeMs(5);
+      frontLeft.setAvgLatencyMs(25);
+      frontLeft.setLatencyStdDevMs(5);
       propertiesHashMap.put("FrontLeftCamera", frontLeft);
 
       var frontRight = new SimCameraProperties();
@@ -168,31 +168,31 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
           MatBuilder.fill(
               Nat.N3(),
               Nat.N3(),
-              913.4991235,
+              909.6508738125398,
               0.0,
-              656.9013349,
+              657.5177321829904,
               0.0,
-              912.2663355,
-              380.7381692,
+              909.6394411538412,
+              381.92351819122564,
               0.0,
               0.0,
               1.0),
           MatBuilder.fill(
               Nat.N8(),
               Nat.N1(),
-              0.04363956086,
-              -0.06962515596,
-              -0.0004791594092,
-              -0.001254755397,
-              0.007056855264,
-              -0.001138138589,
-              -0.0003849712931,
-              -0.001715779282));
-      frontLeft.setCalibError(.3, .01);
-      frontLeft.setFPS(20);
-      frontLeft.setExposureTimeMs(10);
-      frontLeft.setAvgLatencyMs(5);
-      frontLeft.setLatencyStdDevMs(2);
+              0.04858933721783682,
+              -0.08941912550409659,
+              -3.1084536948635744E-4,
+              4.151606520884132E-4,
+              0.03579248740242956,
+              3.9706855102229375E-4,
+              0.0014672508075894892,
+              -0.0029891920125610745));
+      frontLeft.setCalibError(.2, .01);
+      frontLeft.setFPS(35);
+      frontLeft.setExposureTimeMs(5);
+      frontLeft.setAvgLatencyMs(25);
+      frontLeft.setLatencyStdDevMs(5);
       propertiesHashMap.put("FrontRightCamera", frontRight);
     }
   }
