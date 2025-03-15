@@ -183,8 +183,9 @@ public class Robot extends LoggedRobot {
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
     new Trigger(superstructure::hasCoral)
-        .onChange(parallel(primary.rumble(.5), secondary.rumble(.5)));
-    new Trigger(algaeIntake::hasAlgae).onChange(parallel(primary.rumble(.5), secondary.rumble(.5)));
+        .onChange(parallel(primary.rumble(.35), secondary.rumble(.35)));
+    new Trigger(algaeIntake::hasAlgae)
+        .onChange(parallel(primary.rumble(.35), secondary.rumble(.35)));
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
