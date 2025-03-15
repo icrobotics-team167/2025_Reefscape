@@ -29,7 +29,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
   }
 
   @Override
-  public void outtake() {
+  public void outtakeFast() {
     state = SimState.SCORING;
   }
 

@@ -83,11 +83,18 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     motor.setControl(incomingSignal.getValue() ? intakeControl : idleControl);
   }
 
-  private final VoltageOut outtakeControl = new VoltageOut(7).withIgnoreHardwareLimits(true);
+  private final VoltageOut fastOuttakeControl = new VoltageOut(12).withIgnoreHardwareLimits(true);
 
   @Override
-  public void outtake() {
-    motor.setControl(outtakeControl);
+  public void outtakeFast() {
+    motor.setControl(fastOuttakeControl);
+  }
+
+  private final VoltageOut slowOuttakeControl = new VoltageOut(6).withIgnoreHardwareLimits(true);
+
+  @Override
+  public void outtakeSlow() {
+    motor.setControl(slowOuttakeControl);
   }
 
   private final VoltageOut agitateControl = new VoltageOut(-12);
