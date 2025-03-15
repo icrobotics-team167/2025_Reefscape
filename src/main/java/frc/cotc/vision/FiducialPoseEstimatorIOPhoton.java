@@ -77,6 +77,7 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
 
     inputs.poseEstimates = estimatesList.toArray(new FiducialPoseEstimate[0]);
     estimatesList.clear();
+    inputs.dataCount = inputs.poseEstimates.length;
   }
 
   @Override
