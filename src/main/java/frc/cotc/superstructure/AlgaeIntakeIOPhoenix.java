@@ -12,6 +12,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANrange;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.cotc.util.PhoenixBatchRefresher;
@@ -31,7 +32,6 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
     motorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
     motor.getConfigurator().apply(motorConfig);
 
-    //noinspection resource
     var detector = new CANrange(3);
 
     var detectorConfig = new CANrangeConfiguration();
@@ -48,8 +48,7 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
     supplySignal = motor.getSupplyCurrent(false);
 
     BaseStatusSignal.setUpdateFrequencyForAll(50, statorSignal, supplySignal, detectedSignal);
-    motor.optimizeBusUtilization(5, .01);
-    detector.optimizeBusUtilization(5, .01);
+    ParentDevice.optimizeBusUtilizationForAll(5, motor, detector);
     PhoenixBatchRefresher.registerRio(statorSignal, supplySignal, detectedSignal);
   }
 
