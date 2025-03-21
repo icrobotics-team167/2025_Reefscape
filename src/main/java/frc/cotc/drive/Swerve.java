@@ -311,7 +311,7 @@ public class Swerve extends SubsystemBase {
               1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
 
           if (slowMode.getAsBoolean()) {
-            commandedRobotSpeeds = commandedRobotSpeeds.times(.5);
+            commandedRobotSpeeds = commandedRobotSpeeds.times(.3);
           }
 
           var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
@@ -488,27 +488,12 @@ public class Swerve extends SubsystemBase {
 
                   if (nudgeSupplier != null) {
                     var nudge = nudgeSupplier.get();
-                    if (nudge.getNorm() > .1) {
-                      var nudgeScalar =
-                          Math.min(error.getTranslation().getNorm() / 3, 1)
-                              * Math.min(error.getTranslation().getNorm() / 3, 1)
-                              * maxLinearSpeedMetersPerSec;
 
-                      if (Robot.isOnRed()) {
-                        nudge = new Translation2d(-nudge.getX(), -nudge.getY());
-                      }
-                      nudgeScalar *=
-                          Math.abs(
-                              nudge
-                                  .getAngle()
-                                  .minus(
-                                      new Rotation2d(
-                                          outputFieldRelative.vxMetersPerSecond,
-                                          outputFieldRelative.vyMetersPerSecond))
-                                  .getSin());
-                      outputFieldRelative.vxMetersPerSecond += nudge.getX() * nudgeScalar;
-                      outputFieldRelative.vyMetersPerSecond += nudge.getY() * nudgeScalar;
+                    if (Robot.isOnRed()) {
+                      nudge = nudge.unaryMinus();
                     }
+                    outputFieldRelative.vxMetersPerSecond += nudge.getX();
+                    outputFieldRelative.vyMetersPerSecond += nudge.getY();
                   }
 
                   var outputRobotRelative =
