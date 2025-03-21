@@ -11,7 +11,6 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.StaticBrake;
-import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -81,7 +80,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.Slot0.kA = config.Slot0.kG / 9.81 * metersPerRotation;
     var firstStageGains =
         GainsCalculator.getPositionGains(
-            config.Slot0.kV, config.Slot0.kA, 12 - config.Slot0.kG, .01, .25, .001, 0);
+            config.Slot0.kV, config.Slot0.kA, 12 - config.Slot0.kG, .01, .25, .001, .001);
     config.Slot0.kP = firstStageGains.kP();
     config.Slot0.kD = firstStageGains.kD();
     config.Slot1.kG = .31;
@@ -89,7 +88,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.Slot1.kA = config.Slot1.kG / 9.81 * metersPerRotation;
     var secondStageGains =
         GainsCalculator.getPositionGains(
-            config.Slot1.kV, config.Slot1.kA, 12 - config.Slot1.kG, .01, .25, .001, 0);
+            config.Slot1.kV, config.Slot1.kA, 12 - config.Slot1.kG, .01, .25, .001, .001);
     config.Slot1.kP = secondStageGains.kP();
     config.Slot1.kD = secondStageGains.kD();
 
@@ -127,6 +126,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     var triggeredState = !limitSwitch.get(); // Normally closed
     if (!lastTriggeredState && triggeredState) {
       leftMotor.setPosition(0);
+      rightMotor.setPosition(0);
     }
     lastTriggeredState = triggeredState;
 
@@ -149,7 +149,6 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   }
 
   private final PositionVoltage positionControl = new PositionVoltage(0);
-  private final StrictFollower followerControl = new StrictFollower(13);
 
   @Override
   public void setTargetPos(double posMeters) {
@@ -160,7 +159,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
                 posSignal.getValueAsDouble() < (constants.switchPointMeters / metersPerRotation)
                     ? 0
                     : 1));
-    rightMotor.setControl(followerControl);
+    rightMotor.setControl(positionControl);
   }
 
   private static class Sim {
