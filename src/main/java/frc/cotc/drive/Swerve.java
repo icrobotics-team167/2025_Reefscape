@@ -7,14 +7,11 @@
 
 package frc.cotc.drive;
 
-import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
-import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
 import static frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import static java.lang.Math.PI;
 
 import choreo.trajectory.SwerveSample;
-import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,9 +23,9 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.ReefLocations;
@@ -64,7 +61,7 @@ public class Swerve extends SubsystemBase {
   private final RepulsorFieldPlanner repulsorFieldPlanner = new RepulsorFieldPlanner();
 
   public Swerve(SwerveIO driveIO, FiducialPoseEstimator.IO[] visionIOs) {
-    this.swerveIO = driveIO;
+    swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
     inputs = new SwerveIO.SwerveIOInputs();
     driveIO.updateInputs(inputs);
@@ -94,12 +91,11 @@ public class Swerve extends SubsystemBase {
                   -CONSTANTS.TRACK_LENGTH_METERS / 2, -CONSTANTS.TRACK_WIDTH_METERS / 2)
             },
             CONSTANTS.DRIVE_MOTOR,
-            CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS,
+            CONSTANTS.SLIP_CURRENT_AMPS,
             CONSTANTS.MAX_STEER_SPEEDS_RAD_PER_SEC,
             CONSTANTS.MASS_KG,
             CONSTANTS.MOI_KG_METERS_SQUARED,
-            CONSTANTS.WHEEL_DIAMETER_METERS,
-            CONSTANTS.WHEEL_COF);
+            CONSTANTS.WHEEL_DIAMETER_METERS);
     stopInXAngles =
         new Rotation2d[] {
           new Rotation2d(CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2),
@@ -269,8 +265,6 @@ public class Swerve extends SubsystemBase {
     };
   }
 
-  private double accelLimitMpss = -1;
-
   public Command teleopDrive(
       Supplier<Translation2d> translationalControlSupplier,
       DoubleSupplier omegaSupplier,
@@ -285,27 +279,6 @@ public class Swerve extends SubsystemBase {
                       translationalControl.getY() * maxLinearSpeedMetersPerSec,
                       omegaSupplier.getAsDouble() * maxAngularSpeedRadPerSec),
                   inputs.gyroYaw);
-
-          if (accelLimitMpss > 0) {
-            double desiredAccelXMpss =
-                (commandedRobotSpeeds.vxMetersPerSecond
-                        - lastSetpoint.chassisSpeeds().vxMetersPerSecond)
-                    / Robot.defaultPeriodSecs;
-            double desiredAccelYMpss =
-                (commandedRobotSpeeds.vyMetersPerSecond
-                        - lastSetpoint.chassisSpeeds().vyMetersPerSecond)
-                    / Robot.defaultPeriodSecs;
-            double desiredAccelMpss = Math.hypot(desiredAccelXMpss, desiredAccelYMpss);
-            if (desiredAccelMpss > accelLimitMpss) {
-              var accelDirRad = Math.atan2(desiredAccelYMpss, desiredAccelXMpss);
-              commandedRobotSpeeds.vxMetersPerSecond =
-                  lastSetpoint.chassisSpeeds().vxMetersPerSecond
-                      + Math.cos(accelDirRad) * accelLimitMpss * Robot.defaultPeriodSecs;
-              commandedRobotSpeeds.vyMetersPerSecond =
-                  lastSetpoint.chassisSpeeds().vyMetersPerSecond
-                      + Math.sin(accelDirRad) * accelLimitMpss * Robot.defaultPeriodSecs;
-            }
-          }
 
           commandedRobotSpeeds.omegaRadiansPerSecond *=
               1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
@@ -560,50 +533,33 @@ public class Swerve extends SubsystemBase {
     return branches[reefWall * 2 + (left ? 0 : 1)];
   }
 
-  /**
-   * Runs SysID for characterizing the drivebase.
-   *
-   * <p>Moment of inertia can be estimated using the following equation:
-   *
-   * <p>{@code I = mass * drivebaseRadius * kA_angular / kA_linear}
-   *
-   * <p>The above formula is from <a
-   * href="https://choreo.autos/usage/estimating-moi/">https://choreo.autos/usage/estimating-moi/</a>
-   *
-   * @param linear Whether the routine should be characterizing linear or angular dynamics.
-   */
-  public Command driveCharacterize(boolean linear) {
-    var states =
-        setpointGenerator
-            .getKinematics()
-            .toSwerveModuleStates(linear ? new ChassisSpeeds(1, 0, 0) : new ChassisSpeeds(0, 0, 1));
-    Rotation2d[] angles = new Rotation2d[4];
-    for (int i = 0; i < 4; i++) {
-      angles[i] = states[i].angle;
-    }
+  public Command testSlipCurrent() {
+    var timer = new Timer();
 
-    var sysId =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(10).per(Second),
-                Volts.of(20),
-                Seconds.of(4),
-                state -> SignalLogger.writeString("SysIDState", state.toString())),
-            new SysIdRoutine.Mechanism(
-                voltage -> swerveIO.driveCharacterization(voltage.baseUnitMagnitude(), angles),
-                null,
-                this));
-
-    return sequence(
-        runOnce(swerveIO::initSysId),
-        run(() -> swerveIO.driveCharacterization(0, angles)).withTimeout(1),
-        sysId.quasistatic(SysIdRoutine.Direction.kForward),
-        waitSeconds(1),
-        sysId.quasistatic(SysIdRoutine.Direction.kReverse),
-        waitSeconds(1),
-        sysId.dynamic(SysIdRoutine.Direction.kForward),
-        waitSeconds(1),
-        sysId.dynamic(SysIdRoutine.Direction.kReverse));
+    return runOnce(timer::restart)
+        .andThen(
+            run(() -> swerveIO.testSlipCurrent(Math.max(timer.get() - 1, 0) * 5))
+                .until(
+                    () -> {
+                      for (int i = 0; i < 4; i++) {
+                        if (Math.abs(inputs.moduleStates[i].speedMetersPerSecond) > 1) {
+                          System.out.println(
+                              "Current slip detected at "
+                                  + (Math.max(timer.get() - 1, 0) * 5)
+                                  + "amps");
+                          return true;
+                        }
+                      }
+                      return false;
+                    }))
+        .finallyDo(
+            () ->
+                lastSetpoint =
+                    new SwerveSetpoint(
+                        getRobotChassisSpeeds(),
+                        inputs.moduleStates,
+                        new double[4],
+                        new double[4]));
   }
 
   private ChassisSpeeds getRobotChassisSpeeds() {

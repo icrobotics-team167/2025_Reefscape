@@ -57,7 +57,6 @@ public class SwerveIOPhoenix implements SwerveIO {
     CONSTANTS.TRACK_LENGTH_METERS = Constants.FRAME_LENGTH_METERS - Units.inchesToMeters(2.625 * 2);
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
-    CONSTANTS.WHEEL_COF = 1.5;
 
     DRIVE_GEAR_RATIO = (50.0 / 16.0) * (19.0 / 25.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
@@ -88,16 +87,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     CONSTANTS.ANGULAR_SPEED_FUDGING = .75;
 
-    CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS =
-        Math.min(
-            (int)
-                Math.round(
-                    CONSTANTS.DRIVE_MOTOR.getCurrent(
-                        CONSTANTS.WHEEL_COF
-                            * ((CONSTANTS.MASS_KG / 4) * 9.81)
-                            * CONSTANTS.WHEEL_DIAMETER_METERS
-                            / 2)),
-            90);
+    CONSTANTS.SLIP_CURRENT_AMPS = 120;
   }
 
   private final Module[] modules = new Module[4];
@@ -214,26 +204,9 @@ public class SwerveIOPhoenix implements SwerveIO {
   }
 
   @Override
-  public void initSysId() {
-    var signalsToSpeedUp = new BaseStatusSignal[8];
-    for (int i = 0; i < 4; i++) {
-      signalsToSpeedUp[i * 2] = modules[i].steerMotor.getPosition(false);
-      signalsToSpeedUp[i * 2 + 1] = signals[i * 8 + 2];
-    }
-    BaseStatusSignal.setUpdateFrequencyForAll(250, signalsToSpeedUp);
-  }
-
-  @Override
-  public void steerCharacterization(double volts) {
+  public void testSlipCurrent(double amps) {
     for (var module : modules) {
-      module.steerCharacterize(volts);
-    }
-  }
-
-  @Override
-  public void driveCharacterization(double amps, Rotation2d[] angles) {
-    for (int i = 0; i < 4; i++) {
-      modules[i].driveCharacterize(amps, angles[i]);
+      module.testSlipCurrent(amps);
     }
   }
 
@@ -260,7 +233,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       var driveConfig = new TalonFXConfiguration();
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-      driveConfig.CurrentLimits.StatorCurrentLimit = CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS + 10;
+      driveConfig.CurrentLimits.StatorCurrentLimit = CONSTANTS.SLIP_CURRENT_AMPS + 10;
       driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
       driveConfig.Audio.AllowMusicDurDisable = true;
 
@@ -340,22 +313,11 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerMotor.setControl(steerControlRequest.withPosition(angle.getRotations()));
     }
 
-    private final VoltageOut steerCharacterization = new VoltageOut(0).withEnableFOC(false);
-
-    void steerCharacterize(double volts) {
-      driveMotor.setControl(brakeControlRequest);
-      steerMotor.setControl(steerCharacterization.withOutput(volts));
-    }
-
     private final TorqueCurrentFOC driveCharacterization = new TorqueCurrentFOC(0);
 
-    void driveCharacterize(double amps, Rotation2d angle) {
-      if (MathUtil.isNear(0, amps, 1e-2)) {
-        driveMotor.setControl(brakeControlRequest);
-      } else {
-        driveMotor.setControl(driveCharacterization.withOutput(amps));
-      }
-      steerMotor.setControl(steerControlRequest.withPosition(angle.getRotations()));
+    void testSlipCurrent(double amps) {
+      steerMotor.setControl(steerControlRequest.withPosition(0));
+      driveMotor.setControl(driveCharacterization.withOutput(amps));
     }
 
     SwerveModulePosition getPosition() {

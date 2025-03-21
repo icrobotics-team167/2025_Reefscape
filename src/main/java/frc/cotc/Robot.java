@@ -155,6 +155,8 @@ public class Robot extends LoggedRobot {
     primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
     //    primary.povUp().onTrue(superstructure.readyClimb());
 
+    //    primary.b().whileTrue(swerve.testSlipCurrent());
+
     secondary
         .y()
         .whileTrue(
