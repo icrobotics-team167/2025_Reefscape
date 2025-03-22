@@ -140,9 +140,9 @@ public class Robot extends LoggedRobot {
     var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
     var algaePivot =
-        new AlgaePivot(Robot.isReal() ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
+        new AlgaePivot(Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
     var algaeIntake =
-        new AlgaeIntake(Robot.isReal() ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
+        new AlgaeIntake(Robot.isReal() && isNewBot ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
