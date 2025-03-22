@@ -409,7 +409,7 @@ class SwerveSetpointGenerator {
         overrideSteering.add(Optional.of(prevSetpoint.moduleStates()[i].angle));
         continue;
       }
-      double max_theta_step = dt * maxSteerSpeedRadPerSec[i];
+      double max_theta_step = dt * maxSteerSpeedRadPerSec[i] * .8; // 80% max for control headroom
       overrideSteering.add(Optional.empty());
       if (epsilonEquals(prevSetpoint.moduleStates()[i].speedMetersPerSecond, 0.0)) {
         // If module is stopped, we know that we will need to move straight to the final steering

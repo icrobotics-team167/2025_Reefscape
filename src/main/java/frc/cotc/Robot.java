@@ -58,6 +58,8 @@ public class Robot extends LoggedRobot {
     REPLAY
   }
 
+  public static boolean isNewBot;
+
   @SuppressWarnings({"DataFlowIssue", "UnreachableCode", "ConstantValue"})
   public Robot() {
     // If this is erroring, hit build
@@ -73,6 +75,20 @@ public class Robot extends LoggedRobot {
     Mode mode = Robot.isReal() ? Mode.REAL : Mode.SIM;
     //    Mode mode = Robot.isReal() ? Mode.REAL : Mode.REPLAY;
 
+    var newBotLogger =
+        new LoggableInputs() {
+          boolean isNewBot;
+
+          @Override
+          public void toLog(LogTable table) {
+            table.put("isNewBot", isNewBot);
+          }
+
+          @Override
+          public void fromLog(LogTable table) {
+            isNewBot = table.get("isNewBot", true);
+          }
+        };
     switch (mode) {
       case REAL -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
@@ -80,12 +96,16 @@ public class Robot extends LoggedRobot {
         LoggedPowerDistribution.getInstance(); // Enables power distribution logging
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
+        newBotLogger.isNewBot = RobotController.getSerialNumber().equals("TODO: Enter");
+        Logger.processInputs("Robot", newBotLogger);
       }
       case SIM -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to the project's logs folder
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
+        newBotLogger.isNewBot = true;
+        Logger.processInputs("Robot", newBotLogger);
       }
       case REPLAY -> {
         setUseTiming(false); // Run as fast as possible
@@ -104,8 +124,11 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(
             new WPILOGWriter(
                 LogFileUtil.addPathSuffix(logPath, "_replay"))); // Save outputs to a new log
+        Logger.processInputs("Robot", newBotLogger);
       }
     }
+    isNewBot = newBotLogger.isNewBot;
+    Logger.recordMetadata("Is New Bot?", isNewBot ? "True" : "False");
 
     Logger.start();
 
@@ -283,29 +306,31 @@ public class Robot extends LoggedRobot {
 
     switch (mode) {
       case REAL, SIM -> {
+        var cameraPrefix = Robot.isReal() && !isNewBot ? "" : "New";
+
         swerveIO = new SwerveIOPhoenix();
         visionIOs =
             new FiducialPoseEstimator.IO[] {
               new FiducialPoseEstimator.IO(
                   new FiducialPoseEstimatorIOPhoton(
-                      "FrontLeft",
+                      cameraPrefix + "FrontLeft",
                       new Transform3d(
                           Units.inchesToMeters(22.75 / 2),
                           Units.inchesToMeters(22.75 / 2),
                           Units.inchesToMeters(8.25),
                           new Rotation3d(
                               0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
-                  "FrontLeft"),
+                  cameraPrefix + "FrontLeft"),
               new FiducialPoseEstimator.IO(
                   new FiducialPoseEstimatorIOPhoton(
-                      "FrontRight",
+                      cameraPrefix + "FrontRight",
                       new Transform3d(
                           Units.inchesToMeters(22.75 / 2),
                           -Units.inchesToMeters(22.75 / 2),
                           Units.inchesToMeters(8.25),
                           new Rotation3d(
                               0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                  "FrontRight")
+                  cameraPrefix + "FrontRight")
             };
 
         cameraNames.names = new String[visionIOs.length];
@@ -331,8 +356,10 @@ public class Robot extends LoggedRobot {
   private Superstructure getSuperstructure(Mode mode) {
     switch (mode) {
       case REAL -> {
-        return new Superstructure(
-            new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix());
+        return isNewBot
+            ? new Superstructure(
+                new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix())
+            : new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
       }
       case SIM -> {
         return new Superstructure(
