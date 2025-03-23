@@ -492,8 +492,10 @@ public class Swerve extends SubsystemBase {
                     if (Robot.isOnRed()) {
                       nudge = nudge.unaryMinus();
                     }
-                    outputFieldRelative.vxMetersPerSecond += nudge.getX();
-                    outputFieldRelative.vyMetersPerSecond += nudge.getY();
+
+                    var nudgeScalar = .5;
+                    outputFieldRelative.vxMetersPerSecond += nudge.getX() * nudgeScalar;
+                    outputFieldRelative.vyMetersPerSecond += nudge.getY() * nudgeScalar;
                   }
 
                   var outputRobotRelative =
