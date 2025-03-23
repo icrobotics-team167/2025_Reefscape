@@ -14,6 +14,7 @@ import static java.lang.Math.PI;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
@@ -198,6 +199,12 @@ public class Swerve extends SubsystemBase {
                 poseEstimate.yawStdDevs()
               });
         }
+      }
+      var robotPose3d = new Pose3d(poseEstimator.getEstimatedPosition());
+      for (var fiducialPoseEstimator : fiducialPoseEstimators) {
+        Logger.recordOutput(
+            "Vision/" + fiducialPoseEstimator.name + "/cameraPose",
+            robotPose3d.plus(fiducialPoseEstimator.robotToCameraTransform));
       }
     } else {
       poseReset = false;

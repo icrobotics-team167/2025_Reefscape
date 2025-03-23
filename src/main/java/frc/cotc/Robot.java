@@ -140,9 +140,11 @@ public class Robot extends LoggedRobot {
     var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
     var algaePivot =
-        new AlgaePivot(Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
+        new AlgaePivot(
+            Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
     var algaeIntake =
-        new AlgaeIntake(Robot.isReal() && isNewBot ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
+        new AlgaeIntake(
+            Robot.isReal() && isNewBot ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -306,32 +308,57 @@ public class Robot extends LoggedRobot {
 
     switch (mode) {
       case REAL, SIM -> {
-        var cameraPrefix = Robot.isReal() && !isNewBot ? "" : "New";
-
         swerveIO = new SwerveIOPhoenix();
-        visionIOs =
-            new FiducialPoseEstimator.IO[] {
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      cameraPrefix + "FrontLeft",
-                      new Transform3d(
-                          Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
-                  cameraPrefix + "FrontLeft"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      cameraPrefix + "FrontRight",
-                      new Transform3d(
-                          Units.inchesToMeters(22.75 / 2),
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                  cameraPrefix + "FrontRight")
-            };
+
+        if (isNewBot || Robot.isSimulation()) {
+          visionIOs =
+              new FiducialPoseEstimator.IO[] {
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "NewFrontLeft",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2 - 1.5),
+                            Units.inchesToMeters(22.75 / 2 + .125),
+                            Units.inchesToMeters(8.375),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
+                    "NewFrontLeft"),
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "NewFrontRight",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2 - 1.5),
+                            -Units.inchesToMeters(22.75 / 2 + .125),
+                            Units.inchesToMeters(8.375),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
+                    "NewFrontRight")
+              };
+        } else {
+          visionIOs =
+              new FiducialPoseEstimator.IO[] {
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "FrontLeft",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2),
+                            Units.inchesToMeters(22.75 / 2),
+                            Units.inchesToMeters(8.25),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
+                    "FrontLeft"),
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "FrontRight",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2),
+                            -Units.inchesToMeters(22.75 / 2),
+                            Units.inchesToMeters(8.25),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
+                    "FrontRight")
+              };
+        }
 
         cameraNames.names = new String[visionIOs.length];
         for (int i = 0; i < visionIOs.length; i++) {
