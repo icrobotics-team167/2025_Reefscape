@@ -32,6 +32,7 @@ import frc.cotc.Robot;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
+import java.util.Arrays;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -567,6 +568,20 @@ public class Swerve extends SubsystemBase {
                         inputs.moduleStates,
                         new double[4],
                         new double[4]));
+  }
+
+  public Command lockForward() {
+    var angles = new Rotation2d[4];
+    Arrays.fill(angles, Rotation2d.kZero);
+
+    return run(() -> swerveIO.stop(angles));
+  }
+
+  public Command lockSideways() {
+    var angles = new Rotation2d[4];
+    Arrays.fill(angles, Rotation2d.kPi);
+
+    return run(() -> swerveIO.stop(angles));
   }
 
   private ChassisSpeeds getRobotChassisSpeeds() {

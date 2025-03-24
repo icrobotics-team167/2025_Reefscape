@@ -291,8 +291,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       } else {
         driveConfig.Slot0.kP = 10;
 
-        steerConfig.Slot0.kP = 400;
-        steerConfig.Slot0.kD = 1.5;
+        steerConfig.Slot0.kP = 350;
+        steerConfig.Slot0.kD = 2;
       }
 
       driveMotor.getConfigurator().apply(driveConfig);

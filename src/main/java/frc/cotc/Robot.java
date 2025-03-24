@@ -181,6 +181,7 @@ public class Robot extends LoggedRobot {
     //    primary.povUp().onTrue(superstructure.readyClimb());
 
     //    primary.b().whileTrue(swerve.testSlipCurrent());
+    //    primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockSideways());
 
     secondary
         .y()
