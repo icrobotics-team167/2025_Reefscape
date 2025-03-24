@@ -19,6 +19,7 @@ public class Superstructure extends Mechanism {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
   private final Ramp ramp;
+  private final Climber climber;
 
   public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO) {
     elevator = new Elevator(elevatorIO);
@@ -81,8 +82,18 @@ public class Superstructure extends Mechanism {
     return expose(elevator.net());
   }
 
+  private boolean climberDeployed = false;
+
+  public boolean isClimberDeployed() {
+    return climberDeployed;
+  }
   public Command readyClimb() {
-    return expose(ramp.raise());
+    return expose(runOnce(() -> climberDeployed = true).andThen(parallel(ramp.raise(),
+      climber.deploy())));
+  }
+
+  public Command climb() {
+    return expose(climber.climb());
   }
 
   public Trigger coralStuck() {
