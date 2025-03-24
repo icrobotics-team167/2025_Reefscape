@@ -87,9 +87,10 @@ public class Superstructure extends Mechanism {
   public boolean isClimberDeployed() {
     return climberDeployed;
   }
+
   public Command readyClimb() {
-    return expose(runOnce(() -> climberDeployed = true).andThen(parallel(ramp.raise(),
-      climber.deploy())));
+    return expose(
+        runOnce(() -> climberDeployed = true).andThen(parallel(ramp.raise(), climber.deploy())));
   }
 
   public Command climb() {
