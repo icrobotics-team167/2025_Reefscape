@@ -34,6 +34,8 @@ import frc.cotc.Robot;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -190,18 +192,29 @@ public class Swerve extends SubsystemBase {
         yawBuffer.addSample(frame.timestamp(), frame.gyroYaw());
         lastTimestamp = frame.timestamp();
       }
+
+      var poseEstimates = new FiducialPoseEstimator.PoseEstimate[0];
       for (var fiducialPoseEstimator : fiducialPoseEstimators) {
-        var poseEstimates = fiducialPoseEstimator.poll();
-        for (var poseEstimate : poseEstimates) {
-          poseEstimator.addVisionMeasurement(
-              poseEstimate.pose(),
-              poseEstimate.timestamp(),
-              new double[] {
-                poseEstimate.translationalStdDevs(),
-                poseEstimate.translationalStdDevs(),
-                poseEstimate.yawStdDevs()
-              });
-        }
+        var polledEstimates = fiducialPoseEstimator.poll();
+
+        var newSignals =
+            new FiducialPoseEstimator.PoseEstimate[poseEstimates.length + polledEstimates.length];
+        System.arraycopy(poseEstimates, 0, newSignals, 0, poseEstimates.length);
+        System.arraycopy(
+            polledEstimates, 0, newSignals, poseEstimates.length, polledEstimates.length);
+        poseEstimates = newSignals;
+      }
+      Arrays.sort(
+          poseEstimates, Comparator.comparingDouble(FiducialPoseEstimator.PoseEstimate::timestamp));
+      for (var poseEstimate : poseEstimates) {
+        poseEstimator.addVisionMeasurement(
+            poseEstimate.pose(),
+            poseEstimate.timestamp(),
+            new double[] {
+              poseEstimate.translationalStdDevs(),
+              poseEstimate.translationalStdDevs(),
+              poseEstimate.yawStdDevs()
+            });
       }
     } else {
       poseReset = false;
