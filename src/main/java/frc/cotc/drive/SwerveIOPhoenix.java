@@ -269,10 +269,10 @@ public class SwerveIOPhoenix implements SwerveIO {
           steerConfig.Slot0.kD = 0.1;
 
           switch (id) {
-            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0;
-            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0;
-            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = 0;
-            case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0;
+            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.414794921875;
+            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.21630859375;
+            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = 0.48974609375;
+            case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.443359375;
           }
         } else {
           driveConfig.Slot0.kV = 2.25;
