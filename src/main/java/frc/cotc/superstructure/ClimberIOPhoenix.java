@@ -28,8 +28,8 @@ public class ClimberIOPhoenix implements ClimberIO {
 
   public ClimberIOPhoenix() {
     // TODO: Set IDs
-    var encoder = new CANcoder(-1, Robot.CANIVORE_NAME);
-    motor = new TalonFX(-1, Robot.CANIVORE_NAME);
+    var encoder = new CANcoder(12, Robot.CANIVORE_NAME);
+    motor = new TalonFX(16, Robot.CANIVORE_NAME);
 
     var encoderConfig = new CANcoderConfiguration();
     encoderConfig.MagnetSensor.MagnetOffset = 0; // TODO: Set
