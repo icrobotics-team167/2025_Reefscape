@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.superstructure;
+package frc.cotc.algae;
 
 import frc.cotc.util.MotorCurrentDraws;
 import org.littletonrobotics.junction.LogTable;
