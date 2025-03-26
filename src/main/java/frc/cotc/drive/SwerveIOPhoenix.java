@@ -265,8 +265,16 @@ public class SwerveIOPhoenix implements SwerveIO {
           driveConfig.Slot0.kV = 0;
           driveConfig.Slot0.kP = 1;
 
-          steerConfig.Slot0.kP = 80;
-          steerConfig.Slot0.kD = 0.1;
+          switch (id) {
+            case 0, 1 -> {
+              steerConfig.Slot0.kP = 80;
+              steerConfig.Slot0.kD = 0.1;
+            }
+            case 2, 3 -> {
+              steerConfig.Slot0.kP = 80;
+              steerConfig.Slot0.kD = 0.1;
+            }
+          }
 
           switch (id) {
             case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.414794921875;
