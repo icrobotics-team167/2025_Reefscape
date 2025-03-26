@@ -68,6 +68,11 @@ public class ClimberIOPhoenix implements ClimberIO {
   }
 
   @Override
+  public void stop() {
+    motor.stopMotor();
+  }
+
+  @Override
   public void deploy() {
     motor.setVoltage(-5);
   }

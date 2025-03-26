@@ -20,6 +20,8 @@ public interface ClimberIO {
 
   default void updateInputs(ClimberIOInputs inputs) {}
 
+  default void stop() {}
+
   default void deploy() {}
 
   default void climb() {}
