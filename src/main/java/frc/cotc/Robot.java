@@ -151,9 +151,13 @@ public class Robot extends LoggedRobot {
               return Math.copySign(rawInput * rawInput, rawInput);
             },
             primary.leftBumper()));
-    primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
-    primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
-    primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
+    primary
+        .leftTrigger()
+        .whileTrue(swerve.reefBranchAlign(true, driveTranslationalControlSupplier));
+    primary
+        .rightTrigger()
+        .whileTrue(swerve.reefBranchAlign(false, driveTranslationalControlSupplier));
+    primary.rightBumper().whileTrue(swerve.reefAlgaeAlign(driveTranslationalControlSupplier));
     //    primary.povUp().onTrue(superstructure.readyClimb());
 
     secondary
