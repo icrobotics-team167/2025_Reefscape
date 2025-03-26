@@ -97,6 +97,10 @@ public class Superstructure extends Mechanism {
     return expose(climber.climb());
   }
 
+  public Command raiseClimber() {
+    return expose(climber.deploy());
+  }
+
   public Trigger coralStuck() {
     return new Trigger(coralOuttake::coralStuck);
   }
