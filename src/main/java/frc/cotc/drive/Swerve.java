@@ -282,6 +282,12 @@ public class Swerve extends SubsystemBase {
     };
   }
 
+  private void drive(ChassisSpeeds speeds) {
+    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, speeds);
+    swerveIO.drive(setpoint);
+    lastSetpoint = setpoint;
+  }
+
   private double accelLimitMpss = -1;
 
   public Command teleopDrive(
@@ -327,9 +333,7 @@ public class Swerve extends SubsystemBase {
             commandedRobotSpeeds = commandedRobotSpeeds.times(.3);
           }
 
-          var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
-          swerveIO.drive(setpoint);
-          lastSetpoint = setpoint;
+          drive(commandedRobotSpeeds);
         })
         .withName("Teleop Drive");
   }
@@ -375,9 +379,7 @@ public class Swerve extends SubsystemBase {
     var outputRobotRelative =
         ChassisSpeeds.fromFieldRelativeSpeeds(outputFieldRelative, new Rotation2d(sample.heading));
 
-    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
-    swerveIO.drive(setpoint);
-    lastSetpoint = setpoint;
+    drive(outputRobotRelative);
   }
 
   private Pose2d targetPose;
@@ -418,38 +420,43 @@ public class Swerve extends SubsystemBase {
     return error.getTranslation().getNorm() < 1 && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
-  public Command sourceAlign(Supplier<Translation2d> translationalControlSupplier) {
-    return runOnce(yawController::reset)
-        .andThen(
-            run(
-                () -> {
-                  var targetAngle = Units.degreesToRadians(54);
-                  if (Robot.isOnRed()) {
-                    targetAngle = PI - targetAngle;
-                  }
-                  if (poseEstimator.getEstimatedPosition().getY()
-                      > Constants.FIELD_WIDTH_METERS / 2) {
-                    targetAngle *= -1;
-                  }
+  public Command netAlign(Supplier<Translation2d> translationalControlSupplier) {
+    return runOnce(
+      () -> {
+        xController.reset();
+        yawController.reset();
+      })
+      .andThen(
+        run(
+          () -> {
+            var targetX = 7.45;
+            if (Robot.isOnRed()) {
+              targetX = Constants.FIELD_LENGTH_METERS - targetX;
+            }
 
-                  var translationalControl = translationalControlSupplier.get();
+            var xOutput =
+              xController.calculate(poseEstimator.getEstimatedPosition().getX(), targetX);
+            var yawOutput =
+              yawController.calculate(
+                poseEstimator.getEstimatedPosition().getRotation().getRadians(),
+                Robot.isOnRed() ? 0 : PI);
 
-                  var commandedRobotSpeeds =
-                      ChassisSpeeds.fromFieldRelativeSpeeds(
-                          new ChassisSpeeds(
-                              translationalControl.getX() * maxLinearSpeedMetersPerSec,
-                              translationalControl.getY() * maxLinearSpeedMetersPerSec,
-                              yawController.calculate(
-                                  poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-                                  targetAngle)),
-                          inputs.gyroYaw);
+            var driverInput =
+              Robot.isOnRed()
+                ? translationalControlSupplier.get().unaryMinus()
+                : translationalControlSupplier.get();
+            var outputFieldRelative =
+              new ChassisSpeeds(
+                xOutput + driverInput.getX() * maxLinearSpeedMetersPerSec * .5,
+                driverInput.getY() * maxLinearSpeedMetersPerSec * .5,
+                yawOutput);
+            Logger.recordOutput("Swerve/Net align/Output", outputFieldRelative);
 
-                  var setpoint =
-                      setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
-                  swerveIO.drive(setpoint);
-                  lastSetpoint = setpoint;
-                }))
-        .withName("SourceAlign");
+            drive(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation()));
+          }))
+      .withName("Net Align");
   }
 
   public Command followRepulsorField(Pose2d goal) {
@@ -515,10 +522,7 @@ public class Swerve extends SubsystemBase {
                       ChassisSpeeds.fromFieldRelativeSpeeds(
                           outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation());
 
-                  var setpoint =
-                      setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
-                  swerveIO.drive(setpoint);
-                  lastSetpoint = setpoint;
+                  drive(outputRobotRelative);
                 }))
         .withName("Repulsor Field");
   }
