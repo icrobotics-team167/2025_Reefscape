@@ -14,7 +14,9 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.util.Units;
 import frc.cotc.Robot;
 import frc.cotc.util.PhoenixBatchRefresher;
@@ -27,22 +29,23 @@ public class ClimberIOPhoenix implements ClimberIO {
   private final BaseStatusSignal supplyCurrentSignal;
 
   public ClimberIOPhoenix() {
-    // TODO: Set IDs
     var encoder = new CANcoder(12, Robot.CANIVORE_NAME);
     motor = new TalonFX(16, Robot.CANIVORE_NAME);
 
     var encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.MagnetOffset = 0; // TODO: Set
+    encoderConfig.MagnetSensor.MagnetOffset = -0.244140625;
+    encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     encoder.getConfigurator().apply(encoderConfig);
 
     var motorConfig = new TalonFXConfiguration();
     motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
-    motorConfig.Feedback.FeedbackRemoteSensorID = 0;
+    motorConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.25;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = false;
     motor.getConfigurator().apply(motorConfig);
