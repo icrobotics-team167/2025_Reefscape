@@ -591,7 +591,7 @@ public class Swerve extends SubsystemBase {
     return run(() -> swerveIO.stop(angles));
   }
 
-  public Command lockSideways() {
+  public Command lockBackwards() {
     var angles = new Rotation2d[4];
     Arrays.fill(angles, Rotation2d.kPi);
 
