@@ -280,6 +280,14 @@ public class Swerve extends SubsystemBase {
     };
   }
 
+  private void drive(ChassisSpeeds speeds) {
+    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, speeds);
+    swerveIO.drive(setpoint);
+    lastSetpoint = setpoint;
+  }
+
+  private double accelLimitMpss = -1;
+
   public Command teleopDrive(
       Supplier<Translation2d> translationalControlSupplier,
       DoubleSupplier omegaSupplier,
@@ -302,9 +310,7 @@ public class Swerve extends SubsystemBase {
             commandedRobotSpeeds = commandedRobotSpeeds.times(.3);
           }
 
-          var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
-          swerveIO.drive(setpoint);
-          lastSetpoint = setpoint;
+          drive(commandedRobotSpeeds);
         })
         .withName("Teleop Drive");
   }
@@ -350,9 +356,7 @@ public class Swerve extends SubsystemBase {
     var outputRobotRelative =
         ChassisSpeeds.fromFieldRelativeSpeeds(outputFieldRelative, new Rotation2d(sample.heading));
 
-    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
-    swerveIO.drive(setpoint);
-    lastSetpoint = setpoint;
+    drive(outputRobotRelative);
   }
 
   private Pose2d targetPose;
@@ -393,57 +397,63 @@ public class Swerve extends SubsystemBase {
     return error.getTranslation().getNorm() < 1 && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
-  public Command sourceAlign(Supplier<Translation2d> translationalControlSupplier) {
-    return runOnce(yawController::reset)
+  public Command netAlign(Supplier<Translation2d> translationalControlSupplier) {
+    return runOnce(
+            () -> {
+              xController.reset();
+              yawController.reset();
+            })
         .andThen(
             run(
                 () -> {
-                  var targetAngle = Units.degreesToRadians(54);
+                  var targetX = 7.45;
                   if (Robot.isOnRed()) {
-                    targetAngle = PI - targetAngle;
-                  }
-                  if (poseEstimator.getEstimatedPosition().getY()
-                      > Constants.FIELD_WIDTH_METERS / 2) {
-                    targetAngle *= -1;
+                    targetX = Constants.FIELD_LENGTH_METERS - targetX;
                   }
 
-                  var translationalControl = translationalControlSupplier.get();
+                  var xOutput =
+                      xController.calculate(poseEstimator.getEstimatedPosition().getX(), targetX);
+                  var yawOutput =
+                      yawController.calculate(
+                          poseEstimator.getEstimatedPosition().getRotation().getRadians(),
+                          Robot.isOnRed() ? 0 : PI);
 
-                  var commandedRobotSpeeds =
+                  var driverInput =
+                      Robot.isOnRed()
+                          ? translationalControlSupplier.get().unaryMinus()
+                          : translationalControlSupplier.get();
+                  var outputFieldRelative =
+                      new ChassisSpeeds(
+                          xOutput + driverInput.getX() * maxLinearSpeedMetersPerSec * .5,
+                          driverInput.getY() * maxLinearSpeedMetersPerSec * .5,
+                          yawOutput);
+                  Logger.recordOutput("Swerve/Net align/Output", outputFieldRelative);
+
+                  drive(
                       ChassisSpeeds.fromFieldRelativeSpeeds(
-                          new ChassisSpeeds(
-                              translationalControl.getX() * maxLinearSpeedMetersPerSec,
-                              translationalControl.getY() * maxLinearSpeedMetersPerSec,
-                              yawController.calculate(
-                                  poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-                                  targetAngle)),
-                          inputs.gyroYaw);
-
-                  var setpoint =
-                      setpointGenerator.generateSetpoint(lastSetpoint, commandedRobotSpeeds);
-                  swerveIO.drive(setpoint);
-                  lastSetpoint = setpoint;
+                          outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation()));
                 }))
-        .withName("SourceAlign");
+        .withName("Net Align");
   }
 
   public Command followRepulsorField(Pose2d goal) {
-    return followRepulsorField(goal, null);
+    return followRepulsorField(() -> goal, null);
   }
 
-  public Command followRepulsorField(Pose2d goal, Supplier<Translation2d> nudgeSupplier) {
+  private Command followRepulsorField(
+      Supplier<Pose2d> goal, Supplier<Translation2d> nudgeSupplier) {
     return sequence(
             runOnce(
                 () -> {
-                  repulsorFieldPlanner.setGoal(goal.getTranslation());
+                  targetPose = goal.get();
+                  repulsorFieldPlanner.setGoal(targetPose.getTranslation());
                   xController.reset();
                   yController.reset();
                   yawController.reset();
-                  targetPose = goal;
                 }),
             run(
                 () -> {
-                  Logger.recordOutput("Repulsor/Goal", goal);
+                  Logger.recordOutput("Repulsor/Goal", targetPose);
 
                   var sample =
                       repulsorFieldPlanner.sampleField(
@@ -462,9 +472,9 @@ public class Swerve extends SubsystemBase {
                               sample.intermediateGoal().getY()),
                           yawController.calculate(
                               poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-                              goal.getRotation().getRadians()));
+                              targetPose.getRotation().getRadians()));
 
-                  var error = goal.minus(poseEstimator.getEstimatedPosition());
+                  var error = targetPose.minus(poseEstimator.getEstimatedPosition());
                   Logger.recordOutput("Repulsor/Error", error);
                   Logger.recordOutput("Repulsor/Feedforward", feedforward);
                   Logger.recordOutput("Repulsor/Feedback", feedback);
@@ -476,78 +486,113 @@ public class Swerve extends SubsystemBase {
 
                   if (nudgeSupplier != null) {
                     var nudge = nudgeSupplier.get();
+                    if (nudge.getNorm() > .1) {
+                      var nudgeScalar =
+                          Math.min(error.getTranslation().getNorm() / 3, 1)
+                              * Math.min(error.getTranslation().getNorm() / 3, 1)
+                              * maxLinearSpeedMetersPerSec;
 
-                    if (Robot.isOnRed()) {
-                      nudge = nudge.unaryMinus();
+                      if (Robot.isOnRed()) {
+                        nudge = new Translation2d(-nudge.getX(), -nudge.getY());
+                      }
+                      nudgeScalar *=
+                          Math.abs(
+                              nudge
+                                  .getAngle()
+                                  .minus(
+                                      new Rotation2d(
+                                          outputFieldRelative.vxMetersPerSecond,
+                                          outputFieldRelative.vyMetersPerSecond))
+                                  .getSin());
+                      outputFieldRelative.vxMetersPerSecond += nudge.getX() * nudgeScalar;
+                      outputFieldRelative.vyMetersPerSecond += nudge.getY() * nudgeScalar;
                     }
-
-                    var nudgeScalar = .5;
-                    outputFieldRelative.vxMetersPerSecond += nudge.getX() * nudgeScalar;
-                    outputFieldRelative.vyMetersPerSecond += nudge.getY() * nudgeScalar;
                   }
 
                   var outputRobotRelative =
                       ChassisSpeeds.fromFieldRelativeSpeeds(
                           outputFieldRelative, poseEstimator.getEstimatedPosition().getRotation());
 
-                  var setpoint =
-                      setpointGenerator.generateSetpoint(lastSetpoint, outputRobotRelative);
-                  swerveIO.drive(setpoint);
-                  lastSetpoint = setpoint;
+                  drive(outputRobotRelative);
                 }))
         .withName("Repulsor Field");
   }
 
-  public Command reefAlign(boolean left, Supplier<Translation2d> nudgeSupplier) {
-    return defer(
-            () -> {
-              int bestBranch = 0;
-              double bestScore = Double.POSITIVE_INFINITY;
-              for (int i = 0; i < 6; i++) {
-                var branchLocation = getBranchPose(i, left).getTranslation();
-
-                var robotToBranchVector =
-                    branchLocation.minus(poseEstimator.getEstimatedPosition().getTranslation());
-
-                var branchDistanceScore = robotToBranchVector.getNorm();
-
-                var driverControlVector = nudgeSupplier.get();
-                if (Robot.isOnRed()) {
-                  driverControlVector =
-                      new Translation2d(-driverControlVector.getX(), -driverControlVector.getY());
-                }
-
-                double driverInputScore;
-                if (driverControlVector.getNorm() < .1) {
-                  driverInputScore = 0;
-                } else {
-                  var robotToBranchAngle = robotToBranchVector.getAngle();
-                  var driverControlAngle = driverControlVector.getAngle();
-
-                  driverInputScore = driverControlAngle.minus(robotToBranchAngle).getCos() * 2;
-                }
-
-                Logger.recordOutput(
-                    "Swerve/Reef Align/Branch " + i + "/Distance score", branchDistanceScore);
-                Logger.recordOutput(
-                    "Swerve/Reef Align/Branch " + i + "/Driver input score", driverInputScore);
-                double branchScore = branchDistanceScore - driverInputScore;
-                Logger.recordOutput(
-                    "Swerve/Reef Align/Branch " + i + "/Overall score", branchScore);
-
-                if (branchScore < bestScore) {
-                  bestBranch = i;
-                  bestScore = branchScore;
-                }
-              }
-              return followRepulsorField(getBranchPose(bestBranch, left), nudgeSupplier);
-            })
-        .withName("Reef align " + (left ? "left" : "right"));
+  public Command reefBranchAlign(boolean left, Supplier<Translation2d> nudgeSupplier) {
+    var bluePoses = new Pose2d[6];
+    var redPoses = new Pose2d[6];
+    for (int i = 0; i < 6; i++) {
+      bluePoses[i] = ReefLocations.BLUE_BRANCH_POSES[i * 2 + (left ? 0 : 1)];
+      redPoses[i] = ReefLocations.RED_BRANCH_POSES[i * 2 + (left ? 0 : 1)];
+    }
+    return followRepulsorField(
+            () ->
+                Robot.isOnRed()
+                    ? selectPose(redPoses, nudgeSupplier.get().unaryMinus())
+                    : selectPose(bluePoses, nudgeSupplier.get()),
+            nudgeSupplier)
+        .withName("Reef branch align " + (left ? "left" : "right"));
   }
 
-  private Pose2d getBranchPose(int reefWall, boolean left) {
-    var branches = Robot.isOnRed() ? ReefLocations.RED_POSES : ReefLocations.BLUE_POSES;
-    return branches[reefWall * 2 + (left ? 0 : 1)];
+  private Pose2d reefAlignPose;
+
+  public Command reefAlgaeAlign(Supplier<Translation2d> nudgeSupplier) {
+    return followRepulsorField(
+            () -> {
+              reefAlignPose =
+                  Robot.isOnRed()
+                      ? selectPose(ReefLocations.RED_ALGAE_POSES, nudgeSupplier.get().unaryMinus())
+                      : selectPose(ReefLocations.BLUE_ALGAE_POSES, nudgeSupplier.get());
+              return reefAlignPose;
+            },
+            nudgeSupplier)
+        .finallyDo(() -> reefAlignPose = null)
+        .withName("Reef algae align");
+  }
+
+  public Pose2d getReefAlignPose() {
+    if (reefAlignPose == null) {
+      return selectPose(
+          Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES,
+          Translation2d.kZero);
+    } else {
+      return reefAlignPose;
+    }
+  }
+
+  private Pose2d selectPose(Pose2d[] poses, Translation2d driverControlVector) {
+    int bestPose = 0;
+    double bestScore = Double.POSITIVE_INFINITY;
+    for (int i = 0; i < poses.length; i++) {
+      var location = poses[i].getTranslation();
+
+      var robotToPoseVector = location.minus(poseEstimator.getEstimatedPosition().getTranslation());
+
+      var distanceScore = robotToPoseVector.getNorm();
+
+      double driverInputScore;
+      if (driverControlVector.getNorm() < .1) {
+        driverInputScore = 0;
+      } else {
+        var robotToBranchAngle = robotToPoseVector.getAngle();
+        var driverControlAngle = driverControlVector.getAngle();
+
+        driverInputScore = driverControlAngle.minus(robotToBranchAngle).getCos() * 2;
+      }
+
+      Logger.recordOutput("Swerve/Smart Align/Branch " + i + "/Distance score", distanceScore);
+      Logger.recordOutput(
+          "Swerve/Smart Align/Branch " + i + "/Driver input score", driverInputScore);
+      double branchScore = distanceScore - driverInputScore;
+      Logger.recordOutput("Swerve/Smart Align/Branch " + i + "/Overall score", branchScore);
+
+      if (branchScore < bestScore) {
+        bestPose = i;
+        bestScore = branchScore;
+      }
+    }
+
+    return poses[bestPose];
   }
 
   public Command testSlipCurrent() {
