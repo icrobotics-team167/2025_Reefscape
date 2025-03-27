@@ -77,6 +77,7 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
 
     inputs.poseEstimates = estimatesList.toArray(new FiducialPoseEstimate[0]);
     estimatesList.clear();
+    inputs.dataCount = inputs.poseEstimates.length;
   }
 
   @Override
@@ -119,7 +120,7 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
 
     static {
       var none = new SimCameraProperties();
-      none.setCalibration(1280, 800, Rotation2d.fromDegrees(70));
+      none.setCalibration(1280, 800, Rotation2d.fromDegrees(80));
       none.setCalibError(.3, .1);
       none.setFPS(20);
       none.setExposureTimeMs(10);
@@ -134,66 +135,134 @@ public class FiducialPoseEstimatorIOPhoton implements FiducialPoseEstimatorIO {
           MatBuilder.fill(
               Nat.N3(),
               Nat.N3(),
-              917.7435751,
+              895.7697683626751,
               0.0,
-              916.4687196,
+              659.6060292695324,
               0.0,
-              645.1229926,
-              438.7684688,
+              896.0068506346151,
+              451.10507981030486,
               0.0,
               0.0,
               1.0),
           MatBuilder.fill(
               Nat.N8(),
               Nat.N1(),
-              0.04160394239,
-              -0.05934898907,
-              -0.0002104558183,
-              -0.001798832851,
-              0.005054943256,
-              -0.001768082509,
-              0.005583424767,
-              0.0009199079055));
-      frontLeft.setCalibError(.2, .01);
-      frontLeft.setFPS(20);
-      frontLeft.setExposureTimeMs(10);
-      frontLeft.setAvgLatencyMs(5);
-      frontLeft.setLatencyStdDevMs(2);
-      propertiesHashMap.put("FrontLeftCamera", frontLeft);
+              0.0333671674342023,
+              -0.03416433696651355,
+              0.0024363855873020036,
+              2.0703698596376814E-4,
+              -0.03158846431043834,
+              -3.3770550824757396E-4,
+              0.0036614076801956123,
+              0.002376695294547235));
+      frontLeft.setCalibError(.19, .01);
+      frontLeft.setFPS(40);
+      frontLeft.setExposureTimeMs(5);
+      frontLeft.setAvgLatencyMs(25);
+      frontLeft.setLatencyStdDevMs(5);
+      propertiesHashMap.put("FrontLeft", frontLeft);
 
       var frontRight = new SimCameraProperties();
-      frontLeft.setCalibration(
+      frontRight.setCalibration(
           1280,
           800,
           MatBuilder.fill(
               Nat.N3(),
               Nat.N3(),
-              913.4991235,
+              909.6508738125398,
               0.0,
-              912.2663355,
+              657.5177321829904,
               0.0,
-              656.9013349,
-              380.7381692,
+              909.6394411538412,
+              381.92351819122564,
               0.0,
               0.0,
               1.0),
           MatBuilder.fill(
               Nat.N8(),
               Nat.N1(),
-              0.04363956086,
-              -0.06962515596,
-              -0.0004791594092,
-              -0.001254755397,
-              0.007056855264,
-              -0.001138138589,
-              -0.0003849712931,
-              -0.001715779282));
-      frontLeft.setCalibError(.3, .01);
-      frontLeft.setFPS(20);
-      frontLeft.setExposureTimeMs(10);
-      frontLeft.setAvgLatencyMs(5);
-      frontLeft.setLatencyStdDevMs(2);
-      propertiesHashMap.put("FrontRightCamera", frontRight);
+              0.04858933721783682,
+              -0.08941912550409659,
+              -3.1084536948635744E-4,
+              4.151606520884132E-4,
+              0.03579248740242956,
+              3.9706855102229375E-4,
+              0.0014672508075894892,
+              -0.0029891920125610745));
+      frontRight.setCalibError(.2, .01);
+      frontRight.setFPS(35);
+      frontRight.setExposureTimeMs(5);
+      frontRight.setAvgLatencyMs(25);
+      frontRight.setLatencyStdDevMs(5);
+      propertiesHashMap.put("FrontRight", frontRight);
+
+      var newFrontLeft = new SimCameraProperties();
+      newFrontLeft.setCalibration(
+          1280,
+          800,
+          MatBuilder.fill(
+              Nat.N3(),
+              Nat.N3(),
+              915.4325114,
+              0.0,
+              665.8947488,
+              0.0,
+              915.7777798,
+              420.4957657,
+              0.0,
+              0.0,
+              1.0),
+          MatBuilder.fill(
+              Nat.N8(),
+              Nat.N1(),
+              0.03976229713,
+              -0.05622955742,
+              -0.0001059317984,
+              0.0003250262416,
+              0.002521360703,
+              -0.001455079397,
+              0.001565710614,
+              -0.0004670496762));
+      newFrontLeft.setCalibError(.2, .01);
+      newFrontLeft.setFPS(40);
+      newFrontLeft.setExposureTimeMs(5);
+      newFrontLeft.setAvgLatencyMs(25);
+      newFrontLeft.setLatencyStdDevMs(5);
+      propertiesHashMap.put("NewFrontLeft", frontLeft);
+
+      var newFrontRight = new SimCameraProperties();
+      newFrontRight.setCalibration(
+          1280,
+          800,
+          MatBuilder.fill(
+              Nat.N3(),
+              Nat.N3(),
+              910.3836916,
+              0.0,
+              644.2284492,
+              0.0,
+              910.5441685,
+              434.9509512,
+              0.0,
+              0.0,
+              1.0),
+          MatBuilder.fill(
+              Nat.N8(),
+              Nat.N1(),
+              0.03904592683,
+              -0.03707627335,
+              -0.0006458818621,
+              -0.002026416402,
+              -0.0006441872541,
+              0.0001673140141,
+              0.01441301652,
+              0.008230122372));
+      newFrontRight.setCalibError(.1, .01);
+      newFrontRight.setFPS(35);
+      newFrontRight.setExposureTimeMs(5);
+      newFrontRight.setAvgLatencyMs(25);
+      newFrontRight.setLatencyStdDevMs(5);
+      propertiesHashMap.put("NewFrontRight", newFrontRight);
     }
   }
 }

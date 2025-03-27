@@ -32,10 +32,16 @@ class CoralOuttake extends SubsystemBase {
     return run(io::intake).until(() -> inputs.hasCoral).withName("Intake");
   }
 
-  Command score(double extraTime) {
-    return run(io::outtake)
-        .withDeadline(waitUntil(() -> !inputs.hasCoral).andThen(waitSeconds(extraTime)))
-        .withName("Outtake");
+  Command scoreFast() {
+    return run(io::outtakeFast)
+        .withDeadline(waitUntil(() -> !inputs.hasCoral).andThen(waitSeconds(.15)))
+        .withName("Outtake Fast");
+  }
+
+  Command scoreSlow() {
+    return run(io::outtakeSlow)
+        .withDeadline(waitUntil(() -> !inputs.hasCoral).andThen(waitSeconds(.3)))
+        .withName("Outtake Fast");
   }
 
   Command agitate() {

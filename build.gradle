@@ -4,7 +4,7 @@ plugins {
     id "java"
     id "com.peterabeles.gversion" version "1.10.3"
     id "com.diffplug.spotless" version "6.25.0"
-    id "edu.wpi.first.GradleRIO" version "2025.3.1"
+    id "edu.wpi.first.GradleRIO" version "2025.3.2"
 }
 
 java {
@@ -31,6 +31,15 @@ deploy {
                 // getTargetTypeClass is a shortcut to get the class type using a string
 
                 frcJava(getArtifactTypeClass('FRCJavaArtifact')) {
+                    jvmArgs.add("-XX:+UnlockExperimentalVMOptions")
+                    jvmArgs.add("-XX:GCTimeRatio=5")
+                    jvmArgs.add("-XX:+UseSerialGC")
+                    jvmArgs.add("-XX:MaxGCPauseMillis=50")
+
+                    final MAX_JAVA_HEAP_SIZE_MB = 100;
+                    jvmArgs.add("-Xmx" + MAX_JAVA_HEAP_SIZE_MB + "M")
+                    jvmArgs.add("-Xms" + MAX_JAVA_HEAP_SIZE_MB + "M")
+                    jvmArgs.add("-XX:+AlwaysPreTouch")
                 }
 
                 // Static files artifact

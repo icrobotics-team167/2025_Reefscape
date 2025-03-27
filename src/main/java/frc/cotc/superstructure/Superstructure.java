@@ -19,53 +19,50 @@ public class Superstructure extends Mechanism {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
   private final Ramp ramp;
+  private final Climber climber;
 
-  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO) {
+  public Superstructure(
+      ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO, ClimberIO climberIO) {
     elevator = new Elevator(elevatorIO);
     coralOuttake = new CoralOuttake(coralOuttakeIO);
     ramp = new Ramp(rampIO);
+    climber = new Climber(climberIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
-    RobotModeTriggers.disabled().onFalse(ramp.lower());
-  }
-
-  public Command lvl1() {
-    return expose(
-            deadline(
-                    waitUntil(elevator::atTargetPos).andThen(coralOuttake.score(.25).asProxy()),
-                    elevator.lvl1())
-                .withName("Lvl 1 Scoring"))
-        .withName("Lvl 1 Scoring");
+    RobotModeTriggers.disabled().onFalse(ramp.lower().alongWith(climber.deployStart()));
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
     return expose(
-            deadline(
+            elevator
+                .lvl2()
+                .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.25).asProxy()),
-                    elevator.lvl2())
+                        .andThen(coralOuttake.scoreFast().asProxy()))
                 .withName("Lvl 2 Scoring"))
         .withName("Lvl 2 Scoring");
   }
 
   public Command lvl3(BooleanSupplier driveBaseAtTarget) {
     return expose(
-            deadline(
+            elevator
+                .lvl3()
+                .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.25).asProxy()),
-                    elevator.lvl3())
+                        .andThen(coralOuttake.scoreFast().asProxy()))
                 .withName("Lvl 3 Scoring"))
         .withName("Lvl 3 Scoring");
   }
 
   public Command lvl4(BooleanSupplier driveBaseAtTarget) {
     return expose(
-            deadline(
+            elevator
+                .lvl4()
+                .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.score(.25).asProxy()),
-                    elevator.lvl4())
+                        .andThen(coralOuttake.scoreSlow().asProxy()))
                 .withName("Lvl 4 Scoring"))
         .withName("Lvl 4 Scoring");
   }
@@ -87,8 +84,23 @@ public class Superstructure extends Mechanism {
     return expose(elevator.net());
   }
 
+  private boolean climberDeployed = false;
+
+  public boolean isClimberDeployed() {
+    return climberDeployed;
+  }
+
   public Command readyClimb() {
-    return expose(ramp.raise());
+    return expose(
+        runOnce(() -> climberDeployed = true).andThen(parallel(ramp.raise(), climber.deploy())));
+  }
+
+  public Command climb() {
+    return expose(climber.climb());
+  }
+
+  public Command raiseClimber() {
+    return expose(climber.deploy());
   }
 
   public Trigger coralStuck() {

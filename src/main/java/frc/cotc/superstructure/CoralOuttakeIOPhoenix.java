@@ -13,6 +13,7 @@ import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -25,11 +26,12 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
 
   private final BaseStatusSignal statorSignal, supplySignal, velSignal;
   private final StatusSignal<Boolean> detectedSignal;
+  private final StatusSignal<Boolean> incomingSignal;
 
   public CoralOuttakeIOPhoenix() {
     motor = new TalonFX(0);
-    //noinspection resource
-    var detector = new CANrange(1);
+    var coralDetector = new CANrange(1);
+    var incomingDetector = new CANrange(2);
 
     var motorConfig = new TalonFXConfiguration();
     motorConfig.CurrentLimits.StatorCurrentLimit = 20;
@@ -38,7 +40,7 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     motorConfig.HardwareLimitSwitch.ForwardLimitEnable = true;
     motorConfig.HardwareLimitSwitch.ForwardLimitSource = ForwardLimitSourceValue.RemoteCANrange;
-    motorConfig.HardwareLimitSwitch.ForwardLimitRemoteSensorID = detector.getDeviceID();
+    motorConfig.HardwareLimitSwitch.ForwardLimitRemoteSensorID = coralDetector.getDeviceID();
     motor.getConfigurator().apply(motorConfig);
 
     var detectorConfig = new CANrangeConfiguration();
@@ -46,19 +48,21 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     detectorConfig.FovParams.FOVRangeY = 6.75;
     detectorConfig.ProximityParams.ProximityThreshold = .175;
     detectorConfig.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
-    detector.getConfigurator().apply(detectorConfig);
+    coralDetector.getConfigurator().apply(detectorConfig);
+    incomingDetector.getConfigurator().apply(detectorConfig);
 
     statorSignal = motor.getStatorCurrent(false);
     supplySignal = motor.getSupplyCurrent(false);
     velSignal = motor.getVelocity(false);
-    detectedSignal = detector.getIsDetected(false);
+    detectedSignal = coralDetector.getIsDetected(false);
+    incomingSignal = incomingDetector.getIsDetected(false);
 
-    BaseStatusSignal.setUpdateFrequencyForAll(50, statorSignal, supplySignal);
+    BaseStatusSignal.setUpdateFrequencyForAll(50, statorSignal, supplySignal, incomingSignal);
     detectedSignal.setUpdateFrequency(100);
-    motor.optimizeBusUtilization(5, .1);
-    detector.optimizeBusUtilization(5, .1);
+    ParentDevice.optimizeBusUtilizationForAll(5, motor, coralDetector, incomingDetector);
 
-    PhoenixBatchRefresher.registerRio(statorSignal, supplySignal, velSignal, detectedSignal);
+    PhoenixBatchRefresher.registerRio(
+        statorSignal, supplySignal, velSignal, detectedSignal, incomingSignal);
   }
 
   @Override
@@ -71,18 +75,26 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     inputs.currentDraws.mutateFromSignals(statorSignal, supplySignal);
   }
 
+  private final VoltageOut idleControl = new VoltageOut(12).withIgnoreHardwareLimits(false);
   private final VoltageOut intakeControl = new VoltageOut(5).withIgnoreHardwareLimits(false);
 
   @Override
   public void intake() {
-    motor.setControl(intakeControl);
+    motor.setControl(incomingSignal.getValue() ? intakeControl : idleControl);
   }
 
-  private final VoltageOut outtakeControl = new VoltageOut(7).withIgnoreHardwareLimits(true);
+  private final VoltageOut fastOuttakeControl = new VoltageOut(12).withIgnoreHardwareLimits(true);
 
   @Override
-  public void outtake() {
-    motor.setControl(outtakeControl);
+  public void outtakeFast() {
+    motor.setControl(fastOuttakeControl);
+  }
+
+  private final VoltageOut slowOuttakeControl = new VoltageOut(6).withIgnoreHardwareLimits(true);
+
+  @Override
+  public void outtakeSlow() {
+    motor.setControl(slowOuttakeControl);
   }
 
   private final VoltageOut agitateControl = new VoltageOut(-12);

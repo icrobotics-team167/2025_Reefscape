@@ -43,9 +43,7 @@ class SwerveSetpointGenerator {
       maxDriveVelocity,
       massKg,
       moiKgMetersSquared,
-      wheelRadiusMeters,
-      wheelFrictionForce,
-      maxTorqueFriction;
+      wheelRadiusMeters;
   private final double[] maxSteerSpeedRadPerSec;
   private final SimpleMatrix forceKinematics;
 
@@ -56,8 +54,7 @@ class SwerveSetpointGenerator {
       final double[] maxSteerSpeedRadPerSec,
       final double massKg,
       final double moiKgMetersSquared,
-      final double wheelDiameterMeters,
-      final double wheelCoF) {
+      final double wheelDiameterMeters) {
 
     this.driveMotor = driveMotor;
     this.statorCurrentLimitAmps = statorCurrentLimitAmps;
@@ -68,9 +65,6 @@ class SwerveSetpointGenerator {
     this.moiKgMetersSquared = moiKgMetersSquared;
     this.wheelRadiusMeters = wheelDiameterMeters / 2;
     this.maxDriveVelocity = driveMotor.freeSpeedRadPerSec * wheelRadiusMeters;
-
-    wheelFrictionForce = wheelCoF * ((massKg / 4) * 9.81);
-    maxTorqueFriction = this.wheelFrictionForce * wheelRadiusMeters;
 
     forceKinematics = new SimpleMatrix(8, 3);
     for (int i = 0; i < 4; i++) {
@@ -267,10 +261,8 @@ class SwerveSetpointGenerator {
 
   private enum ActiveConstraint {
     STEER_VEL,
-    CENTRIPETAL,
     MOTOR_DYNAMICS,
-    STATOR_CURRENT,
-    TRACTION
+    STATOR_CURRENT
   }
 
   private final SimpleMatrix chassisForceMatrix = new SimpleMatrix(3, 1);
@@ -417,7 +409,7 @@ class SwerveSetpointGenerator {
         overrideSteering.add(Optional.of(prevSetpoint.moduleStates()[i].angle));
         continue;
       }
-      double max_theta_step = dt * maxSteerSpeedRadPerSec[i];
+      double max_theta_step = dt * maxSteerSpeedRadPerSec[i] * .8; // 80% max for control headroom
       overrideSteering.add(Optional.empty());
       if (epsilonEquals(prevSetpoint.moduleStates()[i].speedMetersPerSecond, 0.0)) {
         // If module is stopped, we know that we will need to move straight to the final steering
@@ -463,19 +455,7 @@ class SwerveSetpointGenerator {
         continue;
       }
 
-      // Enforce centripetal force limits to prevent sliding.
-      // We do this by changing max_theta_step to the maximum change in heading over dt
-      // that would create a large enough radius to keep the centripetal force under the
-      // friction force.
-      double maxHeadingChange =
-          (dt * wheelFrictionForce)
-              / ((massKg / 4) * Math.abs(prevSetpoint.moduleStates()[i].speedMetersPerSecond));
-      max_theta_step = Math.min(max_theta_step, maxHeadingChange);
-
-      activeConstraints[i] =
-          max_theta_step == maxHeadingChange
-              ? ActiveConstraint.CENTRIPETAL
-              : ActiveConstraint.STEER_VEL;
+      activeConstraints[i] = ActiveConstraint.STEER_VEL;
 
       double s =
           findSteeringMaxS(
@@ -544,13 +524,7 @@ class SwerveSetpointGenerator {
       }
       double moduleTorque = driveMotor.getTorque(currentDraw);
 
-      // Limit torque to prevent wheel slip
-      moduleTorque = Math.min(moduleTorque, maxTorqueFriction);
-
-      if (moduleTorque == maxTorqueFriction) {
-        activeConstraints[i] = ActiveConstraint.TRACTION;
-        currentDraw = driveMotor.getCurrent(maxTorqueFriction);
-      } else if (currentDraw == statorCurrentLimitAmps) {
+      if (currentDraw == statorCurrentLimitAmps) {
         activeConstraints[i] = ActiveConstraint.STATOR_CURRENT;
       } else if (!epsilonEquals(0, currentDraw)) {
         activeConstraints[i] = ActiveConstraint.MOTOR_DYNAMICS;

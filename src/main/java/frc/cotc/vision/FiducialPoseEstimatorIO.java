@@ -24,19 +24,22 @@ public interface FiducialPoseEstimatorIO {
 
   class FiducialPoseEstimatorIOInputs implements LoggableInputs {
     FiducialPoseEstimate[] poseEstimates = new FiducialPoseEstimate[0];
+    int dataCount;
 
     @Override
     public void toLog(LogTable table) {
       for (int i = 0; i < poseEstimates.length; i++) {
         poseEstimates[i].toLog(table, String.valueOf(i));
       }
+      table.put("dataCount", dataCount);
     }
 
     @Override
     public void fromLog(LogTable table) {
+      dataCount = table.get("dataCount", 0);
       var list = new ArrayList<FiducialPoseEstimate>();
       int i = 0;
-      while (true) {
+      while (i < dataCount) {
         var estimate = FiducialPoseEstimate.fromLog(table, String.valueOf(i));
         if (estimate.timestamp <= 0) {
           break;
@@ -44,7 +47,7 @@ public interface FiducialPoseEstimatorIO {
         list.add(estimate);
         i++;
       }
-      poseEstimates = list.toArray(new FiducialPoseEstimate[i]);
+      poseEstimates = list.toArray(new FiducialPoseEstimate[dataCount]);
     }
 
     public record FiducialPoseEstimate(

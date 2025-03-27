@@ -11,38 +11,30 @@ import frc.cotc.util.MotorCurrentDraws;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-public interface CoralOuttakeIO {
-  class CoralOuttakeIOInputs implements LoggableInputs {
-    boolean hasCoral;
-
-    double velocityPercent;
+public interface ClimberIO {
+  class ClimberIOInputs implements LoggableInputs {
+    double posRad;
 
     MotorCurrentDraws currentDraws = new MotorCurrentDraws();
 
     @Override
     public void toLog(LogTable table) {
-      table.put("hasCoral", hasCoral);
-      table.put("velocityPercent", velocityPercent);
+      table.put("posRad", posRad);
       table.put("currentDraws", MotorCurrentDraws.struct, currentDraws);
     }
 
     @Override
     public void fromLog(LogTable table) {
-      hasCoral = table.get("hasCoral", false);
-      velocityPercent = table.get("velocityPercent", 0.0);
+      posRad = table.get("posRad", 0.0);
       currentDraws = table.get("currentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
     }
   }
 
-  default void updateInputs(CoralOuttakeIOInputs inputs) {}
+  default void updateInputs(ClimberIOInputs inputs) {}
 
-  default void intake() {}
+  default void stop() {}
 
-  default void outtakeFast() {}
+  default void deploy() {}
 
-  default void outtakeSlow() {}
-
-  default void agitate() {}
-
-  default void brake() {}
+  default void climb() {}
 }
