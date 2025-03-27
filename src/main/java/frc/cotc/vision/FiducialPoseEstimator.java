@@ -166,7 +166,7 @@ public class FiducialPoseEstimator {
 
     // Heavy distrust compared multi-tag SolvePnp, due to the inherent lack of information
     // usable in the solve
-    var stdDev = .5 * tag.distanceToCamera() * tag.distanceToCamera() * tag.distanceToCamera();
+    var stdDev = .6 * tag.distanceToCamera() * tag.distanceToCamera();
 
     estimatesList.add(new PoseEstimate(robotPose, estimate.timestamp(), stdDev, .001));
   }
