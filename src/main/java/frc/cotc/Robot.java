@@ -146,7 +146,9 @@ public class Robot extends LoggedRobot {
     var algaePivot =
         new AlgaePivot(
             Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
-    var algaeIntake = new AlgaeIntake(new AlgaeIntakeIO() {});
+    var algaeIntake =
+        new AlgaeIntake(
+            Robot.isReal() && isNewBot ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -205,7 +207,7 @@ public class Robot extends LoggedRobot {
                 () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
 
     algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
-    algaeIntake.setDefaultCommand(algaeIntake.intake());
+    secondary.leftTrigger().or(algaeIntake::hasAlgae).whileTrue(algaeIntake.intake());
     secondary.leftBumper().whileTrue(algaeIntake.outtake());
     secondary.povDown().whileTrue(superstructure.highAlgae());
     secondary.povUp().whileTrue(superstructure.net());
