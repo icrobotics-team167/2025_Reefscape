@@ -46,7 +46,7 @@ public class Swerve extends SubsystemBase {
   private final SwerveIO.SwerveIOInputs inputs;
 
   private final SwerveSetpointGenerator setpointGenerator;
-  private final Rotation2d[] stopInXAngles;
+  private final Rotation2d[] stopAngles;
   private final SwerveSetpoint stopInXSetpoint;
   private SwerveSetpoint lastSetpoint;
 
@@ -99,21 +99,16 @@ public class Swerve extends SubsystemBase {
             CONSTANTS.MASS_KG,
             CONSTANTS.MOI_KG_METERS_SQUARED,
             CONSTANTS.WHEEL_DIAMETER_METERS);
-    stopInXAngles =
-        new Rotation2d[] {
-          new Rotation2d(CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2),
-          new Rotation2d(CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2),
-          new Rotation2d(-CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2),
-          new Rotation2d(-CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2)
-        };
+    stopAngles =
+        new Rotation2d[] {Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero};
     stopInXSetpoint =
         new SwerveSetpoint(
             new ChassisSpeeds(),
             new SwerveModuleState[] {
-              new SwerveModuleState(0, stopInXAngles[0]),
-              new SwerveModuleState(0, stopInXAngles[1]),
-              new SwerveModuleState(0, stopInXAngles[2]),
-              new SwerveModuleState(0, stopInXAngles[3])
+              new SwerveModuleState(0, stopAngles[0]),
+              new SwerveModuleState(0, stopAngles[1]),
+              new SwerveModuleState(0, stopAngles[2]),
+              new SwerveModuleState(0, stopAngles[3])
             },
             new double[4],
             new double[4]);
@@ -316,7 +311,7 @@ public class Swerve extends SubsystemBase {
 
   public Command stop() {
     return run(() -> {
-          swerveIO.stop(stopInXAngles);
+          swerveIO.stop(stopAngles);
           lastSetpoint = stopInXSetpoint;
         })
         .ignoringDisable(true)
