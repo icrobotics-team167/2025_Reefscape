@@ -28,7 +28,7 @@ public class Climber extends SubsystemBase {
 
   Command deployStart() {
     return run(io::deploy)
-        .until(() -> inputs.posRad < Units.degreesToRadians(45))
+        .until(() -> inputs.posRad < Units.degreesToRadians(40))
         .finallyDo(io::stop);
   }
 
