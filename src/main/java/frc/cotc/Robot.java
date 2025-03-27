@@ -231,7 +231,7 @@ public class Robot extends LoggedRobot {
                   }
                 }));
     secondary.leftBumper().whileTrue(algaeIntake.outtake());
-    secondary.povUp().whileTrue(superstructure.net());
+    secondary.rightTrigger().whileTrue(superstructure.net());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
