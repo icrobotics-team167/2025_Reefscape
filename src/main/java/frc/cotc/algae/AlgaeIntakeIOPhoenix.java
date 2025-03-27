@@ -60,12 +60,12 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
 
   @Override
   public void intake() {
-    motor.setVoltage(6);
+    motor.setVoltage(12);
   }
 
   @Override
   public void hold() {
-    motor.setVoltage(1);
+    motor.setVoltage(2);
   }
 
   @Override
