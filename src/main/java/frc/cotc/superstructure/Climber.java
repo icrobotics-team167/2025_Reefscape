@@ -14,7 +14,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
   private final ClimberIO io;
-  private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
+  private final ClimberIO.ClimberIOInputs inputs = new ClimberIO.ClimberIOInputs();
 
   Climber(ClimberIO io) {
     this.io = io;
@@ -27,7 +27,9 @@ public class Climber extends SubsystemBase {
   }
 
   Command deployStart() {
-    return run(io::deploy).until(() -> inputs.posRad < Units.degreesToRadians(30)).finallyDo(io::stop);
+    return run(io::deploy)
+        .until(() -> inputs.posRad < Units.degreesToRadians(30))
+        .finallyDo(io::stop);
   }
 
   Command deploy() {

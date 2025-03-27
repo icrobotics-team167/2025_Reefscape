@@ -391,15 +391,23 @@ public class Robot extends LoggedRobot {
       case REAL -> {
         return isNewBot
             ? new Superstructure(
-                new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix())
-            : new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
+                new ElevatorIOPhoenix(),
+                new CoralOuttakeIOPhoenix(),
+                new RampIOPhoenix(),
+                new ClimberIOPhoenix())
+            : new Superstructure(
+                new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {}, new ClimberIO() {});
       }
       case SIM -> {
         return new Superstructure(
-            new ElevatorIOPhoenix(), new CoralOuttakeIOSim(), new RampIOPhoenix());
+            new ElevatorIOPhoenix(),
+            new CoralOuttakeIOSim(),
+            new RampIOPhoenix(),
+            new ClimberIO() {});
       }
       default -> {
-        return new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
+        return new Superstructure(
+            new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {}, new ClimberIO() {});
       }
     }
   }

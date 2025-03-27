@@ -21,10 +21,12 @@ public class Superstructure extends Mechanism {
   private final Ramp ramp;
   private final Climber climber;
 
-  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO) {
+  public Superstructure(
+      ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO, ClimberIO climberIO) {
     elevator = new Elevator(elevatorIO);
     coralOuttake = new CoralOuttake(coralOuttakeIO);
     ramp = new Ramp(rampIO);
+    climber = new Climber(climberIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
