@@ -407,7 +407,7 @@ public class Swerve extends SubsystemBase {
         .andThen(
             run(
                 () -> {
-                  var targetX = 7.45;
+                  var targetX = 7.58;
                   if (Robot.isOnRed()) {
                     targetX = Constants.FIELD_LENGTH_METERS - targetX;
                   }
@@ -417,7 +417,7 @@ public class Swerve extends SubsystemBase {
                   var yawOutput =
                       yawController.calculate(
                           poseEstimator.getEstimatedPosition().getRotation().getRadians(),
-                          Robot.isOnRed() ? 0 : PI);
+                          Robot.isOnRed() ? PI : 0);
 
                   var driverInput =
                       Robot.isOnRed()
