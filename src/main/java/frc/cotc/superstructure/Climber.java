@@ -33,10 +33,10 @@ public class Climber extends SubsystemBase {
   }
 
   Command deploy() {
-    return run(io::deploy);
+    return run(io::deploy).finallyDo(io::stop);
   }
 
   Command climb() {
-    return run(io::climb);
+    return run(io::climb).finallyDo(io::stop);
   }
 }
