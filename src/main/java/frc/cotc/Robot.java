@@ -146,9 +146,7 @@ public class Robot extends LoggedRobot {
     var algaePivot =
         new AlgaePivot(
             Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
-    var algaeIntake =
-        new AlgaeIntake(
-            Robot.isReal() && isNewBot ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
+    var algaeIntake = new AlgaeIntake(new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -171,21 +169,23 @@ public class Robot extends LoggedRobot {
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
-//    swerve.setDefaultCommand(
-//        swerve.teleopDrive(
-//            driveTranslationalControlSupplier,
-//            () -> {
-//              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
-//              return Math.copySign(rawInput * rawInput, rawInput);
-//            },
-//            primary.leftBumper()));
-//    primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
-//    primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
-//    primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
+    //    swerve.setDefaultCommand(
+    //        swerve.teleopDrive(
+    //            driveTranslationalControlSupplier,
+    //            () -> {
+    //              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
+    //              return Math.copySign(rawInput * rawInput, rawInput);
+    //            },
+    //            primary.leftBumper()));
+    //    primary.leftTrigger().whileTrue(swerve.reefAlign(true,
+    // driveTranslationalControlSupplier));
+    //    primary.rightTrigger().whileTrue(swerve.reefAlign(false,
+    // driveTranslationalControlSupplier));
+    //    primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
     //    primary.povUp().onTrue(superstructure.readyClimb());
 
-//        primary.b().whileTrue(swerve.testSlipCurrent());
-        primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockBackwards());
+    //        primary.b().whileTrue(swerve.testSlipCurrent());
+    primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockBackwards());
 
     secondary
         .y()
