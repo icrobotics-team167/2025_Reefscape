@@ -96,8 +96,11 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         LoggedPowerDistribution.getInstance(); // Enables power distribution logging
 
+        var serialNumber = RobotController.getSerialNumber();
+        Logger.recordMetadata("RoboRIO Serial number", serialNumber);
+
         SignalLogger.start(); // Start logging Phoenix CAN signals
-        newBotLogger.isNewBot = RobotController.getSerialNumber().equals("TODO: Enter");
+        newBotLogger.isNewBot = serialNumber.equals("032BE4AB");
         Logger.processInputs("Robot", newBotLogger);
       }
       case SIM -> {
