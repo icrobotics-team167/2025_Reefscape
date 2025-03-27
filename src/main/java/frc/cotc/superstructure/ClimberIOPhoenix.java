@@ -33,7 +33,7 @@ public class ClimberIOPhoenix implements ClimberIO {
     motor = new TalonFX(16, Robot.CANIVORE_NAME);
 
     var encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.MagnetOffset = -0.244140625;
+    encoderConfig.MagnetSensor.MagnetOffset = -0.260498046875;
     encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     encoder.getConfigurator().apply(encoderConfig);
 
@@ -41,9 +41,9 @@ public class ClimberIOPhoenix implements ClimberIO {
     motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
     motorConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.25;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.27;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.001;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
