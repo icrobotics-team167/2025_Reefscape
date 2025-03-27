@@ -19,16 +19,19 @@ public class Superstructure extends Mechanism {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
   private final Ramp ramp;
+  private final Climber climber;
 
-  public Superstructure(ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO) {
+  public Superstructure(
+      ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO, ClimberIO climberIO) {
     elevator = new Elevator(elevatorIO);
     coralOuttake = new CoralOuttake(coralOuttakeIO);
     ramp = new Ramp(rampIO);
+    climber = new Climber(climberIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
-    RobotModeTriggers.disabled().onFalse(ramp.lower());
+    RobotModeTriggers.disabled().onFalse(ramp.lower().alongWith(climber.deployStart()));
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
@@ -81,8 +84,23 @@ public class Superstructure extends Mechanism {
     return expose(elevator.net());
   }
 
+  private boolean climberDeployed = false;
+
+  public boolean isClimberDeployed() {
+    return climberDeployed;
+  }
+
   public Command readyClimb() {
-    return expose(ramp.raise());
+    return expose(
+        runOnce(() -> climberDeployed = true).andThen(parallel(ramp.raise(), climber.deploy())));
+  }
+
+  public Command climb() {
+    return expose(climber.climb());
+  }
+
+  public Command raiseClimber() {
+    return expose(climber.deploy());
   }
 
   public Trigger coralStuck() {

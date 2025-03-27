@@ -7,7 +7,6 @@
 
 package frc.cotc.drive;
 
-import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import static frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import static java.lang.Math.PI;
@@ -15,6 +14,7 @@ import static java.lang.Math.PI;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
@@ -24,6 +24,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.cotc.Constants;
@@ -45,7 +46,7 @@ public class Swerve extends SubsystemBase {
   private final SwerveIO.SwerveIOInputs inputs;
 
   private final SwerveSetpointGenerator setpointGenerator;
-  private final Rotation2d[] stopInXAngles;
+  private final Rotation2d[] stopAngles;
   private final SwerveSetpoint stopInXSetpoint;
   private SwerveSetpoint lastSetpoint;
 
@@ -63,7 +64,7 @@ public class Swerve extends SubsystemBase {
   private final RepulsorFieldPlanner repulsorFieldPlanner = new RepulsorFieldPlanner();
 
   public Swerve(SwerveIO driveIO, FiducialPoseEstimator.IO[] visionIOs) {
-    this.swerveIO = driveIO;
+    swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
     inputs = new SwerveIO.SwerveIOInputs();
     driveIO.updateInputs(inputs);
@@ -93,27 +94,21 @@ public class Swerve extends SubsystemBase {
                   -CONSTANTS.TRACK_LENGTH_METERS / 2, -CONSTANTS.TRACK_WIDTH_METERS / 2)
             },
             CONSTANTS.DRIVE_MOTOR,
-            CONSTANTS.DRIVE_STATOR_CURRENT_LIMIT_AMPS,
+            CONSTANTS.SLIP_CURRENT_AMPS,
             CONSTANTS.MAX_STEER_SPEEDS_RAD_PER_SEC,
             CONSTANTS.MASS_KG,
             CONSTANTS.MOI_KG_METERS_SQUARED,
-            CONSTANTS.WHEEL_DIAMETER_METERS,
-            CONSTANTS.WHEEL_COF);
-    stopInXAngles =
-        new Rotation2d[] {
-          new Rotation2d(CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2),
-          new Rotation2d(CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2),
-          new Rotation2d(-CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2),
-          new Rotation2d(-CONSTANTS.TRACK_WIDTH_METERS / 2, -CONSTANTS.TRACK_LENGTH_METERS / 2)
-        };
+            CONSTANTS.WHEEL_DIAMETER_METERS);
+    stopAngles =
+        new Rotation2d[] {Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero};
     stopInXSetpoint =
         new SwerveSetpoint(
             new ChassisSpeeds(),
             new SwerveModuleState[] {
-              new SwerveModuleState(0, stopInXAngles[0]),
-              new SwerveModuleState(0, stopInXAngles[1]),
-              new SwerveModuleState(0, stopInXAngles[2]),
-              new SwerveModuleState(0, stopInXAngles[3])
+              new SwerveModuleState(0, stopAngles[0]),
+              new SwerveModuleState(0, stopAngles[1]),
+              new SwerveModuleState(0, stopAngles[2]),
+              new SwerveModuleState(0, stopAngles[3])
             },
             new double[4],
             new double[4]);
@@ -138,9 +133,9 @@ public class Swerve extends SubsystemBase {
               poseEstimator::getEstimatedPosition);
     }
 
-    xController = new PIDController(7.5, 0, 0);
-    yController = new PIDController(7.5, 0, 0);
-    yawController = new PIDController(4, 0, .2);
+    xController = new PIDController(5, 0, 0);
+    yController = new PIDController(5, 0, 0);
+    yawController = new PIDController(3, 0, .2);
     yawController.enableContinuousInput(-PI, PI);
   }
 
@@ -212,6 +207,12 @@ public class Swerve extends SubsystemBase {
               poseEstimate.translationalStdDevs(),
               poseEstimate.yawStdDevs()
             });
+      }
+      var robotPose3d = new Pose3d(poseEstimator.getEstimatedPosition());
+      for (var fiducialPoseEstimator : fiducialPoseEstimators) {
+        Logger.recordOutput(
+            "Vision/" + fiducialPoseEstimator.name + "/cameraPose",
+            robotPose3d.plus(fiducialPoseEstimator.robotToCameraTransform));
       }
     } else {
       poseReset = false;
@@ -302,27 +303,6 @@ public class Swerve extends SubsystemBase {
                       omegaSupplier.getAsDouble() * maxAngularSpeedRadPerSec),
                   inputs.gyroYaw);
 
-          if (accelLimitMpss > 0) {
-            double desiredAccelXMpss =
-                (commandedRobotSpeeds.vxMetersPerSecond
-                        - lastSetpoint.chassisSpeeds().vxMetersPerSecond)
-                    / Robot.defaultPeriodSecs;
-            double desiredAccelYMpss =
-                (commandedRobotSpeeds.vyMetersPerSecond
-                        - lastSetpoint.chassisSpeeds().vyMetersPerSecond)
-                    / Robot.defaultPeriodSecs;
-            double desiredAccelMpss = Math.hypot(desiredAccelXMpss, desiredAccelYMpss);
-            if (desiredAccelMpss > accelLimitMpss) {
-              var accelDirRad = Math.atan2(desiredAccelYMpss, desiredAccelXMpss);
-              commandedRobotSpeeds.vxMetersPerSecond =
-                  lastSetpoint.chassisSpeeds().vxMetersPerSecond
-                      + Math.cos(accelDirRad) * accelLimitMpss * Robot.defaultPeriodSecs;
-              commandedRobotSpeeds.vyMetersPerSecond =
-                  lastSetpoint.chassisSpeeds().vyMetersPerSecond
-                      + Math.sin(accelDirRad) * accelLimitMpss * Robot.defaultPeriodSecs;
-            }
-          }
-
           commandedRobotSpeeds.omegaRadiansPerSecond *=
               1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
 
@@ -337,7 +317,7 @@ public class Swerve extends SubsystemBase {
 
   public Command stop() {
     return run(() -> {
-          swerveIO.stop(stopInXAngles);
+          swerveIO.stop(stopAngles);
           lastSetpoint = stopInXSetpoint;
         })
         .ignoringDisable(true)
@@ -613,6 +593,49 @@ public class Swerve extends SubsystemBase {
     }
 
     return poses[bestPose];
+  }
+
+  public Command testSlipCurrent() {
+    var timer = new Timer();
+
+    return runOnce(timer::restart)
+        .andThen(
+            run(() -> swerveIO.testSlipCurrent(Math.max(timer.get() - 1, 0) * 5))
+                .until(
+                    () -> {
+                      for (int i = 0; i < 4; i++) {
+                        if (Math.abs(inputs.moduleStates[i].speedMetersPerSecond) > 1) {
+                          System.out.println(
+                              "Current slip detected at "
+                                  + (Math.max(timer.get() - 1, 0) * 5)
+                                  + "amps");
+                          return true;
+                        }
+                      }
+                      return false;
+                    }))
+        .finallyDo(
+            () ->
+                lastSetpoint =
+                    new SwerveSetpoint(
+                        getRobotChassisSpeeds(),
+                        inputs.moduleStates,
+                        new double[4],
+                        new double[4]));
+  }
+
+  public Command lockForward() {
+    var angles = new Rotation2d[4];
+    Arrays.fill(angles, Rotation2d.kZero);
+
+    return run(() -> swerveIO.stop(angles));
+  }
+
+  public Command lockBackwards() {
+    var angles = new Rotation2d[4];
+    Arrays.fill(angles, Rotation2d.kPi);
+
+    return run(() -> swerveIO.stop(angles));
   }
 
   private ChassisSpeeds getRobotChassisSpeeds() {

@@ -144,11 +144,10 @@ public interface SwerveIO {
     double TRACK_WIDTH_METERS = 1;
     double TRACK_LENGTH_METERS = 1;
     double WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
-    double WHEEL_COF = 1;
 
     // Should have a gear reduction applied with .withReduction()
     DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60(1).withReduction(6.75);
-    int DRIVE_STATOR_CURRENT_LIMIT_AMPS = 80;
+    int SLIP_CURRENT_AMPS = 80;
 
     double MASS_KG = 40;
     double MOI_KG_METERS_SQUARED = 40;
@@ -191,9 +190,5 @@ public interface SwerveIO {
 
   default void resetGyro(Rotation2d newYaw) {}
 
-  default void initSysId() {}
-
-  default void steerCharacterization(double volts) {}
-
-  default void driveCharacterization(double amps, Rotation2d[] angles) {}
+  default void testSlipCurrent(double amps) {}
 }
