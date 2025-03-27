@@ -89,25 +89,27 @@ public class Autos {
 
     addRoutine("1AtG", () -> scoreAtG(factory, swerve, superstructure));
     addRoutine(
-        "2FromE",
-        () ->
-            generateChoreoRoutine(
-                factory, swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D));
-    addRoutine(
-        "2FromJ",
-        () ->
-            generateChoreoRoutine(
-                factory, swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K));
-    addRoutine(
         "3FromE",
         () ->
-            generateRepulsorRoutine(
-                swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D, ReefBranch.C));
+            generateChoreoRoutine(
+                factory,
+                swerve,
+                superstructure,
+                Source.R,
+                ReefBranch.E,
+                ReefBranch.D,
+                ReefBranch.C));
     addRoutine(
         "3FromJ",
         () ->
-            generateRepulsorRoutine(
-                swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K, ReefBranch.L));
+            generateChoreoRoutine(
+                factory,
+                swerve,
+                superstructure,
+                Source.L,
+                ReefBranch.J,
+                ReefBranch.K,
+                ReefBranch.L));
     addRoutine(
         "4FromE",
         () ->
