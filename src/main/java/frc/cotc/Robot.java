@@ -182,7 +182,7 @@ public class Robot extends LoggedRobot {
     primary
         .rightTrigger()
         .whileTrue(swerve.reefBranchAlign(false, driveTranslationalControlSupplier));
-    primary.rightBumper().whileTrue(swerve.reefAlgaeAlign(driveTranslationalControlSupplier));
+    primary.a().whileTrue(swerve.reefAlgaeAlign(driveTranslationalControlSupplier));
     primary.b().whileTrue(swerve.netAlign(driveTranslationalControlSupplier));
     primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
     primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
