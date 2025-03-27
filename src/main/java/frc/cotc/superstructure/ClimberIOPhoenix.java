@@ -43,7 +43,7 @@ public class ClimberIOPhoenix implements ClimberIO {
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.28;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.005;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.03;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
