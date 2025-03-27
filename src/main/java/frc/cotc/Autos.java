@@ -111,6 +111,16 @@ public class Autos {
                 ReefBranch.K,
                 ReefBranch.L));
     addRoutine(
+        "Fast3FromE",
+        () ->
+            generateRepulsorRoutine(
+                swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D, ReefBranch.C));
+    addRoutine(
+        "Fast3FromJ",
+        () ->
+            generateRepulsorRoutine(
+                swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K, ReefBranch.L));
+    addRoutine(
         "4FromE",
         () ->
             generateRepulsorRoutine(
