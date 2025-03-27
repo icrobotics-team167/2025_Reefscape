@@ -184,8 +184,8 @@ public class Robot extends LoggedRobot {
 
     primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
     primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
-    primary.povDown().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
-    primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.raiseClimber());
+    primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
+    primary.povDown().and(superstructure::isClimberDeployed).whileTrue(superstructure.raiseClimber());
 
     //        primary.b().whileTrue(swerve.testSlipCurrent());
     //    primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockBackwards());
