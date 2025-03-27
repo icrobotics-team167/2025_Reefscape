@@ -262,9 +262,9 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       if (Robot.isReal()) {
         if (Robot.isNewBot) {
-          // TODO: Calibrate
-          driveConfig.Slot0.kV = 0;
-          driveConfig.Slot0.kP = 1;
+          driveConfig.Slot0.kV = 2;
+          driveConfig.Slot0.kP = 24;
+          driveConfig.Slot0.kS = 1;
 
           switch (id) {
             case 0, 1 -> {
