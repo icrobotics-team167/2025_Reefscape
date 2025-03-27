@@ -14,6 +14,7 @@ import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -105,6 +106,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
             .001);
     config.Slot1.kP = secondStageGains.kP();
     config.Slot1.kD = secondStageGains.kD();
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
