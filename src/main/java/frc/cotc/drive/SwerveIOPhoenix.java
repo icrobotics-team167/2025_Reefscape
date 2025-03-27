@@ -79,7 +79,8 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG = Robot.isNewBot ? Units.lbsToKilograms(145) : Units.lbsToKilograms(141);
+    CONSTANTS.MASS_KG =
+        Robot.isNewBot ? Units.lbsToKilograms(115 + 17 + 15) : Units.lbsToKilograms(141);
 
     CONSTANTS.MOI_KG_METERS_SQUARED =
         CONSTANTS.MASS_KG
@@ -88,7 +89,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     CONSTANTS.ANGULAR_SPEED_FUDGING = Robot.isNewBot ? .6 : .75;
 
-    CONSTANTS.SLIP_CURRENT_AMPS = Robot.isNewBot ? 120 : 80;
+    CONSTANTS.SLIP_CURRENT_AMPS = Robot.isNewBot ? 90 : 80;
   }
 
   private final Module[] modules = new Module[4];
