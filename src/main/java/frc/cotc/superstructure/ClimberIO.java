@@ -8,7 +8,6 @@
 package frc.cotc.superstructure;
 
 import frc.cotc.util.MotorCurrentDraws;
-import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
@@ -20,13 +19,13 @@ public interface ClimberIO {
 
     @Override
     public void toLog(LogTable table) {
-      table.put("hasCoral", posRad);
+      table.put("posRad", posRad);
       table.put("currentDraws", MotorCurrentDraws.struct, currentDraws);
     }
 
     @Override
     public void fromLog(LogTable table) {
-      posRad = table.get("hasCoral", 0.0);
+      posRad = table.get("posRad", 0.0);
       currentDraws = table.get("currentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
     }
   }
