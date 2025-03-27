@@ -38,13 +38,13 @@ public class FiducialPoseEstimator {
 
   private final FiducialPoseEstimatorIO io;
   private final FiducialPoseEstimatorIOInputs inputs = new FiducialPoseEstimatorIOInputs();
-  private final Transform3d robotToCameraTransform;
+  public final Transform3d robotToCameraTransform;
   private final Transform2d cameraToRobotTransform2d;
 
   private final GyroYawGetter gyroYawGetter;
   private final Supplier<Pose2d> currentPoseEstimateSupplier;
 
-  private final String name;
+  public final String name;
 
   public record IO(FiducialPoseEstimatorIO io, String name) {}
 

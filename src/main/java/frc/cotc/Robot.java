@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.cotc.algae.*;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -58,6 +59,8 @@ public class Robot extends LoggedRobot {
     REPLAY
   }
 
+  public static boolean isNewBot;
+
   @SuppressWarnings({"DataFlowIssue", "UnreachableCode", "ConstantValue"})
   public Robot() {
     // If this is erroring, hit build
@@ -73,19 +76,40 @@ public class Robot extends LoggedRobot {
     Mode mode = Robot.isReal() ? Mode.REAL : Mode.SIM;
     //    Mode mode = Robot.isReal() ? Mode.REAL : Mode.REPLAY;
 
+    var newBotLogger =
+        new LoggableInputs() {
+          boolean isNewBot;
+
+          @Override
+          public void toLog(LogTable table) {
+            table.put("isNewBot", isNewBot);
+          }
+
+          @Override
+          public void fromLog(LogTable table) {
+            isNewBot = table.get("isNewBot", true);
+          }
+        };
     switch (mode) {
       case REAL -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         LoggedPowerDistribution.getInstance(); // Enables power distribution logging
 
+        var serialNumber = RobotController.getSerialNumber();
+        Logger.recordMetadata("RoboRIO Serial number", serialNumber);
+
         SignalLogger.start(); // Start logging Phoenix CAN signals
+        newBotLogger.isNewBot = serialNumber.equals("032BE4AB");
+        Logger.processInputs("Robot", newBotLogger);
       }
       case SIM -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to the project's logs folder
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
+        newBotLogger.isNewBot = true;
+        Logger.processInputs("Robot", newBotLogger);
       }
       case REPLAY -> {
         setUseTiming(false); // Run as fast as possible
@@ -104,8 +128,11 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(
             new WPILOGWriter(
                 LogFileUtil.addPathSuffix(logPath, "_replay"))); // Save outputs to a new log
+        Logger.processInputs("Robot", newBotLogger);
       }
     }
+    isNewBot = newBotLogger.isNewBot;
+    Logger.recordMetadata("Is New Bot?", isNewBot ? "True" : "False");
 
     Logger.start();
 
@@ -117,9 +144,9 @@ public class Robot extends LoggedRobot {
     var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
     var algaePivot =
-        new AlgaePivot(Robot.isReal() ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
-    var algaeIntake =
-        new AlgaeIntake(Robot.isReal() ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
+        new AlgaePivot(
+            Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
+    var algaeIntake = new AlgaeIntake(new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -152,10 +179,14 @@ public class Robot extends LoggedRobot {
             primary.leftBumper()));
     primary.leftTrigger().whileTrue(swerve.reefAlign(true, driveTranslationalControlSupplier));
     primary.rightTrigger().whileTrue(swerve.reefAlign(false, driveTranslationalControlSupplier));
+
     primary.rightBumper().whileTrue(swerve.sourceAlign(driveTranslationalControlSupplier));
     primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
     primary.povDown().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
     primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.raiseClimber());
+
+    //        primary.b().whileTrue(swerve.testSlipCurrent());
+    //    primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockBackwards());
 
     secondary
         .y()
@@ -284,29 +315,56 @@ public class Robot extends LoggedRobot {
     switch (mode) {
       case REAL, SIM -> {
         swerveIO = new SwerveIOPhoenix();
-        visionIOs =
-            new FiducialPoseEstimator.IO[] {
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "FrontLeft",
-                      new Transform3d(
-                          Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
-                  "FrontLeft"),
-              new FiducialPoseEstimator.IO(
-                  new FiducialPoseEstimatorIOPhoton(
-                      "FrontRight",
-                      new Transform3d(
-                          Units.inchesToMeters(22.75 / 2),
-                          -Units.inchesToMeters(22.75 / 2),
-                          Units.inchesToMeters(8.25),
-                          new Rotation3d(
-                              0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                  "FrontRight")
-            };
+
+        if (isNewBot || Robot.isSimulation()) {
+          visionIOs =
+              new FiducialPoseEstimator.IO[] {
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "NewFrontLeft",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2 - 1.5),
+                            Units.inchesToMeters(22.75 / 2 + .125),
+                            Units.inchesToMeters(8.375),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
+                    "NewFrontLeft"),
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "NewFrontRight",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2 - 1.5),
+                            -Units.inchesToMeters(22.75 / 2 + .125),
+                            Units.inchesToMeters(8.375),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
+                    "NewFrontRight")
+              };
+        } else {
+          visionIOs =
+              new FiducialPoseEstimator.IO[] {
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "FrontLeft",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2),
+                            Units.inchesToMeters(22.75 / 2),
+                            Units.inchesToMeters(8.25),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
+                    "FrontLeft"),
+                new FiducialPoseEstimator.IO(
+                    new FiducialPoseEstimatorIOPhoton(
+                        "FrontRight",
+                        new Transform3d(
+                            Units.inchesToMeters(22.75 / 2),
+                            -Units.inchesToMeters(22.75 / 2),
+                            Units.inchesToMeters(8.25),
+                            new Rotation3d(
+                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
+                    "FrontRight")
+              };
+        }
 
         cameraNames.names = new String[visionIOs.length];
         for (int i = 0; i < visionIOs.length; i++) {
@@ -331,8 +389,10 @@ public class Robot extends LoggedRobot {
   private Superstructure getSuperstructure(Mode mode) {
     switch (mode) {
       case REAL -> {
-        return new Superstructure(
-            new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix());
+        return isNewBot
+            ? new Superstructure(
+                new ElevatorIOPhoenix(), new CoralOuttakeIOPhoenix(), new RampIOPhoenix())
+            : new Superstructure(new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {});
       }
       case SIM -> {
         return new Superstructure(
