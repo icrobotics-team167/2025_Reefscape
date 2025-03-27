@@ -35,6 +35,11 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
   }
 
   @Override
+  public void outtakeSlow() {
+    state = SimState.SCORING;
+  }
+
+  @Override
   public void agitate() {
     state = SimState.AGITATING;
   }
