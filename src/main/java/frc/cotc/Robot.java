@@ -7,14 +7,11 @@
 
 package frc.cotc;
 
-import static edu.wpi.first.wpilibj2.command.Commands.parallel;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -213,8 +210,25 @@ public class Robot extends LoggedRobot {
 
     algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
     secondary.leftTrigger().or(algaeIntake::hasAlgae).whileTrue(algaeIntake.intake());
+    secondary
+        .leftTrigger()
+        .whileTrue(
+            either(
+                superstructure.highAlgae(),
+                none(),
+                () -> {
+                  var angle = swerve.getReefAlignPose().getRotation();
+                  if (Robot.isOnRed()) {
+                    return angle.equals(Rotation2d.kPi)
+                        || angle.equals(Rotation2d.fromDegrees(60))
+                        || angle.equals(Rotation2d.fromDegrees(-60));
+                  } else {
+                    return angle.equals(Rotation2d.kZero)
+                        || angle.equals(Rotation2d.fromDegrees(120))
+                        || angle.equals(Rotation2d.fromDegrees(-120));
+                  }
+                }));
     secondary.leftBumper().whileTrue(algaeIntake.outtake());
-    secondary.povDown().whileTrue(superstructure.highAlgae());
     secondary.povUp().whileTrue(superstructure.net());
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
