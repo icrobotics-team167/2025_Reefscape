@@ -108,6 +108,28 @@ public class Autos {
         () ->
             generateRepulsorRoutine(
                 swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K, ReefBranch.L));
+    addRoutine(
+        "4FromE",
+        () ->
+            generateRepulsorRoutine(
+                swerve,
+                superstructure,
+                Source.R,
+                ReefBranch.E,
+                ReefBranch.D,
+                ReefBranch.C,
+                ReefBranch.B));
+    addRoutine(
+        "4FromJ",
+        () ->
+            generateRepulsorRoutine(
+                swerve,
+                superstructure,
+                Source.L,
+                ReefBranch.J,
+                ReefBranch.K,
+                ReefBranch.L,
+                ReefBranch.A));
   }
 
   private final Pose2d sourceRight = new Pose2d(1.61, .67, Rotation2d.fromDegrees(54));
