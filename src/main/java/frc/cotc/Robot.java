@@ -187,7 +187,10 @@ public class Robot extends LoggedRobot {
     //    primary.povUp().onTrue(superstructure.readyClimb());
     primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
     primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
-    primary.povDown().and(superstructure::isClimberDeployed).whileTrue(superstructure.raiseClimber());
+    primary
+        .povDown()
+        .and(superstructure::isClimberDeployed)
+        .whileTrue(superstructure.raiseClimber());
 
     //        primary.b().whileTrue(swerve.testSlipCurrent());
     //    primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockBackwards());
