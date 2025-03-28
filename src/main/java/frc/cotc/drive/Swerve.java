@@ -407,7 +407,7 @@ public class Swerve extends SubsystemBase {
         .andThen(
             run(
                 () -> {
-                  var targetX = 7.58; // TODO: Tune
+                  var targetX = 7.8;
                   if (Robot.isOnRed()) {
                     targetX = Constants.FIELD_LENGTH_METERS - targetX;
                   }
