@@ -8,6 +8,7 @@
 package frc.cotc.drive;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -253,10 +254,15 @@ class SwerveSetpointGenerator {
     return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, 10);
   }
 
+  private final LinearFilter voltageFilter = LinearFilter.movingAverage(5);
+
   public SwerveSetpoint generateSetpoint(
       final SwerveSetpoint prevSetpoint, ChassisSpeeds desiredState) {
     return generateSetpoint(
-        prevSetpoint, desiredState, RobotController.getBatteryVoltage(), Robot.defaultPeriodSecs);
+        prevSetpoint,
+        desiredState,
+        voltageFilter.calculate(RobotController.getBatteryVoltage()),
+        Robot.defaultPeriodSecs);
   }
 
   private enum ActiveConstraint {
