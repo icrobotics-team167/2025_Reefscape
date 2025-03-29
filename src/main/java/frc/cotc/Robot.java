@@ -98,7 +98,6 @@ public class Robot extends LoggedRobot {
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
         newBotLogger.isNewBot = serialNumber.equals("032BE4AB");
-        Logger.processInputs("Robot", newBotLogger);
       }
       case SIM -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to the project's logs folder
@@ -106,7 +105,6 @@ public class Robot extends LoggedRobot {
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
         newBotLogger.isNewBot = true;
-        Logger.processInputs("Robot", newBotLogger);
       }
       case REPLAY -> {
         setUseTiming(false); // Run as fast as possible
@@ -125,13 +123,13 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(
             new WPILOGWriter(
                 LogFileUtil.addPathSuffix(logPath, "_replay"))); // Save outputs to a new log
-        Logger.processInputs("Robot", newBotLogger);
       }
     }
-    isNewBot = newBotLogger.isNewBot;
-    Logger.recordMetadata("Is New Bot?", isNewBot ? "True" : "False");
 
     Logger.start();
+
+    Logger.processInputs("Robot", newBotLogger);
+    isNewBot = newBotLogger.isNewBot;
 
     registerCommandSchedulerLogging();
 
