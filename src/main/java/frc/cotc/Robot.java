@@ -136,8 +136,8 @@ public class Robot extends LoggedRobot {
     var primary = new CommandXboxControllerWithRumble(0);
     var secondary = new CommandXboxControllerWithRumble(1);
 
-    var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
+    var swerve = getSwerve(mode);
     var algaePivot =
         new AlgaePivot(
             Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});

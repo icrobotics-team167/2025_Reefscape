@@ -12,6 +12,7 @@ import static frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import static java.lang.Math.PI;
 
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -63,7 +64,12 @@ public class Swerve extends SubsystemBase {
 
   private final RepulsorFieldPlanner repulsorFieldPlanner = new RepulsorFieldPlanner();
 
-  public Swerve(SwerveIO driveIO, FiducialPoseEstimator.IO[] visionIOs) {
+  private final DoubleSupplier elevatorHeightSupplier;
+
+  public Swerve(
+      SwerveIO driveIO,
+      FiducialPoseEstimator.IO[] visionIOs,
+      DoubleSupplier elevatorHeightSupplier) {
     swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
     inputs = new SwerveIO.SwerveIOInputs();
@@ -137,6 +143,8 @@ public class Swerve extends SubsystemBase {
     yController = new PIDController(5, 0, 0);
     yawController = new PIDController(3, 0, .2);
     yawController.enableContinuousInput(-PI, PI);
+
+    this.elevatorHeightSupplier = elevatorHeightSupplier;
   }
 
   private ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
@@ -280,13 +288,34 @@ public class Swerve extends SubsystemBase {
     };
   }
 
+  private final double forwardAccelLimit = 12;
+  private final double reverseAccelLimit = 6;
+  private final double sideAccelLimit = 12;
+
   private void drive(ChassisSpeeds speeds) {
+    double elevatorHeight = elevatorHeightSupplier.getAsDouble();
+    double maxForwardAccel = forwardAccelLimit / (1 - elevatorHeight);
+    double maxReverseAccel = reverseAccelLimit / (1 - elevatorHeight);
+    double maxSideAccel = sideAccelLimit / (1 - elevatorHeight);
+
+    speeds.vxMetersPerSecond =
+        MathUtil.clamp(
+            speeds.vxMetersPerSecond,
+            lastSetpoint.chassisSpeeds().vxMetersPerSecond
+                - maxReverseAccel * Robot.defaultPeriodSecs,
+            lastSetpoint.chassisSpeeds().vxMetersPerSecond
+                + maxForwardAccel * Robot.defaultPeriodSecs);
+    speeds.vyMetersPerSecond =
+        MathUtil.clamp(
+            speeds.vyMetersPerSecond,
+            lastSetpoint.chassisSpeeds().vyMetersPerSecond - maxSideAccel * Robot.defaultPeriodSecs,
+            lastSetpoint.chassisSpeeds().vyMetersPerSecond
+                + maxSideAccel * Robot.defaultPeriodSecs);
+
     var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, speeds);
     swerveIO.drive(setpoint);
     lastSetpoint = setpoint;
   }
-
-  private double accelLimitMpss = -1;
 
   public Command teleopDrive(
       Supplier<Translation2d> translationalControlSupplier,
