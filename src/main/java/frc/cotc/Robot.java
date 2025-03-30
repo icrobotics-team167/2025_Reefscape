@@ -36,6 +36,7 @@ import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.*;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -137,7 +138,7 @@ public class Robot extends LoggedRobot {
     var secondary = new CommandXboxControllerWithRumble(1);
 
     var superstructure = getSuperstructure(mode);
-    var swerve = getSwerve(mode);
+    var swerve = getSwerve(mode, superstructure::getElevatorExtension);
     var algaePivot =
         new AlgaePivot(
             Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
@@ -312,7 +313,7 @@ public class Robot extends LoggedRobot {
             });
   }
 
-  private Swerve getSwerve(Mode mode) {
+  private Swerve getSwerve(Mode mode, DoubleSupplier elevatorExtensionSupplier) {
     SwerveIO swerveIO;
     FiducialPoseEstimator.IO[] visionIOs;
 
@@ -402,7 +403,7 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    return new Swerve(swerveIO, visionIOs);
+    return new Swerve(swerveIO, visionIOs, elevatorExtensionSupplier);
   }
 
   private Superstructure getSuperstructure(Mode mode) {

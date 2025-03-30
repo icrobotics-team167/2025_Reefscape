@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -100,6 +101,11 @@ class Elevator extends SubsystemBase {
   boolean atTargetPos() {
     return Math.abs(inputs.posMeters - targetHeight) < .025
         && Math.abs(inputs.velMetersPerSec) < .25;
+  }
+
+  @AutoLogOutput(key = "Superstructure/Elevator/Extension")
+  double getExtension() {
+    return inputs.posMeters / maxHeight;
   }
 
   private final PIDController feedbackController = new PIDController(0, 0, 0);

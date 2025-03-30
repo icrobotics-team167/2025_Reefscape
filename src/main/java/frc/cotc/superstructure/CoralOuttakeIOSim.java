@@ -62,16 +62,25 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
 
   private final Debouncer debouncer = new Debouncer(.6);
 
+  double timer = 0;
+
   private void update() {
     Logger.recordOutput("Superstructure/Coral Outtake (Sim)/State", state.name());
     switch (state) {
       case INTAKING -> {
+        timer = 0;
         if (!hasCoralSim) {
           hasCoralSim = debouncer.calculate(nearSource());
         }
       }
-      case SCORING, AGITATING -> hasCoralSim = false;
-      case BRAKE -> {}
+      case SCORING, AGITATING -> {
+        if (timer >= .15) {
+          hasCoralSim = false;
+        } else {
+          timer += Robot.defaultPeriodSecs;
+        }
+      }
+      case BRAKE -> timer = 0;
     }
   }
 

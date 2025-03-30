@@ -64,12 +64,12 @@ public class Swerve extends SubsystemBase {
 
   private final RepulsorFieldPlanner repulsorFieldPlanner = new RepulsorFieldPlanner();
 
-  private final DoubleSupplier elevatorHeightSupplier;
+  private final DoubleSupplier elevatorExtensionSupplier;
 
   public Swerve(
       SwerveIO driveIO,
       FiducialPoseEstimator.IO[] visionIOs,
-      DoubleSupplier elevatorHeightSupplier) {
+      DoubleSupplier elevatorExtensionSupplier) {
     swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
     inputs = new SwerveIO.SwerveIOInputs();
@@ -144,7 +144,7 @@ public class Swerve extends SubsystemBase {
     yawController = new PIDController(3, 0, .2);
     yawController.enableContinuousInput(-PI, PI);
 
-    this.elevatorHeightSupplier = elevatorHeightSupplier;
+    this.elevatorExtensionSupplier = elevatorExtensionSupplier;
   }
 
   private ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
@@ -288,15 +288,15 @@ public class Swerve extends SubsystemBase {
     };
   }
 
-  private final double forwardAccelLimit = 12;
-  private final double reverseAccelLimit = 6;
-  private final double sideAccelLimit = 12;
-
   private void drive(ChassisSpeeds speeds) {
-    double elevatorHeight = elevatorHeightSupplier.getAsDouble();
-    double maxForwardAccel = forwardAccelLimit / (1 - elevatorHeight);
-    double maxReverseAccel = reverseAccelLimit / (1 - elevatorHeight);
-    double maxSideAccel = sideAccelLimit / (1 - elevatorHeight);
+    double elevatorHeight = elevatorExtensionSupplier.getAsDouble();
+    double maxForwardAccel = MathUtil.interpolate(24, 16, elevatorHeight);
+    double maxReverseAccel = MathUtil.interpolate(24, 8, elevatorHeight);
+    double maxSideAccel = MathUtil.interpolate(24, 12, elevatorHeight);
+
+    Logger.recordOutput("Swerve/Accel Limits/Forward", maxForwardAccel);
+    Logger.recordOutput("Swerve/Accel Limits/Reverse", -maxReverseAccel);
+    Logger.recordOutput("Swerve/Accel Limits/Side", maxSideAccel);
 
     speeds.vxMetersPerSecond =
         MathUtil.clamp(

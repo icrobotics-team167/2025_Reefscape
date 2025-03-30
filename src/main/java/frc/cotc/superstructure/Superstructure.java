@@ -110,4 +110,8 @@ public class Superstructure extends Mechanism {
   public boolean hasCoral() {
     return coralOuttake.hasCoral();
   }
+
+  public double getElevatorExtension() {
+    return elevator.getExtension();
+  }
 }
