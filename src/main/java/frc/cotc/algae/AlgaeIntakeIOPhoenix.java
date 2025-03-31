@@ -15,6 +15,7 @@ import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import frc.cotc.Robot;
 import frc.cotc.util.PhoenixBatchRefresher;
 
 public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
@@ -24,7 +25,7 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
   private final StatusSignal<Boolean> detectedSignal;
 
   public AlgaeIntakeIOPhoenix() {
-    motor = new TalonFX(4);
+    motor = new TalonFX(Robot.isReal() ? 4 : 40);
     var motorConfig = new TalonFXConfiguration();
     motorConfig.CurrentLimits.StatorCurrentLimit = 60;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
