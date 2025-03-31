@@ -85,7 +85,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
             config.Slot0.kV,
             config.Slot0.kA,
             12 - config.Slot0.kG - config.Slot0.kS,
-            .02,
+            .01,
             .25,
             .001,
             .001);
@@ -100,7 +100,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
             config.Slot1.kV,
             config.Slot1.kA,
             12 - config.Slot1.kG - config.Slot1.kS,
-            .02,
+            .01,
             .25,
             .001,
             .001);

@@ -42,7 +42,6 @@ import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
-import frc.cotc.util.ReefLocations;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -470,9 +469,6 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       notifier = new Notifier(this::run);
       notifier.setName("Phoenix Sim Thread");
-
-      double startX = 7.62;
-      double startY = MathUtil.interpolate(2, Constants.FIELD_WIDTH_METERS - 2, Math.random());
       groundTruthOdometry =
           new SwerveDriveOdometry(
               kinematics,
@@ -483,12 +479,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                 new SwerveModulePosition(),
                 new SwerveModulePosition()
               },
-              new Pose2d(
-                  startX,
-                  startY,
-                  new Rotation2d(
-                      ReefLocations.BLUE_REEF.getX() - startX,
-                      ReefLocations.BLUE_REEF.getY() - startY)));
+              new Pose2d(7, 2, Rotation2d.fromDegrees(120)));
 
       Robot.groundTruthPoseSupplier =
           () -> {

@@ -290,9 +290,12 @@ public class Swerve extends SubsystemBase {
 
   private void drive(ChassisSpeeds speeds) {
     double elevatorHeight = elevatorExtensionSupplier.getAsDouble();
-    double maxForwardAccel = MathUtil.interpolate(24, 16, elevatorHeight);
-    double maxReverseAccel = MathUtil.interpolate(24, 8, elevatorHeight);
-    double maxSideAccel = MathUtil.interpolate(24, 12, elevatorHeight);
+
+    double maxForwardAccel = MathUtil.interpolate(15, 12, elevatorHeight);
+    double maxReverseAccel =
+        MathUtil.interpolate(
+            15, lastSetpoint.chassisSpeeds().vxMetersPerSecond > .2 ? 12 : 8, elevatorHeight);
+    double maxSideAccel = MathUtil.interpolate(15, 12, elevatorHeight);
 
     Logger.recordOutput("Swerve/Accel Limits/Forward", maxForwardAccel);
     Logger.recordOutput("Swerve/Accel Limits/Reverse", -maxReverseAccel);
@@ -423,7 +426,7 @@ public class Swerve extends SubsystemBase {
       return false;
     }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
-    return error.getTranslation().getNorm() < 1.25
+    return error.getTranslation().getNorm() < 1.5
         && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
@@ -488,8 +491,8 @@ public class Swerve extends SubsystemBase {
                   var sample =
                       repulsorFieldPlanner.sampleField(
                           poseEstimator.getEstimatedPosition().getTranslation(),
-                          maxLinearSpeedMetersPerSec * .8,
-                          1.25);
+                          maxLinearSpeedMetersPerSec * .9,
+                        .8);
 
                   var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
                   var feedback =
