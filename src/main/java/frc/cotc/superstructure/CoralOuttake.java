@@ -40,7 +40,7 @@ class CoralOuttake extends SubsystemBase {
 
   Command scoreSlow() {
     return run(io::outtakeSlow)
-        .withDeadline(waitUntil(() -> !inputs.hasCoral).andThen(waitSeconds(.3)))
+        .withDeadline(waitUntil(() -> !inputs.hasCoral).andThen(waitSeconds(.15)))
         .withName("Outtake Slow");
   }
 
