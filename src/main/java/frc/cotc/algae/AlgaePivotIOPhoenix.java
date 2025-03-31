@@ -31,7 +31,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
   private final BaseStatusSignal posSignal, velSignal, statorSignal, supplySignal;
 
   public AlgaePivotIOPhoenix() {
-    motor = new TalonFX(3);
+    motor = new TalonFX(Robot.isReal() ? 3 : 30);
 
     var config = new TalonFXConfiguration();
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
