@@ -34,8 +34,7 @@ import frc.cotc.util.ReefLocations;
 import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.*;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -130,8 +129,6 @@ public class Robot extends LoggedRobot {
 
     Logger.processInputs("Robot", newBotLogger);
     isNewBot = newBotLogger.isNewBot;
-
-    registerCommandSchedulerLogging();
 
     var primary = new CommandXboxControllerWithRumble(0);
     var secondary = new CommandXboxControllerWithRumble(1);
@@ -238,78 +235,118 @@ public class Robot extends LoggedRobot {
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
-  }
 
-  private final StringBuilder nameBuilder = new StringBuilder();
-
-  private String getSubsystemNames(Set<Subsystem> subsystems) {
-    nameBuilder.setLength(0);
-    int i = 1;
-    for (var subsystem : subsystems) {
-      nameBuilder.append(subsystem.getName());
-      if (i != subsystems.size()) {
-        nameBuilder.append(" & ");
-      }
-      i++;
-    }
-    if (i == 1) {
-      nameBuilder.append("None");
-    }
-    return nameBuilder.toString();
-  }
-
-  private void registerCommandSchedulerLogging() {
-    CommandScheduler.getInstance()
-        .onCommandInitialize(
-            command ->
-                Logger.recordOutput(
-                    "CommandScheduler/"
-                        + getSubsystemNames(command.getRequirements())
-                        + "/"
-                        + command.getName()
-                        + "/State",
-                    "Initializing"));
-    CommandScheduler.getInstance()
-        .onCommandExecute(
-            command ->
-                Logger.recordOutput(
-                    "CommandScheduler/"
-                        + getSubsystemNames(command.getRequirements())
-                        + "/"
-                        + command.getName()
-                        + "/State",
-                    "Running"));
-    CommandScheduler.getInstance()
-        .onCommandFinish(
-            command ->
-                Logger.recordOutput(
-                    "CommandScheduler/"
-                        + getSubsystemNames(command.getRequirements())
-                        + "/"
-                        + command.getName()
-                        + "/State",
-                    "Finished"));
+    CommandScheduler.getInstance().onCommandInitialize(this::commandStarted);
+    CommandScheduler.getInstance().onCommandFinish(this::commandEnded);
     CommandScheduler.getInstance()
         .onCommandInterrupt(
-            (command, interrupter) -> {
-              if (interrupter.isEmpty()) {
-                Logger.recordOutput(
-                    "CommandScheduler/"
-                        + getSubsystemNames(command.getRequirements())
-                        + "/"
-                        + command.getName()
-                        + "/State",
-                    "Interrupted");
-              } else {
-                Logger.recordOutput(
-                    "CommandScheduler/"
-                        + getSubsystemNames(command.getRequirements())
-                        + "/"
-                        + command.getName()
-                        + "/State",
-                    "Interrupted by: " + interrupter.get().getName());
-              }
+            (interrupted, interrupting) -> {
+              interrupting.ifPresent(
+                  interrupter -> runningInterrupters.put(interrupter, interrupted));
+              commandEnded(interrupted);
             });
+  }
+
+  private final Set<Command> runningNonInterrupters = new HashSet<>();
+  private final Map<Command, Command> runningInterrupters = new HashMap<>();
+  private final Map<Subsystem, Command> requiredSubsystems = new HashMap<>();
+
+  private void commandStarted(final Command command) {
+    if (!runningInterrupters.containsKey(command)) {
+      runningNonInterrupters.add(command);
+    }
+
+    for (final Subsystem subsystem : command.getRequirements()) {
+      requiredSubsystems.put(subsystem, command);
+    }
+  }
+
+  private void commandEnded(final Command command) {
+    runningNonInterrupters.remove(command);
+    runningInterrupters.remove(command);
+
+    for (final Subsystem subsystem : command.getRequirements()) {
+      requiredSubsystems.remove(subsystem);
+    }
+  }
+
+  private final StringBuilder subsystemsBuilder = new StringBuilder();
+
+  private String getCommandName(Command command) {
+    subsystemsBuilder.setLength(0);
+    int j = 1;
+    for (final Subsystem subsystem : command.getRequirements()) {
+      subsystemsBuilder.append(subsystem.getName());
+      if (j < command.getRequirements().size()) {
+        subsystemsBuilder.append(",");
+      }
+
+      j++;
+    }
+    var finalName = command.getName();
+    if (j > 1) {
+      finalName += " (" + subsystemsBuilder + ")";
+    }
+    return finalName;
+  }
+
+  private void logRunningCommands() {
+    Logger.recordOutput("CommandScheduler/Running/.type", "Alerts");
+
+    //    final String[] runningCommands = new String[runningNonInterrupters.size()];
+    //    int i = 0;
+    //    for (final Command command : runningNonInterrupters) {
+    //      runningCommands[i] = getCommandName(command);
+    //      i++;
+    //    }
+    final ArrayList<String> runningCommands = new ArrayList<>();
+    final ArrayList<String> runningDefaultCommands = new ArrayList<>();
+    for (final Command command : runningNonInterrupters) {
+      boolean isDefaultCommand = false;
+      for (Subsystem subsystem : command.getRequirements()) {
+        if (subsystem.getDefaultCommand() == command) {
+          runningDefaultCommands.add(getCommandName(command));
+          isDefaultCommand = true;
+          break;
+        }
+      }
+      if (!isDefaultCommand) {
+        runningCommands.add(getCommandName(command));
+      }
+    }
+    Logger.recordOutput(
+        "CommandScheduler/Running/warnings", runningCommands.toArray(new String[0]));
+    Logger.recordOutput(
+        "CommandScheduler/Running/infos", runningDefaultCommands.toArray(new String[0]));
+
+    final String[] interrupters = new String[runningInterrupters.size()];
+    int j = 0;
+    for (final Map.Entry<Command, Command> entry : runningInterrupters.entrySet()) {
+      final Command interrupter = entry.getKey();
+      final Command interrupted = entry.getValue();
+
+      interrupters[j] = getCommandName(interrupter) + " interrupted " + getCommandName(interrupted);
+      j++;
+    }
+
+    Logger.recordOutput("CommandScheduler/Running/errors", interrupters);
+  }
+
+  private void logRequiredSubsystems() {
+    Logger.recordOutput("CommandScheduler/Subsystems/.type", "Alerts");
+
+    final String[] subsystems = new String[requiredSubsystems.size()];
+    {
+      int i = 0;
+      for (final Map.Entry<Subsystem, Command> entry : requiredSubsystems.entrySet()) {
+        final Subsystem required = entry.getKey();
+        final Command command = entry.getValue();
+
+        subsystems[i] = required.getName() + " (" + command.getName() + ")";
+        i++;
+      }
+    }
+    Logger.recordOutput("CommandScheduler/Subsystems/infos", subsystems);
   }
 
   private Swerve getSwerve(Mode mode) {
@@ -455,6 +492,8 @@ public class Robot extends LoggedRobot {
     // subsystem periodic() methods. This must be called from the robot's periodic block in order
     // for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    logRunningCommands();
+    logRequiredSubsystems();
     Logger.recordOutput(
         "LoggedRobot/MemoryUsageMb",
         (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6);
