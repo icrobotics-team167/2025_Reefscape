@@ -36,7 +36,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private static final ElevatorIOConstantsAutoLogged constants;
 
   static {
-    gearRatio = (46.0 / 16.0) * (52.0 / 20.0);
+    gearRatio = (40.0 / 22.0) * (52.0 / 20.0);
 
     var pitch = 5.0 / 1000;
     var teeth = 36;

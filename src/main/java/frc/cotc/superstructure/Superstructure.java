@@ -31,7 +31,8 @@ public class Superstructure extends Mechanism {
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
-    RobotModeTriggers.disabled().onFalse(ramp.lower().alongWith(climber.deployStart()));
+    RobotModeTriggers.disabled()
+        .onFalse(ramp.lower().alongWith(climber.deployStart()).withName("Initial deploy"));
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
@@ -40,7 +41,8 @@ public class Superstructure extends Mechanism {
                 .lvl2()
                 .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.scoreFast().asProxy()))
+                        .andThen(coralOuttake.scoreFast().asProxy())
+                        .withName("Score On Branch"))
                 .withName("Lvl 2 Scoring"))
         .withName("Lvl 2 Scoring");
   }
@@ -51,7 +53,8 @@ public class Superstructure extends Mechanism {
                 .lvl3()
                 .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.scoreFast().asProxy()))
+                        .andThen(coralOuttake.scoreFast().asProxy())
+                        .withName("Score On Branch"))
                 .withName("Lvl 3 Scoring"))
         .withName("Lvl 3 Scoring");
   }
@@ -62,7 +65,8 @@ public class Superstructure extends Mechanism {
                 .lvl4()
                 .withDeadline(
                     waitUntil(() -> driveBaseAtTarget.getAsBoolean() && elevator.atTargetPos())
-                        .andThen(coralOuttake.scoreSlow().asProxy()))
+                        .andThen(coralOuttake.scoreSlow().asProxy())
+                        .withName("Score On Branch"))
                 .withName("Lvl 4 Scoring"))
         .withName("Lvl 4 Scoring");
   }
@@ -77,11 +81,11 @@ public class Superstructure extends Mechanism {
   }
 
   public Command highAlgae() {
-    return expose(elevator.highAlgae());
+    return expose(elevator.highAlgae()).withName("High Algae");
   }
 
   public Command net() {
-    return expose(elevator.net());
+    return expose(elevator.net()).withName("Net");
   }
 
   private boolean climberDeployed = false;

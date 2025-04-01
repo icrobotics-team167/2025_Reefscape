@@ -238,10 +238,17 @@ public class Autos {
               .goTo(reefBranches[i])
               .withDeadline(
                   waitUntil(swerve::nearingTargetPose)
-                      .andThen(superstructure.lvl4(swerve::atTargetPoseAuto)))
+                      .withName("Wait for drivebase")
+                      .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))
+                      .withName("Score L4"))
+              .withName("Go to " + reefBranches[i].name())
               .asProxy();
       commands[i * 2 + 1] =
-          sourcePathfinding.goTo(source).until(superstructure::hasCoral).asProxy();
+          sourcePathfinding
+              .goTo(source)
+              .until(superstructure::hasCoral)
+              .withName("Go to intake")
+              .asProxy();
     }
 
     return sequence(commands);

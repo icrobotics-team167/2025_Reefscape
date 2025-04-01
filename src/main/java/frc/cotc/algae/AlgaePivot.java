@@ -27,6 +27,7 @@ public class AlgaePivot extends SubsystemBase {
   }
 
   public Command manualControl(DoubleSupplier overrideControl) {
-    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 4));
+    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 4))
+        .withName("Manual Control");
   }
 }
