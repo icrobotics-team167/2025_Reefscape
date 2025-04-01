@@ -8,7 +8,6 @@
 package frc.cotc.superstructure;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -102,13 +101,10 @@ class Elevator extends SubsystemBase {
         && Math.abs(inputs.velMetersPerSec) < .25;
   }
 
-  private final PIDController feedbackController = new PIDController(0, 0, 0);
-
   private Command goToPos(double posMeters) {
     final double clampedPosMeters = MathUtil.clamp(posMeters, 0, maxHeight);
     return runOnce(
             () -> {
-              feedbackController.reset();
               targetHeight = clampedPosMeters;
               Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
             })
