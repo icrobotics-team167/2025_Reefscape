@@ -288,34 +288,50 @@ public class Swerve extends SubsystemBase {
     };
   }
 
-  private void drive(ChassisSpeeds speeds) {
+  private void drive(ChassisSpeeds desiredSpeeds) {
     double elevatorHeight = elevatorExtensionSupplier.getAsDouble();
 
-    double maxForwardAccel = MathUtil.interpolate(15, 12, elevatorHeight);
+    double maxForwardAccel = MathUtil.interpolate(14, 12, elevatorHeight);
     double maxReverseAccel =
         MathUtil.interpolate(
-            15, lastSetpoint.chassisSpeeds().vxMetersPerSecond > .2 ? 12 : 8, elevatorHeight);
-    double maxSideAccel = MathUtil.interpolate(15, 12, elevatorHeight);
+            14, lastSetpoint.chassisSpeeds().vxMetersPerSecond > 0 ? 12 : 4, elevatorHeight);
+    double maxSideAccel = MathUtil.interpolate(14, 12, elevatorHeight);
 
     Logger.recordOutput("Swerve/Accel Limits/Forward", maxForwardAccel);
     Logger.recordOutput("Swerve/Accel Limits/Reverse", -maxReverseAccel);
     Logger.recordOutput("Swerve/Accel Limits/Side", maxSideAccel);
 
-    speeds.vxMetersPerSecond =
-        MathUtil.clamp(
-            speeds.vxMetersPerSecond,
-            lastSetpoint.chassisSpeeds().vxMetersPerSecond
-                - maxReverseAccel * Robot.defaultPeriodSecs,
-            lastSetpoint.chassisSpeeds().vxMetersPerSecond
-                + maxForwardAccel * Robot.defaultPeriodSecs);
-    speeds.vyMetersPerSecond =
-        MathUtil.clamp(
-            speeds.vyMetersPerSecond,
-            lastSetpoint.chassisSpeeds().vyMetersPerSecond - maxSideAccel * Robot.defaultPeriodSecs,
-            lastSetpoint.chassisSpeeds().vyMetersPerSecond
-                + maxSideAccel * Robot.defaultPeriodSecs);
+    var desiredXAccel =
+        (desiredSpeeds.vxMetersPerSecond - lastSetpoint.chassisSpeeds().vxMetersPerSecond)
+            / Robot.defaultPeriodSecs;
+    var desiredYAccel =
+        (desiredSpeeds.vyMetersPerSecond - lastSetpoint.chassisSpeeds().vyMetersPerSecond)
+            / Robot.defaultPeriodSecs;
 
-    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, speeds);
+    double scalar = maxSideAccel / Math.max(Math.abs(desiredYAccel), maxSideAccel);
+    scalar =
+        Math.min(
+            scalar,
+            desiredXAccel > 0
+                ? maxForwardAccel / Math.max(desiredXAccel, maxForwardAccel)
+                : maxReverseAccel / Math.max(-desiredXAccel, maxReverseAccel));
+
+    ChassisSpeeds limitedSpeeds;
+    if (scalar == 1) {
+      limitedSpeeds = desiredSpeeds;
+    } else {
+      limitedSpeeds =
+          new ChassisSpeeds(
+              lastSetpoint.chassisSpeeds().vxMetersPerSecond
+                  + desiredXAccel * Robot.defaultPeriodSecs * scalar,
+              lastSetpoint.chassisSpeeds().vyMetersPerSecond
+                  + desiredYAccel * Robot.defaultPeriodSecs * scalar,
+              lastSetpoint.chassisSpeeds().omegaRadiansPerSecond
+                  + (desiredSpeeds.omegaRadiansPerSecond
+                          - lastSetpoint.chassisSpeeds().omegaRadiansPerSecond)
+                      * scalar);
+    }
+    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, limitedSpeeds);
     swerveIO.drive(setpoint);
     lastSetpoint = setpoint;
   }
