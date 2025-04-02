@@ -54,6 +54,10 @@ public class Swerve extends SubsystemBase {
   private final double maxLinearSpeedMetersPerSec;
   private final double maxAngularSpeedRadPerSec;
   private final double angularSpeedFudgeFactor;
+  private final double maxLowElevatorAccel;
+  private final double maxHighElevatorAccelForwards;
+  private final double maxHighElevatorAccelSideways;
+  private final double maxHighElevatorAccelReverse;
 
   private final SwervePoseEstimator poseEstimator;
   private final TimeInterpolatableBuffer<Rotation2d> yawBuffer =
@@ -83,6 +87,10 @@ public class Swerve extends SubsystemBase {
         maxLinearSpeedMetersPerSec
             / Math.hypot(CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2);
     angularSpeedFudgeFactor = CONSTANTS.ANGULAR_SPEED_FUDGING;
+    maxLowElevatorAccel = CONSTANTS.MAX_ACCEL_LOW;
+    maxHighElevatorAccelForwards = CONSTANTS.MAX_FWD_ACCEL_HIGH;
+    maxHighElevatorAccelSideways = CONSTANTS.MAX_SIDE_ACCEL_HIGH;
+    maxHighElevatorAccelReverse = CONSTANTS.MAX_BACK_ACCEL_HIGH;
 
     Logger.recordOutput("Swerve/Max Linear Speed", maxLinearSpeedMetersPerSec);
     Logger.recordOutput("Swerve/Max Angular Speed", maxAngularSpeedRadPerSec);
@@ -291,11 +299,17 @@ public class Swerve extends SubsystemBase {
   private void drive(ChassisSpeeds desiredSpeeds) {
     double elevatorHeight = elevatorExtensionSupplier.getAsDouble();
 
-    double maxForwardAccel = MathUtil.interpolate(14, 12, elevatorHeight);
+    double maxForwardAccel =
+        MathUtil.interpolate(maxLowElevatorAccel, maxHighElevatorAccelForwards, elevatorHeight);
     double maxReverseAccel =
         MathUtil.interpolate(
-            14, lastSetpoint.chassisSpeeds().vxMetersPerSecond > 0 ? 12 : 4, elevatorHeight);
-    double maxSideAccel = MathUtil.interpolate(14, 12, elevatorHeight);
+            maxLowElevatorAccel,
+            lastSetpoint.chassisSpeeds().vxMetersPerSecond > 0
+                ? maxHighElevatorAccelForwards
+                : maxHighElevatorAccelReverse,
+            elevatorHeight);
+    double maxSideAccel =
+        MathUtil.interpolate(maxLowElevatorAccel, maxHighElevatorAccelSideways, elevatorHeight);
 
     Logger.recordOutput("Swerve/Accel Limits/Forward", maxForwardAccel);
     Logger.recordOutput("Swerve/Accel Limits/Reverse", -maxReverseAccel);
