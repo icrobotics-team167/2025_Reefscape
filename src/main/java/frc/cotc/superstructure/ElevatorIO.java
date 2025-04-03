@@ -9,8 +9,6 @@ package frc.cotc.superstructure;
 
 import frc.cotc.util.MotorCurrentDraws;
 import org.littletonrobotics.junction.AutoLog;
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface ElevatorIO {
   @AutoLog
@@ -19,30 +17,13 @@ public interface ElevatorIO {
     double maxHeightMeters;
   }
 
-  class ElevatorIOInputs implements LoggableInputs {
+  @AutoLog
+  class ElevatorIOInputs {
     double posMeters;
     double velMetersPerSec;
 
     MotorCurrentDraws leftMotorCurrentDraws = new MotorCurrentDraws();
     MotorCurrentDraws rightMotorCurrentDraws = new MotorCurrentDraws();
-
-    @Override
-    public void toLog(LogTable table) {
-      table.put("posMeters", posMeters);
-      table.put("velMetersPerSec", velMetersPerSec);
-      table.put("leftMotorCurrentDraws", MotorCurrentDraws.struct, leftMotorCurrentDraws);
-      table.put("rightMotorCurrentDraws", MotorCurrentDraws.struct, rightMotorCurrentDraws);
-    }
-
-    @Override
-    public void fromLog(LogTable table) {
-      posMeters = table.get("posMeters", 0.0);
-      velMetersPerSec = table.get("velMetersPerSec", 0.0);
-      leftMotorCurrentDraws =
-          table.get("leftMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
-      rightMotorCurrentDraws =
-          table.get("rightMotorCurrentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
-    }
   }
 
   default ElevatorIOConstantsAutoLogged getConstants() {
