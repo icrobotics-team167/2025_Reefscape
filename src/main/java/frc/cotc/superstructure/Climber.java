@@ -14,7 +14,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
   private final ClimberIO io;
-  private final ClimberIO.ClimberIOInputs inputs = new ClimberIO.ClimberIOInputs();
+  private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
 
   Climber(ClimberIO io) {
     this.io = io;
