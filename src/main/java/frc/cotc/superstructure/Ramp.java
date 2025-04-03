@@ -15,7 +15,7 @@ import org.littletonrobotics.junction.Logger;
 
 class Ramp extends SubsystemBase {
   private final RampIO io;
-  private RampIO.RampIOInputs inputs = new RampIO.RampIOInputs();
+  private final RampIOInputsAutoLogged inputs = new RampIOInputsAutoLogged();
 
   public Ramp(RampIO io) {
     this.io = io;

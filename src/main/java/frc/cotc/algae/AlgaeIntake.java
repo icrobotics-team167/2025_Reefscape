@@ -13,7 +13,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class AlgaeIntake extends SubsystemBase {
   private final AlgaeIntakeIO io;
-  private final AlgaeIntakeIO.AlgaeIntakeIOInputs inputs = new AlgaeIntakeIO.AlgaeIntakeIOInputs();
+  private final AlgaeIntakeIOInputsAutoLogged inputs = new AlgaeIntakeIOInputsAutoLogged();
 
   public AlgaeIntake(AlgaeIntakeIO io) {
     this.io = io;

@@ -8,30 +8,16 @@
 package frc.cotc.superstructure;
 
 import frc.cotc.util.MotorCurrentDraws;
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+import org.littletonrobotics.junction.AutoLog;
 
 public interface CoralOuttakeIO {
-  class CoralOuttakeIOInputs implements LoggableInputs {
+  @AutoLog
+  class CoralOuttakeIOInputs {
     boolean hasCoral;
 
     double velocityPercent;
 
     MotorCurrentDraws currentDraws = new MotorCurrentDraws();
-
-    @Override
-    public void toLog(LogTable table) {
-      table.put("hasCoral", hasCoral);
-      table.put("velocityPercent", velocityPercent);
-      table.put("currentDraws", MotorCurrentDraws.struct, currentDraws);
-    }
-
-    @Override
-    public void fromLog(LogTable table) {
-      hasCoral = table.get("hasCoral", false);
-      velocityPercent = table.get("velocityPercent", 0.0);
-      currentDraws = table.get("currentDraws", MotorCurrentDraws.struct, new MotorCurrentDraws());
-    }
   }
 
   default void updateInputs(CoralOuttakeIOInputs inputs) {}

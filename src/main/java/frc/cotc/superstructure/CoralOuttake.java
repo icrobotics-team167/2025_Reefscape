@@ -15,8 +15,7 @@ import org.littletonrobotics.junction.Logger;
 
 class CoralOuttake extends SubsystemBase {
   private final CoralOuttakeIO io;
-  private final CoralOuttakeIO.CoralOuttakeIOInputs inputs =
-      new CoralOuttakeIO.CoralOuttakeIOInputs();
+  private final CoralOuttakeIOInputsAutoLogged inputs = new CoralOuttakeIOInputsAutoLogged();
 
   CoralOuttake(CoralOuttakeIO io) {
     this.io = io;

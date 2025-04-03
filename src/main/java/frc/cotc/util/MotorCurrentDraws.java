@@ -9,9 +9,10 @@ package frc.cotc.util;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructSerializable;
 import java.nio.ByteBuffer;
 
-public class MotorCurrentDraws {
+public class MotorCurrentDraws implements StructSerializable {
   public double statorCurrent;
   public double supplyCurrent;
 

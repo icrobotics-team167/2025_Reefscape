@@ -14,7 +14,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class AlgaePivot extends SubsystemBase {
   private final AlgaePivotIO io;
-  private final AlgaePivotIO.AlgaeClawIOInputs inputs = new AlgaePivotIO.AlgaeClawIOInputs();
+  private final AlgaeClawIOInputsAutoLogged inputs = new AlgaeClawIOInputsAutoLogged();
 
   public AlgaePivot(AlgaePivotIO io) {
     this.io = io;
