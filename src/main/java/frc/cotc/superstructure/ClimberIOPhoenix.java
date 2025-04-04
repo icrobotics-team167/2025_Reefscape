@@ -55,7 +55,7 @@ public class ClimberIOPhoenix implements ClimberIO {
     supplyCurrentSignal = motor.getSupplyCurrent(false);
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        50, posSignal, statorCurrentSignal, supplyCurrentSignal);
+            50, posSignal, statorCurrentSignal, supplyCurrentSignal);
     ParentDevice.optimizeBusUtilizationForAll(5, encoder, motor);
     PhoenixBatchRefresher.registerCanivore(posSignal, statorCurrentSignal, supplyCurrentSignal);
   }
