@@ -34,8 +34,8 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
     var incomingDetector = new CANrange(2);
 
     var motorConfig = new TalonFXConfiguration();
-    motorConfig.CurrentLimits.StatorCurrentLimit = 20;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 10;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     motorConfig.HardwareLimitSwitch.ForwardLimitEnable = true;
@@ -76,7 +76,7 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   }
 
   private final VoltageOut idleControl = new VoltageOut(12).withIgnoreHardwareLimits(false);
-  private final VoltageOut intakeControl = new VoltageOut(5).withIgnoreHardwareLimits(false);
+  private final VoltageOut intakeControl = new VoltageOut(2.5).withIgnoreHardwareLimits(false);
 
   @Override
   public void intake() {
