@@ -469,7 +469,7 @@ public class Swerve extends SubsystemBase {
 
     return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < .05
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
-            < .5
+            < .1
         && Math.abs(
                 targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
             < 10;

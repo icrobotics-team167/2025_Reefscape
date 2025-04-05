@@ -9,6 +9,7 @@ package frc.cotc.superstructure;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -99,8 +100,14 @@ public class Superstructure extends Mechanism {
   }
 
   public Command bargeScore(BooleanSupplier atBarge) {
+    final Debouncer debouncer = new Debouncer(.5);
     return expose(
-        elevator.net().withDeadline(waitUntil(atBarge).andThen(algaeClaw.eject().withTimeout(.5))));
+        elevator
+            .net()
+            .withDeadline(
+                waitUntil(
+                        () -> debouncer.calculate(atBarge.getAsBoolean() && elevator.atTargetPos()))
+                    .andThen(algaeClaw.eject().withTimeout(1))));
   }
 
   public Command ejectAlgae() {

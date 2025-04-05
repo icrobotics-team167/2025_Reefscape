@@ -424,7 +424,7 @@ public class Robot extends LoggedRobot {
             new ElevatorIOPhoenix(),
             new CoralOuttakeIOSim(),
             new AlgaePivotIOSim(),
-            new AlgaeRollersIO() {},
+            new AlgaeRollersIOSim(),
             new RampIOPhoenix(),
             new ClimberIO() {});
       }
