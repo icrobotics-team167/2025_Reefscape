@@ -193,18 +193,30 @@ public class Robot extends LoggedRobot {
     secondary
         .y()
         .whileTrue(
-            superstructure.lvl4(
-                () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
+            waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
+                .andThen(
+                    superstructure.lvl4(
+                        () ->
+                            swerve.atTargetPoseTeleop()
+                                || secondary.getHID().getRightBumperButton())));
     secondary
         .x()
         .whileTrue(
-            superstructure.lvl3(
-                () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
+            waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
+                .andThen(
+                    superstructure.lvl3(
+                        () ->
+                            swerve.atTargetPoseTeleop()
+                                || secondary.getHID().getRightBumperButton())));
     secondary
         .b()
         .whileTrue(
-            superstructure.lvl2(
-                () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
+            waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
+                .andThen(
+                    superstructure.lvl2(
+                        () ->
+                            swerve.atTargetPoseTeleop()
+                                || secondary.getHID().getRightBumperButton())));
 
     algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
     secondary.leftTrigger().or(algaeIntake::hasAlgae).whileTrue(algaeIntake.intake());
