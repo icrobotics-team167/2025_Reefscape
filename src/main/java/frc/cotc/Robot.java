@@ -228,6 +228,8 @@ public class Robot extends LoggedRobot {
     secondary.leftBumper().whileTrue(algaeIntake.outtake());
     secondary.rightTrigger().whileTrue(superstructure.net());
 
+    SmartDashboard.putData("Turbo!", swerve.forceJIT());
+
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
     new Trigger(superstructure::hasCoral).onChange(secondary.rumble(.35));

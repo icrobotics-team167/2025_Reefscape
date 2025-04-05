@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.cotc.Constants;
 import frc.cotc.Robot;
@@ -112,8 +113,7 @@ public class Swerve extends SubsystemBase {
             },
             new double[4],
             new double[4]);
-    lastSetpoint =
-        new SwerveSetpoint(new ChassisSpeeds(), inputs.moduleStates, new double[4], new double[4]);
+    resetLastSetpoint();
 
     poseEstimator =
         new SwervePoseEstimator(
@@ -137,6 +137,11 @@ public class Swerve extends SubsystemBase {
     yController = new PIDController(5, 0, 0);
     yawController = new PIDController(3, 0, .2);
     yawController.enableContinuousInput(-PI, PI);
+  }
+
+  private void resetLastSetpoint() {
+    lastSetpoint =
+        new SwerveSetpoint(new ChassisSpeeds(), inputs.moduleStates, new double[4], new double[4]);
   }
 
   private ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
@@ -623,6 +628,25 @@ public class Swerve extends SubsystemBase {
                         inputs.moduleStates,
                         new double[4],
                         new double[4]));
+  }
+
+  /**
+   * Run the drive method 5,000 times a second to force a C2 JIT. Because every nanosecond counts.
+   */
+  public Command forceJIT() {
+    return Commands.run(
+            () -> {
+              for (int i = 0; i < 100; i++) {
+                drive(
+                    new ChassisSpeeds(
+                        maxLinearSpeedMetersPerSec * (Math.random() * 2 - 1),
+                        maxLinearSpeedMetersPerSec * (Math.random() * 2 - 1),
+                        maxAngularSpeedRadPerSec * (Math.random() * 2 - 1)));
+              }
+            })
+        .finallyDo(this::resetLastSetpoint)
+        .ignoringDisable(true)
+        .withName("Force JIT");
   }
 
   public Command lockForward() {
