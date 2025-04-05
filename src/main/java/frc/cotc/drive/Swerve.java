@@ -47,7 +47,7 @@ public class Swerve extends SubsystemBase {
 
   private final SwerveSetpointGenerator setpointGenerator;
   private final Rotation2d[] stopAngles;
-  private final SwerveSetpoint stopInXSetpoint;
+  private final SwerveSetpoint stopSetpoint;
   private SwerveSetpoint lastSetpoint;
 
   private final double maxLinearSpeedMetersPerSec;
@@ -101,7 +101,7 @@ public class Swerve extends SubsystemBase {
             CONSTANTS.WHEEL_DIAMETER_METERS);
     stopAngles =
         new Rotation2d[] {Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero};
-    stopInXSetpoint =
+    stopSetpoint =
         new SwerveSetpoint(
             new ChassisSpeeds(),
             new SwerveModuleState[] {
@@ -318,7 +318,7 @@ public class Swerve extends SubsystemBase {
   public Command stop() {
     return run(() -> {
           swerveIO.stop(stopAngles);
-          lastSetpoint = stopInXSetpoint;
+          lastSetpoint = stopSetpoint;
         })
         .ignoringDisable(true)
         .withName("Stop");
