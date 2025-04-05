@@ -460,6 +460,21 @@ public class Swerve extends SubsystemBase {
         && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
+  private final double blueNetTargetX = 7.825;
+  private final double redNetTargetX = Constants.FIELD_LENGTH_METERS - blueNetTargetX;
+
+  public boolean atNet() {
+    var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
+    var targetYaw = Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi;
+
+    return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < .05
+        && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
+            < .5
+        && Math.abs(
+                targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
+            < 10;
+  }
+
   public Command netAlign(Supplier<Translation2d> translationalControlSupplier) {
     return runOnce(
             () -> {
@@ -469,10 +484,7 @@ public class Swerve extends SubsystemBase {
         .andThen(
             run(
                 () -> {
-                  var targetX = 7.825;
-                  if (Robot.isOnRed()) {
-                    targetX = Constants.FIELD_LENGTH_METERS - targetX;
-                  }
+                  var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
 
                   var xOutput =
                       xController.calculate(poseEstimator.getEstimatedPosition().getX(), targetX);

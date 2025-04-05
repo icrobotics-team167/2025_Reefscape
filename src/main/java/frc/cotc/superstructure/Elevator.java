@@ -87,6 +87,10 @@ class Elevator extends SubsystemBase {
     return goToPos(1.515).withName("Lvl 4");
   }
 
+  Command lowAlgae() {
+    return goToPos(.2).withName("Low Algae");
+  }
+
   Command highAlgae() {
     return goToPos(.58).withName("High Algae");
   }

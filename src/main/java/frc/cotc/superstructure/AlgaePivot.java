@@ -5,29 +5,35 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.algae;
+package frc.cotc.superstructure;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
-public class AlgaePivot extends SubsystemBase {
+class AlgaePivot extends SubsystemBase {
   private final AlgaePivotIO io;
-  private final AlgaeClawIOInputsAutoLogged inputs = new AlgaeClawIOInputsAutoLogged();
+  private final AlgaePivotIOInputsAutoLogged inputs = new AlgaePivotIOInputsAutoLogged();
 
-  public AlgaePivot(AlgaePivotIO io) {
+  AlgaePivot(AlgaePivotIO io) {
     this.io = io;
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Superstructure/AlgaeClaw", inputs);
+    Logger.processInputs("Superstructure/Algae/Pivot", inputs);
   }
 
-  public Command manualControl(DoubleSupplier overrideControl) {
-    return run(() -> io.manualOverride(overrideControl.getAsDouble() * 4))
-        .withName("Manual Control");
+  Command intake() {
+    return run(io::intake);
+  }
+
+  Command stow() {
+    return run(io::stow);
+  }
+
+  Command hold() {
+    return run(io::hold);
   }
 }

@@ -5,25 +5,24 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.algae;
+package frc.cotc.superstructure;
 
 import frc.cotc.util.MotorCurrentDraws;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface AlgaePivotIO {
   @AutoLog
-  class AlgaeClawIOInputs {
+  class AlgaePivotIOInputs {
     double posRad;
     double velRadPerSec;
-
-    MotorCurrentDraws motorCurrentDraws = new MotorCurrentDraws();
+    MotorCurrentDraws currentDraws = new MotorCurrentDraws();
   }
 
-  default void updateInputs(AlgaeClawIOInputs inputs) {}
+  default void updateInputs(AlgaePivotIOInputs inputs) {}
 
-  default void setTargetPos(double angleRad) {}
+  default void intake() {}
 
-  default void manualOverride(double voltage) {}
+  default void stow() {}
 
-  default void resetAlgae() {}
+  default void hold() {}
 }

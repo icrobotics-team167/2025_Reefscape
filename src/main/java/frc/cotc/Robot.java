@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.cotc.algae.*;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -56,8 +55,6 @@ public class Robot extends LoggedRobot {
     REPLAY
   }
 
-  public static boolean isNewBot;
-
   @SuppressWarnings({"DataFlowIssue", "UnreachableCode", "ConstantValue"})
   public Robot() {
     // If this is erroring, hit build
@@ -73,20 +70,6 @@ public class Robot extends LoggedRobot {
     Mode mode = Robot.isReal() ? Mode.REAL : Mode.SIM;
     //    Mode mode = Robot.isReal() ? Mode.REAL : Mode.REPLAY;
 
-    var newBotLogger =
-        new LoggableInputs() {
-          boolean isNewBot;
-
-          @Override
-          public void toLog(LogTable table) {
-            table.put("isNewBot", isNewBot);
-          }
-
-          @Override
-          public void fromLog(LogTable table) {
-            isNewBot = table.get("isNewBot", true);
-          }
-        };
     switch (mode) {
       case REAL -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
@@ -97,14 +80,12 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("RoboRIO Serial number", serialNumber);
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
-        newBotLogger.isNewBot = serialNumber.equals("032BE4AB");
       }
       case SIM -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to the project's logs folder
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
-        newBotLogger.isNewBot = true;
       }
       case REPLAY -> {
         setUseTiming(false); // Run as fast as possible
@@ -128,20 +109,11 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
-    Logger.processInputs("Robot", newBotLogger);
-    isNewBot = newBotLogger.isNewBot;
-
     var primary = new CommandXboxControllerWithRumble(0);
     var secondary = new CommandXboxControllerWithRumble(1);
 
     var superstructure = getSuperstructure(mode);
     var swerve = getSwerve(mode, superstructure::getElevatorExtension);
-    var algaePivot =
-        new AlgaePivot(
-            Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
-    var algaeIntake =
-        new AlgaeIntake(
-            Robot.isReal() && isNewBot ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -192,6 +164,7 @@ public class Robot extends LoggedRobot {
 
     secondary
         .y()
+        .and(superstructure::hasCoral)
         .whileTrue(
             waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
                 .andThen(
@@ -201,6 +174,7 @@ public class Robot extends LoggedRobot {
                                 || secondary.getHID().getRightBumperButton())));
     secondary
         .x()
+        .and(superstructure::hasCoral)
         .whileTrue(
             waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
                 .andThen(
@@ -210,6 +184,7 @@ public class Robot extends LoggedRobot {
                                 || secondary.getHID().getRightBumperButton())));
     secondary
         .b()
+        .and(superstructure::hasCoral)
         .whileTrue(
             waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
                 .andThen(
@@ -217,15 +192,14 @@ public class Robot extends LoggedRobot {
                         () ->
                             swerve.atTargetPoseTeleop()
                                 || secondary.getHID().getRightBumperButton())));
+    secondary.a().whileTrue(superstructure.lvl3(() -> false));
 
-    algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
-    secondary.leftTrigger().or(algaeIntake::hasAlgae).whileTrue(algaeIntake.intake());
     secondary
         .leftTrigger()
         .whileTrue(
             either(
-                superstructure.highAlgae(),
-                none(),
+                superstructure.intakeHighAlgae(),
+                superstructure.intakeLowAlgae(),
                 () -> {
                   var angle = swerve.getReefAlignPose().getRotation();
                   if (Robot.isOnRed()) {
@@ -238,13 +212,18 @@ public class Robot extends LoggedRobot {
                         || angle.equals(Rotation2d.fromDegrees(-120));
                   }
                 }));
-    secondary.leftBumper().whileTrue(algaeIntake.outtake());
-    secondary.rightTrigger().whileTrue(superstructure.net());
+    secondary.leftBumper().and(superstructure::hasAlgae).whileTrue(superstructure.ejectAlgae());
+    secondary
+        .rightTrigger()
+        .and(superstructure::hasAlgae)
+        .whileTrue(
+            superstructure.bargeScore(
+                () -> swerve.atNet() || secondary.getHID().getRightBumperButton()));
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
     new Trigger(superstructure::hasCoral).onChange(secondary.rumble(.35));
-    new Trigger(algaeIntake::hasAlgae).onChange(secondary.rumble(.35));
+    new Trigger(superstructure::hasAlgae).onChange(secondary.rumble(.35));
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
@@ -385,55 +364,29 @@ public class Robot extends LoggedRobot {
       case REAL, SIM -> {
         swerveIO = new SwerveIOPhoenix();
 
-        if (isNewBot || Robot.isSimulation()) {
-          visionIOs =
-              new FiducialPoseEstimator.IO[] {
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "NewFrontLeft",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2 - 1.5),
-                            Units.inchesToMeters(22.75 / 2 + .125),
-                            Units.inchesToMeters(8.375),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
-                    "NewFrontLeft"),
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "NewFrontRight",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2 - 1.5),
-                            -Units.inchesToMeters(22.75 / 2 + .125),
-                            Units.inchesToMeters(8.375),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                    "NewFrontRight")
-              };
-        } else {
-          visionIOs =
-              new FiducialPoseEstimator.IO[] {
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "FrontLeft",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2),
-                            Units.inchesToMeters(22.75 / 2),
-                            Units.inchesToMeters(8.25),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
-                    "FrontLeft"),
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "FrontRight",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2),
-                            -Units.inchesToMeters(22.75 / 2),
-                            Units.inchesToMeters(8.25),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                    "FrontRight")
-              };
-        }
+        visionIOs =
+            new FiducialPoseEstimator.IO[] {
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      "NewFrontLeft",
+                      new Transform3d(
+                          Units.inchesToMeters(22.75 / 2 - 1.5),
+                          Units.inchesToMeters(22.75 / 2 + .125),
+                          Units.inchesToMeters(8.375),
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
+                  "NewFrontLeft"),
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      "NewFrontRight",
+                      new Transform3d(
+                          Units.inchesToMeters(22.75 / 2 - 1.5),
+                          -Units.inchesToMeters(22.75 / 2 + .125),
+                          Units.inchesToMeters(8.375),
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
+                  "NewFrontRight")
+            };
 
         cameraNames.names = new String[visionIOs.length];
         for (int i = 0; i < visionIOs.length; i++) {
@@ -458,25 +411,31 @@ public class Robot extends LoggedRobot {
   private Superstructure getSuperstructure(Mode mode) {
     switch (mode) {
       case REAL -> {
-        return isNewBot
-            ? new Superstructure(
-                new ElevatorIOPhoenix(),
-                new CoralOuttakeIOPhoenix(),
-                new RampIOPhoenix(),
-                new ClimberIOPhoenix())
-            : new Superstructure(
-                new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {}, new ClimberIO() {});
+        return new Superstructure(
+            new ElevatorIOPhoenix(),
+            new CoralOuttakeIOPhoenix(),
+            new AlgaePivotIOPhoenix(),
+            new AlgaeRollersIOPhoenix(),
+            new RampIOPhoenix(),
+            new ClimberIOPhoenix());
       }
       case SIM -> {
         return new Superstructure(
             new ElevatorIOPhoenix(),
             new CoralOuttakeIOSim(),
+            new AlgaePivotIOSim(),
+            new AlgaeRollersIO() {},
             new RampIOPhoenix(),
             new ClimberIO() {});
       }
       default -> {
         return new Superstructure(
-            new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {}, new ClimberIO() {});
+            new ElevatorIO() {},
+            new CoralOuttakeIO() {},
+            new AlgaePivotIO() {},
+            new AlgaeRollersIO() {},
+            new RampIO() {},
+            new ClimberIO() {});
       }
     }
   }

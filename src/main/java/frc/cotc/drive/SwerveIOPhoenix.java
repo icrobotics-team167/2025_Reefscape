@@ -57,8 +57,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
 
-    DRIVE_GEAR_RATIO =
-        (50.0 / 16.0) * (Robot.isNewBot ? (19.0 / 25.0) : (17.0 / 27.0)) * (45.0 / 15.0);
+    DRIVE_GEAR_RATIO = (50.0 / 16.0) * (19.0 / 25.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
 
     var MK4N_STEER_GEAR_RATIO = 18.75;
@@ -78,17 +77,16 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG =
-        Robot.isNewBot ? Units.lbsToKilograms(115 + 17 + 15) : Units.lbsToKilograms(141);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(115 + 17 + 15);
 
     CONSTANTS.MOI_KG_METERS_SQUARED =
         CONSTANTS.MASS_KG
             * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2)
             * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2);
 
-    CONSTANTS.ANGULAR_SPEED_FUDGING = Robot.isNewBot ? .6 : .75;
+    CONSTANTS.ANGULAR_SPEED_FUDGING = .6;
 
-    CONSTANTS.SLIP_CURRENT_AMPS = Robot.isNewBot ? 90 : 80;
+    CONSTANTS.SLIP_CURRENT_AMPS = 90;
   }
 
   private final Module[] modules = new Module[4];
@@ -260,41 +258,26 @@ public class SwerveIOPhoenix implements SwerveIO {
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
       if (Robot.isReal()) {
-        if (Robot.isNewBot) {
-          driveConfig.Slot0.kV = 2;
-          driveConfig.Slot0.kP = 24;
-          driveConfig.Slot0.kS = 1;
+        driveConfig.Slot0.kV = 2;
+        driveConfig.Slot0.kP = 24;
+        driveConfig.Slot0.kS = 1;
 
-          switch (id) {
-            case 0, 1 -> {
-              steerConfig.Slot0.kP = 80;
-              steerConfig.Slot0.kD = 0.1;
-            }
-            case 2, 3 -> {
-              steerConfig.Slot0.kP = 80;
-              steerConfig.Slot0.kD = 0.1;
-            }
+        switch (id) {
+          case 0, 1 -> {
+            steerConfig.Slot0.kP = 80;
+            steerConfig.Slot0.kD = 0.1;
           }
-
-          switch (id) {
-            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.414794921875;
-            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.21630859375;
-            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = 0.48974609375;
-            case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.443359375;
+          case 2, 3 -> {
+            steerConfig.Slot0.kP = 80;
+            steerConfig.Slot0.kD = 0.1;
           }
-        } else {
-          driveConfig.Slot0.kV = 2.25;
-          driveConfig.Slot0.kP = 15;
+        }
 
-          steerConfig.Slot0.kP = 80;
-          steerConfig.Slot0.kD = 0.1;
-
-          switch (id) {
-            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
-            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.204345703125;
-            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
-            case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.08984375;
-          }
+        switch (id) {
+          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.414794921875;
+          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.21630859375;
+          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = 0.48974609375;
+          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.443359375;
         }
       } else {
         driveConfig.Slot0.kP = 10;

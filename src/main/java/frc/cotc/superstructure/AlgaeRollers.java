@@ -5,27 +5,27 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.algae;
+package frc.cotc.superstructure;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class AlgaeIntake extends SubsystemBase {
-  private final AlgaeIntakeIO io;
-  private final AlgaeIntakeIOInputsAutoLogged inputs = new AlgaeIntakeIOInputsAutoLogged();
+class AlgaeRollers extends SubsystemBase {
+  private final AlgaeRollersIO io;
+  private final AlgaeRollersIOInputsAutoLogged inputs = new AlgaeRollersIOInputsAutoLogged();
 
-  public AlgaeIntake(AlgaeIntakeIO io) {
+  AlgaeRollers(AlgaeRollersIO io) {
     this.io = io;
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Superstructure/AlgaeIntake", inputs);
+    Logger.processInputs("Superstructure/Algae/Rollers", inputs);
   }
 
-  public Command intake() {
+  Command intake() {
     return run(() -> {
           if (inputs.hasAlgae) {
             io.hold();
@@ -33,15 +33,14 @@ public class AlgaeIntake extends SubsystemBase {
             io.intake();
           }
         })
-        .finallyDo(io::brake)
-        .withName("Intake");
+        .finallyDo(io::brake);
   }
 
-  public Command outtake() {
-    return run(io::outtake).finallyDo(io::brake).withName("Outtake");
+  Command eject() {
+    return run(io::eject).finallyDo(io::brake);
   }
 
-  public boolean hasAlgae() {
+  boolean hasAlgae() {
     return inputs.hasAlgae;
   }
 }
