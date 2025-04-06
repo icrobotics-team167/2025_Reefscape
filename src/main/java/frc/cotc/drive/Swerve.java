@@ -469,8 +469,11 @@ public class Swerve extends SubsystemBase {
     var targetYaw = Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi;
 
     return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < .05
-        && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
-            < .25
+        && (Robot.isOnRed()
+            ? poseEstimator.getEstimatedPosition().getY() < Constants.FIELD_WIDTH_METERS / 2
+            : poseEstimator.getEstimatedPosition().getY() > Constants.FIELD_WIDTH_METERS / 2)
+        && Math.abs(fieldRelativeSpeeds.vxMetersPerSecond) < .25
+        && Math.abs(fieldRelativeSpeeds.vyMetersPerSecond) < .5
         && Math.abs(
                 targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
             < 10;
@@ -481,7 +484,7 @@ public class Swerve extends SubsystemBase {
     var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
     var targetYaw = Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi;
 
-    return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < 1.5
+    return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < 2
         && Math.abs(
                 targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
             < 20;

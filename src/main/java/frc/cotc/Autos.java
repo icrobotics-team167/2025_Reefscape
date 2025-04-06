@@ -187,7 +187,7 @@ public class Autos {
                     .withName("Score L4"))
             .withName("Go to G")
             .asProxy();
-    commands[1] = swerve.driveStraight(-1).withTimeout(.5).asProxy();
+    commands[1] = swerve.driveStraight(-.75).withTimeout(.5).asProxy();
 
     for (int i = 0; i < faces.length; i++) {
       commands[i * 2 + 2] =
@@ -197,11 +197,17 @@ public class Autos {
                   swerve
                       .followRepulsorField(reefFaces[faces[i]])
                       .until(superstructure::hasAlgae)
-                      .andThen(swerve.driveStraight(-.5).withTimeout(.5)))
+                      .andThen(swerve.driveStraight(-1.25).withTimeout(.25)))
               .asProxy();
       commands[i * 2 + 3] =
           swerve
-              .netAlign(() -> new Translation2d(0, targetY - swerve.getPose().getY()))
+              .netAlign(
+                  () ->
+                      new Translation2d(
+                          0,
+                          Robot.isOnRed()
+                              ? swerve.getPose().getY() - targetY
+                              : targetY - swerve.getPose().getY()))
               .withDeadline(
                   waitUntil(swerve::nearingNet)
                       .andThen(superstructure.bargeScore(swerve::atNet).asProxy()))
