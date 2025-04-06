@@ -12,6 +12,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -484,6 +485,7 @@ public class Robot extends LoggedRobot {
   public static volatile double simVoltage = 12;
 
   public static Supplier<Pose2d> groundTruthPoseSupplier;
+  public static Supplier<ChassisSpeeds> groundTruthSpeedSupplier;
 
   @Override
   public void simulationPeriodic() {

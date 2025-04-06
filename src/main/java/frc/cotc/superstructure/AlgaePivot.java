@@ -7,6 +7,8 @@
 
 package frc.cotc.superstructure;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
@@ -35,5 +37,10 @@ class AlgaePivot extends SubsystemBase {
 
   Command hold() {
     return run(io::hold);
+  }
+
+  boolean atIntakeAngle() {
+    return MathUtil.isNear(Units.degreesToRadians(-35), inputs.posRad, Units.degreesToRadians(5))
+        && Math.abs(inputs.velRadPerSec) < Units.degreesToRadians(10);
   }
 }

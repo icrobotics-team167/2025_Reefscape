@@ -42,6 +42,10 @@ public class Superstructure extends Mechanism {
     RobotModeTriggers.disabled()
         .onFalse(ramp.lower().alongWith(climber.deployStart()).withName("Initial deploy"));
     algaeClaw.setDefaultCommand(either(algaeClaw.hold(), algaeClaw.stow(), algaeClaw::hasAlgae));
+
+    if (algaeRollersIO instanceof AlgaeRollersIOSim simRollers) {
+      simRollers.atTargetHeight = elevator::atTargetPos;
+    }
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
@@ -102,12 +106,15 @@ public class Superstructure extends Mechanism {
   public Command bargeScore(BooleanSupplier atBarge) {
     final Debouncer debouncer = new Debouncer(.5);
     return expose(
-        elevator
-            .net()
-            .withDeadline(
-                waitUntil(
-                        () -> debouncer.calculate(atBarge.getAsBoolean() && elevator.atTargetPos()))
-                    .andThen(algaeClaw.eject().withTimeout(1))));
+            elevator
+                .net()
+                .withDeadline(
+                    waitUntil(
+                            () ->
+                                debouncer.calculate(
+                                    atBarge.getAsBoolean() && elevator.atTargetPos()))
+                        .andThen(algaeClaw.eject().withTimeout(.4))))
+        .withName("Barge Score");
   }
 
   public Command ejectAlgae() {

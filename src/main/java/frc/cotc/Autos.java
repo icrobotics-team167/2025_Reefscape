@@ -14,6 +14,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -88,6 +89,7 @@ public class Autos {
         };
 
     addRoutine("1AtG", () -> scoreAtG(factory, swerve, superstructure));
+    addRoutine("GAndAlgae", () -> gAndAlgae(swerve, superstructure));
     addRoutine(
         "3FromE",
         () ->
@@ -163,6 +165,59 @@ public class Autos {
                     .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))));
 
     return routine.cmd();
+  }
+
+  private Command gAndAlgae(Swerve swerve, Superstructure superstructure) {
+    var reefFaces =
+        Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES;
+    var targetY = Constants.FIELD_WIDTH_METERS / 2 + (Robot.isOnRed() ? -1 : 1);
+
+    var faces = new int[] {3, 4, 2};
+    var high = new boolean[] {false, true, true};
+
+    var commands = new Command[faces.length * 2 + 3];
+
+    commands[0] =
+        reefPathfinding
+            .goTo(ReefBranch.G)
+            .withDeadline(
+                waitUntil(swerve::nearingTargetPose)
+                    .withName("Wait for drivebase")
+                    .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))
+                    .withName("Score L4"))
+            .withName("Go to G")
+            .asProxy();
+    commands[1] = swerve.driveStraight(-1).withTimeout(.5).asProxy();
+
+    for (int i = 0; i < faces.length; i++) {
+      commands[i * 2 + 2] =
+          waitUntil(swerve::nearingTargetPose)
+              .andThen(high[i] ? superstructure.intakeHighAlgae() : superstructure.intakeLowAlgae())
+              .withDeadline(
+                  swerve
+                      .followRepulsorField(reefFaces[faces[i]])
+                      .until(superstructure::hasAlgae)
+                      .andThen(swerve.driveStraight(-.5).withTimeout(.5)))
+              .asProxy();
+      commands[i * 2 + 3] =
+          swerve
+              .netAlign(() -> new Translation2d(0, targetY - swerve.getPose().getY()))
+              .withDeadline(
+                  waitUntil(swerve::nearingNet)
+                      .andThen(superstructure.bargeScore(swerve::atNet).asProxy()))
+              .asProxy();
+    }
+
+    commands[faces.length * 2 + 2] =
+        swerve
+            .followRepulsorField(
+                new Pose2d(
+                    Constants.FIELD_LENGTH_METERS / 2 + (Robot.isOnRed() ? 2 : -2),
+                    targetY,
+                    Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi))
+            .asProxy();
+
+    return sequence(commands);
   }
 
   private Command generateChoreoRoutine(

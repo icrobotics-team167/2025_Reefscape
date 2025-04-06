@@ -470,6 +470,16 @@ public class SwerveIOPhoenix implements SwerveIO {
               return groundTruthOdometry.getPoseMeters();
             }
           };
+      Robot.groundTruthSpeedSupplier =
+          () -> {
+            synchronized (simModules) {
+              return kinematics.toChassisSpeeds(
+                  simModules[0].getModuleState(),
+                  simModules[1].getModuleState(),
+                  simModules[2].getModuleState(),
+                  simModules[3].getModuleState());
+            }
+          };
     }
 
     void start() {

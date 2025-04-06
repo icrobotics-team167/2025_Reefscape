@@ -149,7 +149,7 @@ public class Swerve extends SubsystemBase {
 
     xController = new PIDController(5, 0, 0);
     yController = new PIDController(5, 0, 0);
-    yawController = new PIDController(3, 0, .2);
+    yawController = new PIDController(4, 0, .2);
     yawController.enableContinuousInput(-PI, PI);
 
     this.elevatorExtensionSupplier = elevatorExtensionSupplier;
@@ -460,19 +460,31 @@ public class Swerve extends SubsystemBase {
         && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
-  private final double blueNetTargetX = 7.825;
+  private final double blueNetTargetX = 7.8;
   private final double redNetTargetX = Constants.FIELD_LENGTH_METERS - blueNetTargetX;
 
+  @AutoLogOutput
   public boolean atNet() {
     var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
     var targetYaw = Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi;
 
     return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < .05
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
-            < .1
+            < .25
         && Math.abs(
                 targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
             < 10;
+  }
+
+  @AutoLogOutput
+  public boolean nearingNet() {
+    var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
+    var targetYaw = Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi;
+
+    return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < 1.5
+        && Math.abs(
+                targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
+            < 20;
   }
 
   public Command netAlign(Supplier<Translation2d> translationalControlSupplier) {
@@ -668,6 +680,10 @@ public class Swerve extends SubsystemBase {
     }
 
     return poses[bestPose];
+  }
+
+  public Command driveStraight(double speedMetersPerSec) {
+    return run(() -> drive(new ChassisSpeeds(speedMetersPerSec, 0, 0)));
   }
 
   public Command testSlipCurrent() {

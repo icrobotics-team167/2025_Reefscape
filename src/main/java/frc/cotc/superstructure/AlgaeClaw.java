@@ -19,6 +19,10 @@ class AlgaeClaw extends Mechanism {
   AlgaeClaw(AlgaePivotIO pivotIO, AlgaeRollersIO rollersIO) {
     pivot = new AlgaePivot(pivotIO);
     rollers = new AlgaeRollers(rollersIO);
+
+    if (rollersIO instanceof AlgaeRollersIOSim simRollers) {
+      simRollers.atTargetAngle = pivot::atIntakeAngle;
+    }
   }
 
   Command intake() {
