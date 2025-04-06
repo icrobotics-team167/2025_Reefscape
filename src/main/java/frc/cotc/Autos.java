@@ -89,7 +89,10 @@ public class Autos {
         };
 
     addRoutine("1AtG", () -> scoreAtG(factory, swerve, superstructure));
-    addRoutine("GAndAlgae", () -> gAndAlgae(swerve, superstructure));
+    addRoutine(
+        "GAnd2Algae", () -> generateAlgaeRoutine(swerve, superstructure, ReefBranch.G, 3, 4));
+    addRoutine(
+        "GAnd3Algae", () -> generateAlgaeRoutine(swerve, superstructure, ReefBranch.G, 3, 4, 2));
     addRoutine(
         "3FromE",
         () ->
@@ -167,38 +170,42 @@ public class Autos {
     return routine.cmd();
   }
 
-  private Command gAndAlgae(Swerve swerve, Superstructure superstructure) {
+  private Command generateAlgaeRoutine(
+      Swerve swerve, Superstructure superstructure, ReefBranch startingBranch, int... faces) {
     var reefFaces =
         Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES;
     var targetY = Constants.FIELD_WIDTH_METERS / 2 + (Robot.isOnRed() ? -1 : 1);
 
-    var faces = new int[] {3, 4, 2};
-    var high = new boolean[] {false, true, true};
+    var high = new boolean[] {true, false, true, false, true, false};
 
     var commands = new Command[faces.length * 2 + 3];
 
     commands[0] =
         reefPathfinding
-            .goTo(ReefBranch.G)
+            .goTo(startingBranch)
             .withDeadline(
                 waitUntil(swerve::nearingTargetPose)
                     .withName("Wait for drivebase")
                     .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))
                     .withName("Score L4"))
-            .withName("Go to G")
+            .withName("Go to " + startingBranch.name())
             .asProxy();
     commands[1] = swerve.driveStraight(-.75).withTimeout(.5).asProxy();
 
     for (int i = 0; i < faces.length; i++) {
       commands[i * 2 + 2] =
           waitUntil(swerve::nearingTargetPose)
-              .andThen(high[i] ? superstructure.intakeHighAlgae() : superstructure.intakeLowAlgae())
+              .andThen(
+                  high[faces[i]]
+                      ? superstructure.intakeHighAlgae()
+                      : superstructure.intakeLowAlgae())
               .withDeadline(
                   swerve
                       .followRepulsorField(reefFaces[faces[i]])
                       .until(superstructure::hasAlgae)
                       .andThen(swerve.driveStraight(-1.25).withTimeout(.25)))
-              .asProxy();
+              .asProxy()
+              .raceWith(waitUntil(swerve::atTargetPoseAuto).andThen(waitSeconds(3)));
       commands[i * 2 + 3] =
           swerve
               .netAlign(
@@ -212,14 +219,28 @@ public class Autos {
               .withDeadline(
                   waitUntil(swerve::nearingNet)
                       .andThen(superstructure.bargeScore(swerve::atNet).asProxy()))
-              .asProxy();
+              .asProxy()
+              .onlyIf(superstructure::hasAlgae);
     }
 
-    var endPose = new Pose2d(3, 6.5, sourceLeft.getRotation());
+    var leftEndPose = new Pose2d(4, 7.25, sourceLeft.getRotation());
     if (Robot.isOnRed()) {
-      endPose = endPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
+      leftEndPose = leftEndPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
     }
-    commands[faces.length * 2 + 2] = swerve.followRepulsorField(endPose).asProxy();
+    var rightEndPose =
+        new Pose2d(4, Constants.FIELD_WIDTH_METERS - 7.25, sourceRight.getRotation());
+    if (Robot.isOnRed()) {
+      rightEndPose = rightEndPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
+    }
+    commands[faces.length * 2 + 2] =
+        either(
+                swerve.followRepulsorField(leftEndPose),
+                swerve.followRepulsorField(rightEndPose),
+                () ->
+                    Robot.isOnRed()
+                        ? swerve.getPose().getY() < Constants.FIELD_WIDTH_METERS / 2
+                        : swerve.getPose().getY() > Constants.FIELD_WIDTH_METERS / 2)
+            .asProxy();
 
     return sequence(commands);
   }
