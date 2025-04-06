@@ -205,23 +205,21 @@ public class Autos {
                   () ->
                       new Translation2d(
                           0,
-                          Robot.isOnRed()
-                              ? swerve.getPose().getY() - targetY
-                              : targetY - swerve.getPose().getY()))
+                          2
+                              * (Robot.isOnRed()
+                                  ? swerve.getPose().getY() - targetY
+                                  : targetY - swerve.getPose().getY())))
               .withDeadline(
                   waitUntil(swerve::nearingNet)
                       .andThen(superstructure.bargeScore(swerve::atNet).asProxy()))
               .asProxy();
     }
 
-    commands[faces.length * 2 + 2] =
-        swerve
-            .followRepulsorField(
-                new Pose2d(
-                    Constants.FIELD_LENGTH_METERS / 2 + (Robot.isOnRed() ? 2 : -2),
-                    targetY,
-                    Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi))
-            .asProxy();
+    var endPose = new Pose2d(3, 6.5, sourceLeft.getRotation());
+    if (Robot.isOnRed()) {
+      endPose = endPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
+    }
+    commands[faces.length * 2 + 2] = swerve.followRepulsorField(endPose).asProxy();
 
     return sequence(commands);
   }

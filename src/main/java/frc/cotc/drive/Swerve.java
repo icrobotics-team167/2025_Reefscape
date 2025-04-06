@@ -487,7 +487,7 @@ public class Swerve extends SubsystemBase {
     return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < 2
         && Math.abs(
                 targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
-            < 20;
+            < 40;
   }
 
   public Command netAlign(Supplier<Translation2d> translationalControlSupplier) {
