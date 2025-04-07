@@ -71,6 +71,20 @@ public class Robot extends LoggedRobot {
     Mode mode = Robot.isReal() ? Mode.REAL : Mode.SIM;
     //    Mode mode = Robot.isReal() ? Mode.REAL : Mode.REPLAY;
 
+    var isCompBot =
+        new LoggableInputs() {
+          boolean isCompBot;
+
+          @Override
+          public void toLog(LogTable table) {
+            table.put("isNewBot", isCompBot);
+          }
+
+          @Override
+          public void fromLog(LogTable table) {
+            isCompBot = table.get("isCompBot", true);
+          }
+        };
     switch (mode) {
       case REAL -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
@@ -81,12 +95,15 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("RoboRIO Serial number", serialNumber);
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
+
+        isCompBot.isCompBot = serialNumber.equals("032BE4AB");
       }
       case SIM -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to the project's logs folder
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
+        isCompBot.isCompBot = true;
       }
       case REPLAY -> {
         setUseTiming(false); // Run as fast as possible
@@ -108,13 +125,15 @@ public class Robot extends LoggedRobot {
       }
     }
 
+    Logger.processInputs("Robot", isCompBot);
+
     Logger.start();
 
     var primary = new CommandXboxControllerWithRumble(0);
     var secondary = new CommandXboxControllerWithRumble(1);
 
     var superstructure = getSuperstructure(mode);
-    var swerve = getSwerve(mode, superstructure::getElevatorExtension);
+    var swerve = getSwerve(mode, superstructure::getElevatorExtension, isCompBot.isCompBot);
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -342,7 +361,7 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("CommandScheduler/Subsystems/infos", subsystems);
   }
 
-  private Swerve getSwerve(Mode mode, DoubleSupplier elevatorExtensionSupplier) {
+  private Swerve getSwerve(Mode mode, DoubleSupplier elevatorExtensionSupplier, boolean isCompBot) {
     SwerveIO swerveIO;
     FiducialPoseEstimator.IO[] visionIOs;
 
@@ -363,7 +382,7 @@ public class Robot extends LoggedRobot {
 
     switch (mode) {
       case REAL, SIM -> {
-        swerveIO = new SwerveIOPhoenix();
+        swerveIO = new SwerveIOPhoenix(isCompBot);
 
         visionIOs =
             new FiducialPoseEstimator.IO[] {

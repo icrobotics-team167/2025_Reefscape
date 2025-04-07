@@ -97,11 +97,11 @@ public class SwerveIOPhoenix implements SwerveIO {
 
   private SimThread simThread;
 
-  public SwerveIOPhoenix() {
+  public SwerveIOPhoenix(boolean isCompBot) {
     var devices = new ParentDevice[13];
     var lowFreqSignals = new BaseStatusSignal[20];
     for (int i = 0; i < 4; i++) {
-      modules[i] = new Module(i);
+      modules[i] = new Module(i, isCompBot);
       signals[i * 8] = modules[i].driveMotor.getVelocity(false);
       signals[i * 8 + 1] = modules[i].encoder.getAbsolutePosition(false);
       signals[i * 8 + 2] = modules[i].steerMotor.getVelocity(false);
@@ -225,7 +225,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     final CANcoder encoder;
 
     @SuppressWarnings("DuplicateBranchesInSwitch")
-    public Module(int id) {
+    public Module(int id, boolean isCompBot) {
       driveMotor = new TalonFX(id * 3, Robot.CANIVORE_NAME);
       steerMotor = new TalonFX(id * 3 + 1, Robot.CANIVORE_NAME);
       encoder = new CANcoder(id * 3 + 2, Robot.CANIVORE_NAME);
@@ -257,7 +257,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       var encoderConfig = new CANcoderConfiguration();
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
-      if (Robot.isReal()) {
+      if (isCompBot) {
         driveConfig.Slot0.kV = 2;
         driveConfig.Slot0.kP = 24;
         driveConfig.Slot0.kS = 1;
@@ -280,10 +280,18 @@ public class SwerveIOPhoenix implements SwerveIO {
           case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.443359375;
         }
       } else {
-        driveConfig.Slot0.kP = 10;
+        driveConfig.Slot0.kV = 2.25;
+        driveConfig.Slot0.kP = 15;
 
-        steerConfig.Slot0.kP = 350;
-        steerConfig.Slot0.kD = 2;
+        steerConfig.Slot0.kP = 80;
+        steerConfig.Slot0.kD = 0.1;
+
+        switch (id) {
+          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
+          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.204345703125;
+          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
+          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.08984375;
+        }
       }
 
       driveMotor.getConfigurator().apply(driveConfig);
