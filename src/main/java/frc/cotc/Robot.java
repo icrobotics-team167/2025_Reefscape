@@ -186,7 +186,10 @@ public class Robot extends LoggedRobot {
         .y()
         .and(superstructure::hasCoral)
         .whileTrue(
-            waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
+            waitUntil(
+                    () ->
+                        (swerve.nearingTargetPose() && superstructure.hasCoral())
+                            || secondary.getHID().getRightBumperButton())
                 .andThen(
                     superstructure.lvl4(
                         () ->
@@ -196,7 +199,10 @@ public class Robot extends LoggedRobot {
         .x()
         .and(superstructure::hasCoral)
         .whileTrue(
-            waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
+            waitUntil(
+                    () ->
+                        (swerve.nearingTargetPose() && superstructure.hasCoral())
+                            || secondary.getHID().getRightBumperButton())
                 .andThen(
                     superstructure.lvl3(
                         () ->
@@ -206,7 +212,10 @@ public class Robot extends LoggedRobot {
         .b()
         .and(superstructure::hasCoral)
         .whileTrue(
-            waitUntil(() -> swerve.nearingTargetPose() || secondary.getHID().getRightBumperButton())
+            waitUntil(
+                    () ->
+                        (swerve.nearingTargetPose() && superstructure.hasCoral())
+                            || secondary.getHID().getRightBumperButton())
                 .andThen(
                     superstructure.lvl2(
                         () ->
