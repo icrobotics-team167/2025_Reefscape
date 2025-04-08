@@ -220,18 +220,7 @@ public class Robot extends LoggedRobot {
             either(
                 superstructure.intakeHighAlgae(),
                 superstructure.intakeLowAlgae(),
-                () -> {
-                  var angle = swerve.getReefAlignPose().getRotation();
-                  if (Robot.isOnRed()) {
-                    return angle.equals(Rotation2d.kPi)
-                        || angle.equals(Rotation2d.fromDegrees(60))
-                        || angle.equals(Rotation2d.fromDegrees(-60));
-                  } else {
-                    return angle.equals(Rotation2d.kZero)
-                        || angle.equals(Rotation2d.fromDegrees(120))
-                        || angle.equals(Rotation2d.fromDegrees(-120));
-                  }
-                }));
+                swerve::isReefAlignHigh));
     secondary.leftBumper().and(superstructure::hasAlgae).whileTrue(superstructure.ejectAlgae());
     secondary
         .rightTrigger()

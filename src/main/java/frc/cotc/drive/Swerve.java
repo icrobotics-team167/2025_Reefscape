@@ -640,13 +640,25 @@ public class Swerve extends SubsystemBase {
         .withName("Reef algae align");
   }
 
-  public Pose2d getReefAlignPose() {
+  public boolean isReefAlignHigh() {
+    Rotation2d angle;
     if (reefAlignPose == null) {
-      return selectPose(
-          Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES,
-          Translation2d.kZero);
+      angle =
+          selectPose(
+                  Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES,
+                  Translation2d.kZero)
+              .getRotation();
     } else {
-      return reefAlignPose;
+      angle = reefAlignPose.getRotation();
+    }
+    if (Robot.isOnRed()) {
+      return angle.equals(Rotation2d.kPi)
+          || angle.equals(Rotation2d.fromDegrees(60))
+          || angle.equals(Rotation2d.fromDegrees(-60));
+    } else {
+      return angle.equals(Rotation2d.kZero)
+          || angle.equals(Rotation2d.fromDegrees(120))
+          || angle.equals(Rotation2d.fromDegrees(-120));
     }
   }
 
