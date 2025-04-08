@@ -33,11 +33,12 @@ class AlgaeRollers extends SubsystemBase {
             io.intake();
           }
         })
-        .finallyDo(io::brake);
+        .finallyDo(io::brake)
+        .withName("Intake");
   }
 
   Command eject() {
-    return run(io::eject).finallyDo(io::brake);
+    return run(io::eject).finallyDo(io::brake).withName("Eject");
   }
 
   boolean hasAlgae() {

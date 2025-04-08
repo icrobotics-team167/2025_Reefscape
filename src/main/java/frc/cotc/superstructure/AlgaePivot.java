@@ -28,15 +28,15 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command intake() {
-    return run(io::intake);
+    return run(io::intake).withName("Intake");
   }
 
   Command stow() {
-    return run(io::stow);
+    return run(io::stow).withName("Stow");
   }
 
   Command hold() {
-    return run(io::hold);
+    return run(io::hold).withName("Hold");
   }
 
   boolean atIntakeAngle() {

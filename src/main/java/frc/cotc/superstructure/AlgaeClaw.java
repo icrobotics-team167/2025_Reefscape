@@ -26,19 +26,19 @@ class AlgaeClaw extends Mechanism {
   }
 
   Command intake() {
-    return expose(parallel(pivot.intake(), rollers.intake()));
+    return expose(parallel(pivot.intake(), rollers.intake()).withName("Intake")).withName("Intake");
   }
 
   Command stow() {
-    return expose(pivot.stow());
+    return expose(pivot.stow()).withName("Stow");
   }
 
   Command hold() {
-    return expose(parallel(pivot.hold(), rollers.intake()));
+    return expose(parallel(pivot.hold(), rollers.intake()).withName("Hold")).withName("Hold");
   }
 
   Command eject() {
-    return expose(parallel(pivot.hold(), rollers.eject()));
+    return expose(parallel(pivot.hold(), rollers.eject()).withName("Eject")).withName("Eject");
   }
 
   boolean hasAlgae() {
