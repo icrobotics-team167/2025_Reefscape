@@ -220,7 +220,6 @@ public class Robot extends LoggedRobot {
                         () ->
                             swerve.atTargetPoseTeleop()
                                 || secondary.getHID().getRightBumperButton())));
-    secondary.a().whileTrue(superstructure.lvl3(() -> false));
 
     secondary
         .leftTrigger()
