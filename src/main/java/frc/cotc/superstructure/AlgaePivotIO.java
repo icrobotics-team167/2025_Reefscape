@@ -20,9 +20,5 @@ public interface AlgaePivotIO {
 
   default void updateInputs(AlgaePivotIOInputs inputs) {}
 
-  default void intake() {}
-
-  default void stow() {}
-
-  default void hold() {}
+  default void goToAngle(double angleRad) {}
 }

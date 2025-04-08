@@ -46,17 +46,7 @@ public class AlgaePivotIOSim implements AlgaePivotIO {
   }
 
   @Override
-  public void intake() {
-    targetPos = Units.degreesToRadians(-35);
-  }
-
-  @Override
-  public void stow() {
-    targetPos = Units.degreesToRadians(-75);
-  }
-
-  @Override
-  public void hold() {
-    targetPos = Units.degreesToRadians(120);
+  public void goToAngle(double angleRad) {
+    targetPos = angleRad;
   }
 }

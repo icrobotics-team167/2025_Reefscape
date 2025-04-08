@@ -11,6 +11,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 class AlgaePivot extends SubsystemBase {
@@ -28,19 +29,26 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command intake() {
-    return run(io::intake).withName("Intake");
+    return goToAngle(Units.degreesToRadians(-35)).withName("Intake");
   }
 
   Command stow() {
-    return run(io::stow).withName("Stow");
+    return goToAngle(Units.degreesToRadians(-75)).withName("Stow");
   }
 
   Command hold() {
-    return run(io::hold).withName("Hold");
+    return goToAngle(Units.degreesToRadians(110)).withName("Hold");
   }
 
-  boolean atIntakeAngle() {
-    return MathUtil.isNear(Units.degreesToRadians(-35), inputs.posRad, Units.degreesToRadians(5))
+  @AutoLogOutput(key = "Superstructure/Algae/Pivot/Target Angle")
+  private double targetAngle = Units.degreesToRadians(-75);
+
+  private Command goToAngle(double angleRad) {
+    return runOnce(() -> targetAngle = angleRad).andThen(run(() -> io.goToAngle(angleRad)));
+  }
+
+  boolean atTargetAngle() {
+    return MathUtil.isNear(targetAngle, inputs.posRad, Units.degreesToRadians(5))
         && Math.abs(inputs.velRadPerSec) < Units.degreesToRadians(10);
   }
 }

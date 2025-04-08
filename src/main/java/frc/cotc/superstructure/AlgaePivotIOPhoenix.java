@@ -60,17 +60,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
   private final PositionVoltage positionControlSignal = new PositionVoltage(0);
 
   @Override
-  public void intake() {
-    motor.setControl(positionControlSignal.withPosition(Units.degreesToRotations(-35)));
-  }
-
-  @Override
-  public void stow() {
-    motor.setControl(positionControlSignal.withPosition(Units.degreesToRotations(-75)));
-  }
-
-  @Override
-  public void hold() {
-    motor.setControl(positionControlSignal.withPosition(Units.degreesToRotations(120)));
+  public void goToAngle(double angleRad) {
+    motor.setControl(positionControlSignal.withPosition(Units.radiansToRotations(angleRad)));
   }
 }

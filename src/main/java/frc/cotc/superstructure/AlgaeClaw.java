@@ -21,7 +21,7 @@ class AlgaeClaw extends Mechanism {
     rollers = new AlgaeRollers(rollersIO);
 
     if (rollersIO instanceof AlgaeRollersIOSim simRollers) {
-      simRollers.atTargetAngle = pivot::atIntakeAngle;
+      simRollers.atTargetAngle = pivot::atTargetAngle;
     }
   }
 
@@ -43,5 +43,9 @@ class AlgaeClaw extends Mechanism {
 
   boolean hasAlgae() {
     return rollers.hasAlgae();
+  }
+
+  boolean atTargetAngle() {
+    return pivot.atTargetAngle();
   }
 }
