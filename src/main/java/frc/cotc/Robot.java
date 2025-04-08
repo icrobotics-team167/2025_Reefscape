@@ -197,7 +197,6 @@ public class Robot extends LoggedRobot {
                                 || secondary.getHID().getRightBumperButton())));
     secondary
         .x()
-        .and(superstructure::hasCoral)
         .whileTrue(
             waitUntil(
                     () ->
