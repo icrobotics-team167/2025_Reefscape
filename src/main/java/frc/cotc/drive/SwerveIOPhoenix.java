@@ -257,41 +257,47 @@ public class SwerveIOPhoenix implements SwerveIO {
       var encoderConfig = new CANcoderConfiguration();
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
-      if (isCompBot) {
-        driveConfig.Slot0.kV = 2;
-        driveConfig.Slot0.kP = 24;
-        driveConfig.Slot0.kS = 1;
+      if (Robot.isReal()) {
+        if (isCompBot) {
+          driveConfig.Slot0.kV = 2;
+          driveConfig.Slot0.kP = 24;
+          driveConfig.Slot0.kS = 1;
 
-        switch (id) {
-          case 0, 1 -> {
-            steerConfig.Slot0.kP = 80;
-            steerConfig.Slot0.kD = 0.1;
+          switch (id) {
+            case 0, 1 -> {
+              steerConfig.Slot0.kP = 80;
+              steerConfig.Slot0.kD = 0.1;
+            }
+            case 2, 3 -> {
+              steerConfig.Slot0.kP = 80;
+              steerConfig.Slot0.kD = 0.1;
+            }
           }
-          case 2, 3 -> {
-            steerConfig.Slot0.kP = 80;
-            steerConfig.Slot0.kD = 0.1;
-          }
-        }
 
-        switch (id) {
-          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.414794921875;
-          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.21630859375;
-          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = 0.48974609375;
-          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.443359375;
+          switch (id) {
+            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.414794921875;
+            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.21630859375;
+            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = 0.48974609375;
+            case 3 -> encoderConfig.MagnetSensor.MagnetOffset = 0.443359375;
+          }
+        } else {
+          driveConfig.Slot0.kV = 2.25;
+          driveConfig.Slot0.kP = 15;
+
+          steerConfig.Slot0.kP = 80;
+          steerConfig.Slot0.kD = 0.1;
+
+          switch (id) {
+            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
+            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.204345703125;
+            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
+            case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.08984375;
+          }
         }
       } else {
-        driveConfig.Slot0.kV = 2.25;
         driveConfig.Slot0.kP = 15;
-
         steerConfig.Slot0.kP = 80;
-        steerConfig.Slot0.kD = 0.1;
-
-        switch (id) {
-          case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
-          case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.204345703125;
-          case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
-          case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.08984375;
-        }
+        steerConfig.Slot0.kD = .1;
       }
 
       driveMotor.getConfigurator().apply(driveConfig);
