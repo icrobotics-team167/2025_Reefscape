@@ -92,7 +92,7 @@ public class Autos {
     addRoutine(
         "GAnd2Algae", () -> generateAlgaeRoutine(swerve, superstructure, ReefBranch.G, 3, 4));
     addRoutine(
-        "GAnd3Algae", () -> generateAlgaeRoutine(swerve, superstructure, ReefBranch.G, 3, 4, 2));
+        "GAnd3Algae", () -> generateAlgaeRoutine(swerve, superstructure, ReefBranch.G, 3, 2, 4));
     addRoutine(
         "3FromE",
         () ->
