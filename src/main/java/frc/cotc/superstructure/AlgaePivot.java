@@ -51,4 +51,8 @@ class AlgaePivot extends SubsystemBase {
     return MathUtil.isNear(targetAngle, inputs.posRad, Units.degreesToRadians(5))
         && Math.abs(inputs.velRadPerSec) < Units.degreesToRadians(10);
   }
+
+  boolean pastVertical() {
+    return inputs.posRad > Units.degreesToRadians(90);
+  }
 }

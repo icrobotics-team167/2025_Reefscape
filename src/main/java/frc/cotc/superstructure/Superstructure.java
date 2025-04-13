@@ -104,16 +104,18 @@ public class Superstructure extends Mechanism {
 
   public Command bargeScore(BooleanSupplier atBarge) {
     return expose(
-            elevator
-                .net()
-                .withDeadline(
-                    waitUntil(
-                            () ->
-                                atBarge.getAsBoolean()
-                                    && elevator.atTargetPos()
-                                    && algaeClaw.atTargetAngle())
-                        .andThen(algaeClaw.eject().withTimeout(.2)))
-                .withName("Barge Score"))
+            waitUntil(algaeClaw::isPastVertical)
+                .andThen(
+                    elevator
+                        .net()
+                        .withDeadline(
+                            waitUntil(
+                                    () ->
+                                        atBarge.getAsBoolean()
+                                            && elevator.atTargetPos()
+                                            && algaeClaw.atTargetAngle())
+                                .andThen(algaeClaw.eject().withTimeout(.2)))
+                        .withName("Barge Score")))
         .withName("Barge Score");
   }
 

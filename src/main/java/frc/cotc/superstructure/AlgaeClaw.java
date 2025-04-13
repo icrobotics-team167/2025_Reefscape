@@ -48,4 +48,8 @@ class AlgaeClaw extends Mechanism {
   boolean atTargetAngle() {
     return pivot.atTargetAngle();
   }
+
+  boolean isPastVertical() {
+    return pivot.pastVertical();
+  }
 }
