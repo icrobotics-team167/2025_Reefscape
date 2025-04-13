@@ -31,8 +31,7 @@ public class Superstructure extends Mechanism {
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
-    RobotModeTriggers.disabled()
-        .onFalse(ramp.lower().alongWith(climber.deployStart()).withName("Initial deploy"));
+    RobotModeTriggers.disabled().onFalse(ramp.lower());
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
