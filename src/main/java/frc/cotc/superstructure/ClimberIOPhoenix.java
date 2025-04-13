@@ -33,7 +33,7 @@ public class ClimberIOPhoenix implements ClimberIO {
     motor = new TalonFX(16, Robot.CANIVORE_NAME);
 
     var encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.MagnetOffset = -0.408203125;
+    encoderConfig.MagnetSensor.MagnetOffset = 0.080810546875;
     encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     encoder.getConfigurator().apply(encoderConfig);
 
@@ -79,6 +79,6 @@ public class ClimberIOPhoenix implements ClimberIO {
 
   @Override
   public void climb() {
-    motor.setVoltage(12);
+    motor.setVoltage(9);
   }
 }
