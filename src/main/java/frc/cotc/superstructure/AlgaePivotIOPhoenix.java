@@ -46,7 +46,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     motor.getConfigurator().apply(motorConfig);
 
     var encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.MagnetOffset = -0.47705078125;
+    encoderConfig.MagnetSensor.MagnetOffset = -0.156494140625;
     encoder.getConfigurator().apply(encoderConfig);
 
     posSignal = encoder.getAbsolutePosition(false);
