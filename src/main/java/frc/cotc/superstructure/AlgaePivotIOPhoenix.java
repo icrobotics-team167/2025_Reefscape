@@ -8,6 +8,7 @@
 package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -26,19 +27,23 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     motor = new TalonFX(3);
     var encoder = new CANcoder(4);
 
-    var config = new TalonFXConfiguration();
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.Feedback.RotorToSensorRatio = (46.0 / 42.0) * 81;
-    config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-    config.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-    config.CurrentLimits.StatorCurrentLimit = 40;
-    config.CurrentLimits.SupplyCurrentLimit = 20;
-    config.Slot0.kP = 48;
-    config.Slot0.kD = 1;
-    config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
-    config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-    motor.getConfigurator().apply(config);
+    var motorConfig = new TalonFXConfiguration();
+    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.Feedback.RotorToSensorRatio = (46.0 / 42.0) * 81;
+    motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    motorConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
+    motorConfig.CurrentLimits.StatorCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
+    motorConfig.Slot0.kP = 48;
+    motorConfig.Slot0.kD = 1;
+    motorConfig.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
+    motorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+    motor.getConfigurator().apply(motorConfig);
+
+    var encoderConfig = new CANcoderConfiguration();
+    encoderConfig.MagnetSensor.MagnetOffset = -0.47705078125;
+    encoder.getConfigurator().apply(encoderConfig);
 
     posSignal = encoder.getAbsolutePosition(false);
     velSignal = motor.getVelocity(false);
