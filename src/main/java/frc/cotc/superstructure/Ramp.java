@@ -10,7 +10,6 @@ package frc.cotc.superstructure;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 class Ramp extends SubsystemBase {
@@ -28,11 +27,11 @@ class Ramp extends SubsystemBase {
   }
 
   Command lower() {
-    return run(io::lower).until(this::stalled).withName("Lower");
+    return run(io::lower).until(this::stalled).finallyDo(io::brake).withName("Lower");
   }
 
   Command raise() {
-    return run(io::raise).until(this::stalled).withName("Raise");
+    return run(io::raise).until(this::stalled).finallyDo(io::brake).withName("Raise");
   }
 
   Command hold() {
@@ -41,9 +40,10 @@ class Ramp extends SubsystemBase {
 
   private final Debouncer debouncer = new Debouncer(.05);
 
-  @AutoLogOutput(key = "Superstructure/Ramp/Stalled")
   private boolean stalled() {
-    return debouncer.calculate(
-        Math.abs(inputs.velRPM) < 10 && inputs.currentDraws.statorCurrent > 3);
+    var stalled =
+        debouncer.calculate(Math.abs(inputs.velRPM) < 75 && inputs.currentDraws.statorCurrent > 3);
+    Logger.recordOutput("Superstructure/Ramp/Stalled", stalled);
+    return stalled;
   }
 }
