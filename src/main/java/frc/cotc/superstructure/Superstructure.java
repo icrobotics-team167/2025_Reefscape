@@ -39,7 +39,8 @@ public class Superstructure extends Mechanism {
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
     RobotModeTriggers.disabled().onFalse(ramp.lower());
-    algaeClaw.setDefaultCommand(either(algaeClaw.hold(), algaeClaw.stow(), algaeClaw::hasAlgae));
+    algaeClaw.setDefaultCommand(
+        either(algaeClaw.hold(), algaeClaw.stow(), algaeClaw::hasAlgae).withName("Hold or Stow"));
 
     if (algaeRollersIO instanceof AlgaeRollersIOSim simRollers) {
       simRollers.atTargetHeight = elevator::atTargetPos;
