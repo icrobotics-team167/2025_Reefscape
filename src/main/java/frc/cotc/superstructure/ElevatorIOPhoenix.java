@@ -147,10 +147,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     lastTriggeredState = triggeredState;
 
     inputs.posMeters =
-        triggeredState
-            ? 0
-            : BaseStatusSignal.getLatencyCompensatedValueAsDouble(posSignal, velSignal)
-                * metersPerRotation;
+        BaseStatusSignal.getLatencyCompensatedValueAsDouble(posSignal, velSignal)
+            * metersPerRotation;
     inputs.velMetersPerSec = velSignal.getValueAsDouble() * metersPerRotation;
     inputs.leftMotorCurrentDraws.mutateFromSignals(leftStator, leftSupply);
     inputs.rightMotorCurrentDraws.mutateFromSignals(rightStator, rightSupply);
