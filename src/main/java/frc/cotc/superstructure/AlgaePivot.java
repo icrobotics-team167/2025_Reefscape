@@ -37,7 +37,7 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command hold() {
-    return goToAngle(Units.degreesToRadians(110)).withName("Hold");
+    return goToAngle(Units.degreesToRadians(115)).withName("Hold");
   }
 
   @AutoLogOutput(key = "Superstructure/Algae/Pivot/Target Angle")
