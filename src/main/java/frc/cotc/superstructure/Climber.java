@@ -26,13 +26,6 @@ public class Climber extends SubsystemBase {
     Logger.processInputs("Superstructure/Climber", inputs);
   }
 
-  Command deployStart() {
-    return run(io::deploy)
-        .until(() -> inputs.posRad < Units.degreesToRadians(40))
-        .finallyDo(io::stop)
-        .withName("Initial Climb");
-  }
-
   Command deploy() {
     return run(io::deploy).finallyDo(io::stop).withName("Deploy");
   }

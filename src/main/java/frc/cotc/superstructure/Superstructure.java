@@ -38,8 +38,7 @@ public class Superstructure extends Mechanism {
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
-    RobotModeTriggers.disabled()
-        .onFalse(ramp.lower().alongWith(climber.deployStart()).withName("Initial deploy"));
+    RobotModeTriggers.disabled().onFalse(ramp.lower());
     algaeClaw.setDefaultCommand(either(algaeClaw.hold(), algaeClaw.stow(), algaeClaw::hasAlgae));
 
     if (algaeRollersIO instanceof AlgaeRollersIOSim simRollers) {
