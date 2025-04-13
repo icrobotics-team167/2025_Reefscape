@@ -42,7 +42,7 @@ class Ramp extends SubsystemBase {
 
   private boolean stalled() {
     var stalled =
-        debouncer.calculate(Math.abs(inputs.velRPM) < 20 && inputs.currentDraws.statorCurrent > 3);
+        debouncer.calculate(Math.abs(inputs.velRPM) < 75 && inputs.currentDraws.statorCurrent > 3);
     Logger.recordOutput("Superstructure/Ramp/Stalled", stalled);
     return stalled;
   }
