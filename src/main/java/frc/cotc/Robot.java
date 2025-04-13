@@ -194,7 +194,8 @@ public class Robot extends LoggedRobot {
                     superstructure.lvl4(
                         () ->
                             swerve.atTargetPoseTeleop()
-                                || secondary.getHID().getRightBumperButton())));
+                                || secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L4"));
     secondary
         .x()
         .whileTrue(
@@ -206,7 +207,8 @@ public class Robot extends LoggedRobot {
                     superstructure.lvl3(
                         () ->
                             swerve.atTargetPoseTeleop()
-                                || secondary.getHID().getRightBumperButton())));
+                                || secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L3"));
     secondary
         .b()
         .and(superstructure::hasCoral)
@@ -219,7 +221,8 @@ public class Robot extends LoggedRobot {
                     superstructure.lvl2(
                         () ->
                             swerve.atTargetPoseTeleop()
-                                || secondary.getHID().getRightBumperButton())));
+                                || secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L2"));
 
     secondary
         .leftTrigger()
@@ -238,8 +241,10 @@ public class Robot extends LoggedRobot {
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
-    new Trigger(superstructure::hasCoral).onChange(secondary.rumble(.35));
-    new Trigger(superstructure::hasAlgae).onChange(secondary.rumble(.35));
+    new Trigger(superstructure::hasCoral)
+        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
+    new Trigger(superstructure::hasAlgae)
+        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();

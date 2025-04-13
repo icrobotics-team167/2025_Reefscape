@@ -59,6 +59,9 @@ def deployArtifact = deploy.targets.roborio.artifacts.frcJava
 // Set to true to use debug for JNI.
 wpi.java.debugJni = false
 
+// Uncomment to use the real driver station
+// wpi.sim.addDriverstation().defaultEnabled = true
+
 // Set this to true to enable desktop support.
 def includeDesktopSupport = true
 

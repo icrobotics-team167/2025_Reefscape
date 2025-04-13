@@ -131,15 +131,18 @@ public class Superstructure extends Mechanism {
 
   public Command readyClimb() {
     return expose(
-        runOnce(() -> climberDeployed = true).andThen(parallel(ramp.raise(), climber.deploy())));
+            runOnce(() -> climberDeployed = true)
+                .andThen(parallel(ramp.raise(), climber.deploy()))
+                .withName("Ready Climb"))
+        .withName("Ready Climb");
   }
 
   public Command climb() {
-    return expose(climber.climb());
+    return expose(climber.climb().withName("Climb")).withName("Climb");
   }
 
   public Command raiseClimber() {
-    return expose(climber.deploy());
+    return expose(climber.deploy()).withName("Raise Climber");
   }
 
   public Trigger coralStuck() {
