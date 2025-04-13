@@ -35,6 +35,10 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     motorConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
     motorConfig.CurrentLimits.StatorCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .33;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.197;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfig.Slot0.kP = 48;
     motorConfig.Slot0.kD = 1;
     motorConfig.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;

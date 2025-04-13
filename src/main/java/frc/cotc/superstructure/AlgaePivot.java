@@ -33,15 +33,15 @@ class AlgaePivot extends SubsystemBase {
   }
 
   Command stow() {
-    return goToAngle(Units.degreesToRadians(-75)).withName("Stow");
+    return goToAngle(Units.rotationsToRadians(-.197)).withName("Stow");
   }
 
   Command hold() {
-    return goToAngle(Units.degreesToRadians(115)).withName("Hold");
+    return goToAngle(Units.rotationsToRadians(.33)).withName("Hold");
   }
 
   @AutoLogOutput(key = "Superstructure/Algae/Pivot/Target Angle")
-  private double targetAngle = Units.degreesToRadians(-75);
+  private double targetAngle = Units.rotationsToRadians(-.197);
 
   private Command goToAngle(double angleRad) {
     return runOnce(() -> targetAngle = angleRad).andThen(run(() -> io.goToAngle(angleRad)));
