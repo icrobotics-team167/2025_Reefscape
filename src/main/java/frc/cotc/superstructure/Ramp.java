@@ -41,9 +41,10 @@ class Ramp extends SubsystemBase {
 
   private final Debouncer debouncer = new Debouncer(.05);
 
-  @AutoLogOutput(key = "Superstructure/Ramp/Stalled")
   private boolean stalled() {
-    return debouncer.calculate(
-        Math.abs(inputs.velRPM) < 10 && inputs.currentDraws.statorCurrent > 3);
+    var stalled = debouncer.calculate(
+        Math.abs(inputs.velRPM) < 20 && inputs.currentDraws.statorCurrent > 3);
+    Logger.recordOutput("Superstructure/Ramp/Stalled", stalled);
+    return stalled;
   }
 }

@@ -29,7 +29,8 @@ public class Climber extends SubsystemBase {
   Command deployStart() {
     return run(io::deploy)
         .until(() -> inputs.posRad < Units.degreesToRadians(40))
-        .finallyDo(io::stop).withName("Initial Climb");
+        .finallyDo(io::stop)
+        .withName("Initial Climb");
   }
 
   Command deploy() {
