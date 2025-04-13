@@ -106,6 +106,20 @@ public class ElevatorIOPhoenix implements ElevatorIO {
             .001);
     config.Slot1.kP = secondStageGains.kP();
     config.Slot1.kD = secondStageGains.kD();
+    config.Slot2.kG = config.Slot0.kG;
+    config.Slot2.kV = config.Slot0.kV;
+    config.Slot2.kA = config.Slot0.kA;
+    var slowGains =
+        GainsCalculator.getPositionGains(
+            config.Slot0.kV,
+            config.Slot0.kA,
+            3 - config.Slot0.kG - config.Slot0.kS,
+            .005,
+            .025,
+            .001,
+            .001);
+    config.Slot2.kP = slowGains.kP();
+    config.Slot2.kD = slowGains.kD();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     leftMotor.getConfigurator().apply(config);
@@ -165,14 +179,18 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private final PositionVoltage positionControl = new PositionVoltage(0);
 
   @Override
-  public void setTargetPos(double posMeters) {
+  public void setTargetPos(double targetPosMeters) {
+    double currentPosRot = posSignal.getValueAsDouble();
+    int slot;
+    if (targetPosMeters == 0 && currentPosRot < 1.0 / metersPerRotation) {
+      slot = 2;
+    } else if (currentPosRot > (constants.switchPointMeters / metersPerRotation)) {
+      slot = 1;
+    } else {
+      slot = 0;
+    }
     leftMotor.setControl(
-        positionControl
-            .withPosition(posMeters / metersPerRotation)
-            .withSlot(
-                posSignal.getValueAsDouble() < (constants.switchPointMeters / metersPerRotation)
-                    ? 0
-                    : 1));
+        positionControl.withPosition(targetPosMeters / metersPerRotation).withSlot(slot));
     rightMotor.setControl(positionControl);
   }
 
