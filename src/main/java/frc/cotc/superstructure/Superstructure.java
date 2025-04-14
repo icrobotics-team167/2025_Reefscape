@@ -123,6 +123,10 @@ public class Superstructure extends Mechanism {
     return expose(algaeClaw.eject());
   }
 
+  public Command processAlgae(BooleanSupplier eject) {
+    return expose(sequence(algaeClaw.intake(), waitUntil(eject), algaeClaw.process()));
+  }
+
   private boolean climberDeployed = false;
 
   public boolean isClimberDeployed() {

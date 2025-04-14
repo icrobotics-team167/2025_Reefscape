@@ -211,7 +211,6 @@ public class Robot extends LoggedRobot {
                 .withName("Teleop L3"));
     secondary
         .b()
-        .and(superstructure::hasCoral)
         .whileTrue(
             waitUntil(
                     () ->
@@ -223,6 +222,10 @@ public class Robot extends LoggedRobot {
                             swerve.atTargetPoseTeleop()
                                 || secondary.getHID().getRightBumperButton()))
                 .withName("Teleop L2"));
+    secondary
+        .a()
+        .and(superstructure::hasAlgae)
+        .whileTrue(superstructure.processAlgae(() -> secondary.getHID().getRightBumperButton()));
 
     secondary
         .leftTrigger()

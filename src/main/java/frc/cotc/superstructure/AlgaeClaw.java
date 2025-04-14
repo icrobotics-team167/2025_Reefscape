@@ -41,6 +41,10 @@ class AlgaeClaw extends Mechanism {
     return expose(parallel(pivot.hold(), rollers.eject()).withName("Eject")).withName("Eject");
   }
 
+  Command process() {
+    return expose(parallel(pivot.intake(), rollers.eject()));
+  }
+
   boolean hasAlgae() {
     return rollers.hasAlgae();
   }
