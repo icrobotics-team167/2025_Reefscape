@@ -136,7 +136,7 @@ public class Superstructure extends Mechanism {
   }
 
   public Command processAlgae(BooleanSupplier eject) {
-    return expose(algaeClaw.process(eject));
+    return expose(algaeClaw.process(eject)).withName("Process Algae");
   }
 
   private boolean climberDeployed = false;

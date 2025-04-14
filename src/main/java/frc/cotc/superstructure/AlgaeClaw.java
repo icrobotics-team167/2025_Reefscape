@@ -43,7 +43,10 @@ class AlgaeClaw extends Mechanism {
   }
 
   Command process(BooleanSupplier eject) {
-    return expose(parallel(pivot.intake(), rollers.intake().until(eject).andThen(rollers.eject())));
+    return expose(
+            parallel(pivot.intake(), rollers.intake().until(eject).andThen(rollers.eject()))
+                .withName("Process"))
+        .withName("Process");
   }
 
   boolean hasAlgae() {

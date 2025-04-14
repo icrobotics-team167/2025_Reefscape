@@ -237,9 +237,10 @@ public class Robot extends LoggedRobot {
         .leftTrigger()
         .whileTrue(
             either(
-                superstructure.intakeHighAlgae(),
-                superstructure.intakeLowAlgae(),
-                swerve::isReefAlignHigh));
+                    superstructure.intakeHighAlgae(),
+                    superstructure.intakeLowAlgae(),
+                    swerve::isReefAlignHigh)
+                .withName("Teleop Algae Intake"));
     secondary.leftBumper().and(superstructure::hasAlgae).whileTrue(superstructure.ejectAlgae());
     secondary
         .rightTrigger()
