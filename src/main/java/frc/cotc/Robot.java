@@ -226,6 +226,12 @@ public class Robot extends LoggedRobot {
         .a()
         .and(superstructure::hasAlgae)
         .whileTrue(superstructure.processAlgae(() -> secondary.getHID().getRightBumperButton()));
+    secondary
+        .back()
+        .whileTrue(
+            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+                .andThen(superstructure.lvl1(() -> secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L1"));
 
     secondary
         .leftTrigger()

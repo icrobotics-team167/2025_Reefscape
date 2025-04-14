@@ -47,6 +47,18 @@ public class Superstructure extends Mechanism {
     }
   }
 
+  public Command lvl1(BooleanSupplier eject) {
+    return expose(
+            elevator
+                .lvl1()
+                .withDeadline(
+                    waitUntil(() -> eject.getAsBoolean() && elevator.atTargetPos())
+                        .andThen(coralOuttake.scoreSuperSlow().asProxy())
+                        .withName("Score On Trough"))
+                .withName("Lvl 1 Scoring"))
+        .withName("Lvl 1 Scoring");
+  }
+
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
     return expose(
             elevator

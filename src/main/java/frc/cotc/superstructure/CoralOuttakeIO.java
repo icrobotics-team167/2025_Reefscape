@@ -28,6 +28,8 @@ public interface CoralOuttakeIO {
 
   default void outtakeSlow() {}
 
+  default void outtakeSuperSlow() {}
+
   default void agitate() {}
 
   default void brake() {}
