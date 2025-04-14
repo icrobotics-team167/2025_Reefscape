@@ -27,8 +27,8 @@ public class AlgaeRollersIOPhoenix implements AlgaeRollersIO {
     motor = new TalonFX(4);
     var motorConfig = new TalonFXConfiguration();
     motorConfig.CurrentLimits.StatorCurrentLimit = 60;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
-    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 20;
     motorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
     motor.getConfigurator().apply(motorConfig);
 
