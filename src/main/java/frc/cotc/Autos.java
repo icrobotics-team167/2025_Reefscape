@@ -187,7 +187,7 @@ public class Autos {
                     .withName("Score L4"))
             .withName("Go to " + startingBranch.name())
             .asProxy();
-    commands[1] = swerve.driveStraight(-.75).withTimeout(.5).asProxy();
+    commands[1] = swerve.driveStraight(-.75).withTimeout(.5).withName("Back Up").asProxy();
 
     for (int i = 0; i < algaeHandling.length; i++) {
       commands[i * 2 + 2] =
@@ -201,8 +201,10 @@ public class Autos {
                       .followRepulsorField(reefFaces[algaeHandling[i].face])
                       .until(superstructure::hasAlgae)
                       .andThen(swerve.driveStraight(-1.25).withTimeout(.25)))
+              .withName("Intake Algae At " + algaeHandling[i].face)
               .asProxy()
-              .raceWith(waitUntil(swerve::atTargetPoseAuto).andThen(waitSeconds(3)));
+              .raceWith(waitUntil(swerve::atTargetPoseAuto).andThen(waitSeconds(3)))
+              .withName("Intake Algae At " + algaeHandling[i].face);
       commands[i * 2 + 3] =
           switch (algaeHandling[i].scoring) {
             case NET ->
@@ -218,18 +220,21 @@ public class Autos {
                     .withDeadline(
                         waitUntil(swerve::nearingNet)
                             .andThen(superstructure.bargeScore(swerve::atNet).asProxy()))
+                    .withName("Score in net")
                     .asProxy()
                     .onlyIf(superstructure::hasAlgae);
             case PROCESS ->
                 swerve
                     .processorAlign(() -> Translation2d.kZero)
                     .withDeadline(superstructure.processAlgae(swerve::atTargetPoseAuto))
+                    .withName("Score in processor")
                     .asProxy()
                     .andThen(
                         sequence(
                                 swerve.driveStraight(.9).withTimeout(.2),
                                 swerve.driveStraight(0).withTimeout(.3),
                                 swerve.driveStraight(-1).withTimeout(.3))
+                            .withName("Push in algae")
                             .asProxy())
                     .onlyIf(superstructure::hasAlgae);
           };
@@ -249,6 +254,7 @@ public class Autos {
                     Robot.isOnRed()
                         ? swerve.getPose().getY() < Constants.FIELD_WIDTH_METERS / 2
                         : swerve.getPose().getY() > Constants.FIELD_WIDTH_METERS / 2)
+            .withName("Run to source")
             .asProxy();
 
     return sequence(commands);
