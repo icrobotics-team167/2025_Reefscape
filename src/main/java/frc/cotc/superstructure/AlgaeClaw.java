@@ -8,7 +8,6 @@
 package frc.cotc.superstructure;
 
 import static edu.wpi.first.wpilibj2.command.Commands.parallel;
-import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.cotc.util.Mechanism;
@@ -44,7 +43,7 @@ class AlgaeClaw extends Mechanism {
   }
 
   Command process(BooleanSupplier eject) {
-    return expose(parallel(pivot.intake(), waitUntil(eject).andThen(rollers.eject())));
+    return expose(parallel(pivot.intake(), rollers.intake().until(eject).andThen(rollers.eject())));
   }
 
   boolean hasAlgae() {
