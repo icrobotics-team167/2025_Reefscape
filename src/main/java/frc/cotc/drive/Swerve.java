@@ -11,7 +11,6 @@ import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import static frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import static java.lang.Math.PI;
 
-import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -398,27 +397,6 @@ public class Swerve extends SubsystemBase {
                   gyroAngle, getLatestModulePositions(), poseEstimator.getEstimatedPosition());
             })
         .withName("Reset Gyro");
-  }
-
-  public void followChoreoTrajectory(SwerveSample sample) {
-    Logger.recordOutput(
-        "Choreo/Target pose", new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading)));
-
-    var feedforward = new ChassisSpeeds(sample.vx, sample.vy, sample.omega);
-    Logger.recordOutput("Choreo/Feedforward (Field)", feedforward);
-    var feedback =
-        new ChassisSpeeds(
-            xController.calculate(poseEstimator.getEstimatedPosition().getX(), sample.x),
-            yController.calculate(poseEstimator.getEstimatedPosition().getY(), sample.y),
-            yawController.calculate(
-                poseEstimator.getEstimatedPosition().getRotation().getRadians(), sample.heading));
-    Logger.recordOutput("Choreo/Feedback (Field)", feedback);
-
-    var outputFieldRelative = feedforward.plus(feedback);
-    var outputRobotRelative =
-        ChassisSpeeds.fromFieldRelativeSpeeds(outputFieldRelative, new Rotation2d(sample.heading));
-
-    drive(outputRobotRelative);
   }
 
   private Pose2d targetPose;
