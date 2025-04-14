@@ -252,8 +252,10 @@ public class Robot extends LoggedRobot {
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
     new Trigger(superstructure::hasCoral)
+Do        .and(RobotModeTriggers.teleop())
         .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
     new Trigger(superstructure::hasAlgae)
+        .and(RobotModeTriggers.teleop())
         .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
 
     autos = new Autos(swerve, superstructure);
