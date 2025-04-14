@@ -39,12 +39,14 @@ class AlgaeClaw extends Mechanism {
   }
 
   Command eject() {
-    return expose(parallel(pivot.hold(), rollers.eject()).withName("Eject")).withName("Eject");
+    return expose(pivot.hold().withDeadline(rollers.eject()).withName("Eject")).withName("Eject");
   }
 
   Command process(BooleanSupplier eject) {
     return expose(
-            parallel(pivot.intake(), rollers.intake().until(eject).andThen(rollers.eject()))
+            pivot
+                .intake()
+                .withDeadline(rollers.intake().until(eject).andThen(rollers.eject()))
                 .withName("Process"))
         .withName("Process");
   }

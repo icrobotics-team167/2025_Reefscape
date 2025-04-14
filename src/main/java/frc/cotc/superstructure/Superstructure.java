@@ -126,13 +126,13 @@ public class Superstructure extends Mechanism {
                                         atBarge.getAsBoolean()
                                             && elevator.atTargetPos()
                                             && algaeClaw.atTargetAngle())
-                                .andThen(algaeClaw.eject().withTimeout(.2)))
+                                .andThen(algaeClaw.eject()))
                         .withName("Barge Score")))
         .withName("Barge Score");
   }
 
   public Command ejectAlgae() {
-    return expose(algaeClaw.eject());
+    return expose(algaeClaw.eject()).withName("Eject Algae");
   }
 
   public Command processAlgae(BooleanSupplier eject) {

@@ -504,6 +504,16 @@ public class Swerve extends SubsystemBase {
         .withName("Net Align");
   }
 
+  private final Pose2d blueProcessorPose = new Pose2d(6, .65, Rotation2d.kCW_90deg);
+  private final Pose2d redProcessorPose =
+      blueProcessorPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
+
+  public Command processorAlign(Supplier<Translation2d> nudgeSupplier) {
+    return followRepulsorField(
+            () -> Robot.isOnRed() ? redProcessorPose : blueProcessorPose, nudgeSupplier)
+        .withName("Processor Align");
+  }
+
   public Command followRepulsorField(Pose2d goal) {
     return followRepulsorField(() -> goal, null);
   }
