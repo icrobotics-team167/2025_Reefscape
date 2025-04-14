@@ -36,7 +36,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     motorConfig.CurrentLimits.StatorCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .33;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.197;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.212;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfig.Slot0.kP = 48;
