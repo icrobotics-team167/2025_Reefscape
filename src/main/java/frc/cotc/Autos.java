@@ -98,9 +98,9 @@ public class Autos {
                 swerve,
                 superstructure,
                 ReefBranch.G,
-                new AlgaeHandling(3, AlgaeScoring.PROCESS),
-                new AlgaeHandling(2, AlgaeScoring.PROCESS),
-                new AlgaeHandling(4, AlgaeScoring.NET)));
+                new AlgaeHandling(3, AlgaeScoring.NET),
+                new AlgaeHandling(4, AlgaeScoring.PROCESS),
+                new AlgaeHandling(2, AlgaeScoring.PROCESS)));
     addRoutine(
         "3FromE",
         () ->
