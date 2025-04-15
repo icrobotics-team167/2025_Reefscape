@@ -631,12 +631,12 @@ public class Swerve extends SubsystemBase {
   }
 
   /**
-   * Run the drive method 5,000 times a second to force a C2 JIT. Because every nanosecond counts.
+   * Run the drive method 50k times to force a C2 JIT. Because every nanosecond counts.
    */
   public Command forceJIT() {
-    return Commands.run(
+    return Commands.runOnce(
             () -> {
-              for (int i = 0; i < 100; i++) {
+              for (int i = 0; i < 50000; i++) {
                 drive(
                     new ChassisSpeeds(
                         maxLinearSpeedMetersPerSec * (Math.random() * 2 - 1),
