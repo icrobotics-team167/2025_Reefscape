@@ -254,6 +254,7 @@ public class Autos {
                     Robot.isOnRed()
                         ? swerve.getPose().getY() < Constants.FIELD_WIDTH_METERS / 2
                         : swerve.getPose().getY() > Constants.FIELD_WIDTH_METERS / 2)
+            .until(swerve::atTargetPoseAuto)
             .withName("Run to source")
             .asProxy();
 
