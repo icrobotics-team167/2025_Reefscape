@@ -252,7 +252,7 @@ public class Robot extends LoggedRobot {
     //            superstructure.bargeScore(
     //                () -> swerve.atNet() || secondary.getHID().getRightBumperButton()));
     secondary.leftTrigger().whileTrue(superstructure.intakeLowAlgae());
-    secondary.rightTrigger().whileTrue(superstructure.intakeHighAlgae());
+    secondary.rightTrigger().whileTrue(superstructure.bargeScore(secondary.a()));
 
     superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
 
