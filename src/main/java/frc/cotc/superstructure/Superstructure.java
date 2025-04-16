@@ -121,7 +121,9 @@ public class Superstructure extends Mechanism {
                     elevator
                         .net()
                         .withDeadline(
-                            waitUntil(
+                            algaeClaw
+                                .hold()
+                                .until(
                                     () ->
                                         atBarge.getAsBoolean()
                                             && elevator.atTargetPos()
