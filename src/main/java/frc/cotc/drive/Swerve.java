@@ -434,7 +434,7 @@ public class Swerve extends SubsystemBase {
       return false;
     }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
-    return error.getTranslation().getNorm() < 1.5
+    return error.getTranslation().getNorm() < 1.25
         && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
@@ -537,7 +537,7 @@ public class Swerve extends SubsystemBase {
                       repulsorFieldPlanner.sampleField(
                           poseEstimator.getEstimatedPosition().getTranslation(),
                           maxLinearSpeedMetersPerSec * .9,
-                          .8);
+                          1.25);
 
                   var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
                   var feedback =
