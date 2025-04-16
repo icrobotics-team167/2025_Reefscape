@@ -179,9 +179,6 @@ public class Robot extends LoggedRobot {
         .and(superstructure::isClimberDeployed)
         .whileTrue(superstructure.raiseClimber());
 
-    primary.b().whileTrue(swerve.testSlipCurrent());
-    primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockBackwards());
-
     secondary
         .y()
         .and(superstructure::hasCoral)
