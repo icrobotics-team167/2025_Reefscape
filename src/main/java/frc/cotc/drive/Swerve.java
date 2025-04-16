@@ -438,7 +438,7 @@ public class Swerve extends SubsystemBase {
         && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
-  private final double blueNetTargetX = 7.8;
+  private final double blueNetTargetX = 7.7;
   private final double redNetTargetX = Constants.FIELD_LENGTH_METERS - blueNetTargetX;
 
   @AutoLogOutput
