@@ -434,8 +434,7 @@ public class Swerve extends SubsystemBase {
       return false;
     }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
-    return error.getTranslation().getNorm() < 1.25
-        && Math.abs(error.getRotation().getDegrees()) < 20;
+    return error.getTranslation().getNorm() < 1 && Math.abs(error.getRotation().getDegrees()) < 20;
   }
 
   private final double blueNetTargetX = 7.7;
@@ -536,8 +535,8 @@ public class Swerve extends SubsystemBase {
                   var sample =
                       repulsorFieldPlanner.sampleField(
                           poseEstimator.getEstimatedPosition().getTranslation(),
-                          maxLinearSpeedMetersPerSec * .85,
-                          1.25);
+                          maxLinearSpeedMetersPerSec * .8,
+                          1.5);
 
                   var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
                   var feedback =
