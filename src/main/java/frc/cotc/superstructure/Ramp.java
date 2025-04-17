@@ -38,11 +38,11 @@ class Ramp extends SubsystemBase {
     return run(io::brake).withName("Hold");
   }
 
-  private final Debouncer debouncer = new Debouncer(.05);
+  private final Debouncer debouncer = new Debouncer(.1);
 
   private boolean stalled() {
     var stalled =
-        debouncer.calculate(Math.abs(inputs.velRPM) < 100 && inputs.currentDraws.statorCurrent > 3);
+        debouncer.calculate(Math.abs(inputs.velRPM) < 75 && inputs.currentDraws.statorCurrent > 5);
     Logger.recordOutput("Superstructure/Ramp/Stalled", stalled);
     return stalled;
   }
