@@ -70,7 +70,7 @@ public class AlgaeRollersIOPhoenix implements AlgaeRollersIO {
 
   @Override
   public void eject() {
-    motor.setVoltage(-8);
+    motor.setVoltage(-10);
   }
 
   @Override
