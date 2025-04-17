@@ -411,8 +411,8 @@ public class Swerve extends SubsystemBase {
     return error.getTranslation().getNorm() < .05
         && Math.abs(error.getRotation().getDegrees()) < 5
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
-            < .5
-        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 10;
+            < .25
+        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 5;
   }
 
   @AutoLogOutput
@@ -424,8 +424,8 @@ public class Swerve extends SubsystemBase {
     return error.getTranslation().getNorm() < .08
         && Math.abs(error.getRotation().getDegrees()) < 5
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
-            < .5
-        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 10;
+            < .25
+        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 5;
   }
 
   @AutoLogOutput

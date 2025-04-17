@@ -181,7 +181,6 @@ public class Robot extends LoggedRobot {
 
     secondary
         .y()
-        .and(superstructure::hasCoral)
         .whileTrue(
             waitUntil(
                     () ->
