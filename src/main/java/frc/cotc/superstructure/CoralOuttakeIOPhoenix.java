@@ -76,7 +76,7 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   }
 
   private final VoltageOut idleControl = new VoltageOut(12).withIgnoreHardwareLimits(false);
-  private final VoltageOut intakeControl = new VoltageOut(2.5).withIgnoreHardwareLimits(false);
+  private final VoltageOut intakeControl = new VoltageOut(3).withIgnoreHardwareLimits(false);
 
   @Override
   public void intake() {
