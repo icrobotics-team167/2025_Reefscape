@@ -86,7 +86,7 @@ public class RampIOPhoenix implements RampIO {
 
   @Override
   public void lower() {
-    motor.setControl(moveControl.withOutput(-1));
+    motor.setControl(moveControl.withOutput(-2));
   }
 
   @Override
