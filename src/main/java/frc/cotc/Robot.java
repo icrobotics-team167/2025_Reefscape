@@ -246,7 +246,11 @@ public class Robot extends LoggedRobot {
             superstructure.bargeScore(
                 () -> swerve.atNet() || secondary.getHID().getRightBumperButton()));
 
-    superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
+    superstructure
+        .coralStuck()
+        .debounce(.25)
+        .or(secondary.povDown().debounce(.25))
+        .onTrue(superstructure.ejectStuckCoral());
 
     new Trigger(superstructure::hasCoral)
         .and(RobotModeTriggers.teleop())
