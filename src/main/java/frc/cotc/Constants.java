@@ -21,5 +21,5 @@ public final class Constants {
 
   public static final double FRAME_WIDTH_METERS = Units.inchesToMeters(28);
   public static final double FRAME_LENGTH_METERS = Units.inchesToMeters(28);
-  public static final double BUMPER_THICKNESS_METERS = Units.inchesToMeters(4);
+  public static final double BUMPER_THICKNESS_METERS = Units.inchesToMeters(3.5);
 }
