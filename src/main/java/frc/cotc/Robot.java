@@ -156,99 +156,101 @@ public class Robot extends LoggedRobot {
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
-    swerve.setDefaultCommand(
-        swerve.teleopDrive(
-            driveTranslationalControlSupplier,
-            () -> {
-              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
-              return Math.copySign(rawInput * rawInput, rawInput);
-            },
-            primary.leftBumper()));
-    primary
-        .leftTrigger()
-        .whileTrue(swerve.reefBranchAlign(true, driveTranslationalControlSupplier));
-    primary
-        .rightTrigger()
-        .whileTrue(swerve.reefBranchAlign(false, driveTranslationalControlSupplier));
-    primary.a().whileTrue(swerve.reefAlgaeAlign(driveTranslationalControlSupplier));
-    primary.b().whileTrue(swerve.netAlign(driveTranslationalControlSupplier));
-    primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
-    primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
-    primary
-        .povDown()
-        .and(superstructure::isClimberDeployed)
-        .whileTrue(superstructure.raiseClimber());
-
-    secondary
-        .y()
-        .whileTrue(
-            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
-                .andThen(
-                    superstructure.lvl4(
-                        () ->
-                            swerve.atTargetPoseTeleop()
-                                || secondary.getHID().getRightBumperButton()))
-                .withName("Teleop L4"));
-    secondary
-        .x()
-        .whileTrue(
-            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
-                .andThen(
-                    superstructure.lvl3(
-                        () ->
-                            swerve.atTargetPoseTeleop()
-                                || secondary.getHID().getRightBumperButton()))
-                .withName("Teleop L3"));
-    secondary
-        .b()
-        .whileTrue(
-            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
-                .andThen(
-                    superstructure.lvl2(
-                        () ->
-                            swerve.atTargetPoseTeleop()
-                                || secondary.getHID().getRightBumperButton()))
-                .withName("Teleop L2"));
-    secondary
-        .a()
-        .and(superstructure::hasAlgae)
-        .whileTrue(superstructure.processAlgae(() -> secondary.getHID().getRightBumperButton()));
-    secondary
-        .back()
-        .whileTrue(
-            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
-                .andThen(superstructure.lvl1(() -> secondary.getHID().getRightBumperButton()))
-                .withName("Teleop L1"));
-
-    secondary
-        .leftTrigger()
-        .whileTrue(
-            either(
-                    superstructure.intakeHighAlgae(),
-                    superstructure.intakeLowAlgae(),
-                    swerve::isReefAlignHigh)
-                .withName("Teleop Algae Intake"));
-
-    secondary.leftBumper().and(superstructure::hasAlgae).whileTrue(superstructure.ejectAlgae());
-    secondary
-        .rightTrigger()
-        .and(superstructure::hasAlgae)
-        .whileTrue(
-            superstructure.bargeScore(
-                () -> swerve.atNet() || secondary.getHID().getRightBumperButton()));
-
-    superstructure
-        .coralStuck()
-        .debounce(.25)
-        .or(secondary.povDown().debounce(.25))
-        .onTrue(superstructure.ejectStuckCoral());
-
-    new Trigger(superstructure::hasCoral)
-        .and(RobotModeTriggers.teleop())
-        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
-    new Trigger(superstructure::hasAlgae)
-        .and(RobotModeTriggers.teleop())
-        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
+//    swerve.setDefaultCommand(
+//        swerve.teleopDrive(
+//            driveTranslationalControlSupplier,
+//            () -> {
+//              var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
+//              return Math.copySign(rawInput * rawInput, rawInput);
+//            },
+//            primary.leftBumper()));
+//    primary
+//        .leftTrigger()
+//        .whileTrue(swerve.reefBranchAlign(true, driveTranslationalControlSupplier));
+//    primary
+//        .rightTrigger()
+//        .whileTrue(swerve.reefBranchAlign(false, driveTranslationalControlSupplier));
+//    primary.a().whileTrue(swerve.reefAlgaeAlign(driveTranslationalControlSupplier));
+//    primary.b().whileTrue(swerve.netAlign(driveTranslationalControlSupplier));
+//    primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
+//    primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
+//    primary
+//        .povDown()
+//        .and(superstructure::isClimberDeployed)
+//        .whileTrue(superstructure.raiseClimber());
+//
+//    secondary
+//        .y()
+//        .whileTrue(
+//            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+//                .andThen(
+//                    superstructure.lvl4(
+//                        () ->
+//                            swerve.atTargetPoseTeleop()
+//                                || secondary.getHID().getRightBumperButton()))
+//                .withName("Teleop L4"));
+//    secondary
+//        .x()
+//        .whileTrue(
+//            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+//                .andThen(
+//                    superstructure.lvl3(
+//                        () ->
+//                            swerve.atTargetPoseTeleop()
+//                                || secondary.getHID().getRightBumperButton()))
+//                .withName("Teleop L3"));
+//    secondary
+//        .b()
+//        .whileTrue(
+//            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+//                .andThen(
+//                    superstructure.lvl2(
+//                        () ->
+//                            swerve.atTargetPoseTeleop()
+//                                || secondary.getHID().getRightBumperButton()))
+//                .withName("Teleop L2"));
+//    secondary
+//        .a()
+//        .and(superstructure::hasAlgae)
+//        .whileTrue(superstructure.processAlgae(() -> secondary.getHID().getRightBumperButton()));
+//    secondary
+//        .back()
+//        .whileTrue(
+//            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+//                .andThen(superstructure.lvl1(() -> secondary.getHID().getRightBumperButton()))
+//                .withName("Teleop L1"));
+//
+//    secondary
+//        .leftTrigger()
+//        .whileTrue(
+//            either(
+//                    superstructure.intakeHighAlgae(),
+//                    superstructure.intakeLowAlgae(),
+//                    swerve::isReefAlignHigh)
+//                .withName("Teleop Algae Intake"));
+//
+//    secondary.leftBumper().and(superstructure::hasAlgae).whileTrue(superstructure.ejectAlgae());
+//    secondary
+//        .rightTrigger()
+//        .and(superstructure::hasAlgae)
+//        .whileTrue(
+//            superstructure.bargeScore(
+//                () -> swerve.atNet() || secondary.getHID().getRightBumperButton()));
+//
+//    superstructure
+//        .coralStuck()
+//        .debounce(.25)
+//        .or(secondary.povDown().debounce(.25))
+//        .onTrue(superstructure.ejectStuckCoral());
+//
+//    new Trigger(superstructure::hasCoral)
+//        .and(RobotModeTriggers.teleop())
+//        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
+//    new Trigger(superstructure::hasAlgae)
+//        .and(RobotModeTriggers.teleop())
+//        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
+    secondary.leftTrigger().whileTrue(superstructure.intakeLowAlgae());
+    secondary.rightTrigger().whileTrue(superstructure.intakeHighAlgae());
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
