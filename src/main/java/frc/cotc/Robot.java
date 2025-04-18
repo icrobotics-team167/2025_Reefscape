@@ -129,6 +129,8 @@ public class Robot extends LoggedRobot {
 
     Logger.start();
 
+    DriverStation.silenceJoystickConnectionWarning(true);
+
     var primary = new CommandXboxControllerWithRumble(0);
     var secondary = new CommandXboxControllerWithRumble(1);
 
