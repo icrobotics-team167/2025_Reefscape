@@ -187,7 +187,7 @@ public class Autos {
                     .withName("Score L4"))
             .withName("Go to " + startingBranch.name())
             .asProxy();
-    commands[1] = swerve.driveStraight(-.75).withTimeout(.5).withName("Back Up").asProxy();
+    commands[1] = swerve.driveStraight(-1).withTimeout(.75).withName("Back Up").asProxy();
 
     for (int i = 0; i < algaeHandling.length; i++) {
       commands[i * 2 + 2] =
