@@ -98,7 +98,7 @@ public class CoralOuttakeIOPhoenix implements CoralOuttakeIO {
   }
 
   private final VoltageOut superSlowOuttakeControl =
-      new VoltageOut(3).withIgnoreHardwareLimits(true);
+      new VoltageOut(5).withIgnoreHardwareLimits(true);
 
   @Override
   public void outtakeSuperSlow() {
