@@ -151,6 +151,7 @@ public class Superstructure extends Mechanism {
     return expose(
             runOnce(() -> climberDeployed = true)
                 .andThen(parallel(ramp.raise(), climber.deploy()))
+                .withTimeout(3)
                 .withName("Ready Climb"))
         .withName("Ready Climb");
   }
