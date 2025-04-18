@@ -40,8 +40,8 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfig.Slot0.kP = 48;
-    motorConfig.Slot0.kD = .5;
-    motorConfig.Slot0.kG = 2.5;
+    motorConfig.Slot0.kD = 2;
+    motorConfig.Slot0.kG = .4;
     motorConfig.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
     motorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
     motor.getConfigurator().apply(motorConfig);
