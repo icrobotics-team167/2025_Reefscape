@@ -18,21 +18,45 @@ import java.util.function.BooleanSupplier;
 public class Superstructure extends Mechanism {
   private final Elevator elevator;
   private final CoralOuttake coralOuttake;
+  private final AlgaeClaw algaeClaw;
   private final Ramp ramp;
   private final Climber climber;
 
   public Superstructure(
-      ElevatorIO elevatorIO, CoralOuttakeIO coralOuttakeIO, RampIO rampIO, ClimberIO climberIO) {
+      ElevatorIO elevatorIO,
+      CoralOuttakeIO coralOuttakeIO,
+      AlgaePivotIO algaePivotIO,
+      AlgaeRollersIO algaeRollersIO,
+      RampIO rampIO,
+      ClimberIO climberIO) {
     elevator = new Elevator(elevatorIO);
     coralOuttake = new CoralOuttake(coralOuttakeIO);
+    algaeClaw = new AlgaeClaw(algaePivotIO, algaeRollersIO);
     ramp = new Ramp(rampIO);
     climber = new Climber(climberIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
     ramp.setDefaultCommand(ramp.hold());
-    RobotModeTriggers.disabled()
-        .onFalse(ramp.lower().alongWith(climber.deployStart()).withName("Initial deploy"));
+    RobotModeTriggers.disabled().onFalse(ramp.lower());
+    algaeClaw.setDefaultCommand(
+        either(algaeClaw.hold(), algaeClaw.stow(), algaeClaw::hasAlgae).withName("Hold or Stow"));
+
+    if (algaeRollersIO instanceof AlgaeRollersIOSim simRollers) {
+      simRollers.atTargetHeight = elevator::atTargetPos;
+    }
+  }
+
+  public Command lvl1(BooleanSupplier eject) {
+    return expose(
+            elevator
+                .lvl1()
+                .withDeadline(
+                    waitUntil(() -> eject.getAsBoolean() && elevator.atTargetPos())
+                        .andThen(coralOuttake.scoreSuperSlow().asProxy())
+                        .withName("Score On Trough"))
+                .withName("Lvl 1 Scoring"))
+        .withName("Lvl 1 Scoring");
   }
 
   public Command lvl2(BooleanSupplier driveBaseAtTarget) {
@@ -80,12 +104,41 @@ public class Superstructure extends Mechanism {
         .withName("Eject Stuck Coral");
   }
 
-  public Command highAlgae() {
-    return expose(elevator.highAlgae()).withName("High Algae");
+  public Command intakeLowAlgae() {
+    return expose(parallel(algaeClaw.intake(), elevator.lowAlgae()).withName("Low Algae"))
+        .withName("Low Algae");
   }
 
-  public Command net() {
-    return expose(elevator.net()).withName("Net");
+  public Command intakeHighAlgae() {
+    return expose(parallel(algaeClaw.intake(), elevator.highAlgae()).withName("High Algae"))
+        .withName("High Algae");
+  }
+
+  public Command bargeScore(BooleanSupplier atBarge) {
+    return expose(
+            waitUntil(algaeClaw::isPastVertical)
+                .andThen(
+                    elevator
+                        .net()
+                        .withDeadline(
+                            algaeClaw
+                                .hold()
+                                .until(
+                                    () ->
+                                        atBarge.getAsBoolean()
+                                            && elevator.atTargetPos()
+                                            && algaeClaw.atTargetAngle())
+                                .andThen(algaeClaw.eject()))
+                        .withName("Barge Score")))
+        .withName("Barge Score");
+  }
+
+  public Command ejectAlgae() {
+    return expose(algaeClaw.eject()).withName("Eject Algae");
+  }
+
+  public Command processAlgae(BooleanSupplier eject) {
+    return expose(algaeClaw.process(eject)).withName("Process Algae");
   }
 
   private boolean climberDeployed = false;
@@ -96,15 +149,19 @@ public class Superstructure extends Mechanism {
 
   public Command readyClimb() {
     return expose(
-        runOnce(() -> climberDeployed = true).andThen(parallel(ramp.raise(), climber.deploy())));
+            runOnce(() -> climberDeployed = true)
+                .andThen(parallel(ramp.raise(), climber.deploy()))
+                .withTimeout(3)
+                .withName("Ready Climb"))
+        .withName("Ready Climb");
   }
 
   public Command climb() {
-    return expose(climber.climb());
+    return expose(climber.climb().withName("Climb")).withName("Climb");
   }
 
   public Command raiseClimber() {
-    return expose(climber.deploy());
+    return expose(climber.deploy()).withName("Raise Climber");
   }
 
   public Trigger coralStuck() {
@@ -113,5 +170,13 @@ public class Superstructure extends Mechanism {
 
   public boolean hasCoral() {
     return coralOuttake.hasCoral();
+  }
+
+  public boolean hasAlgae() {
+    return algaeClaw.hasAlgae();
+  }
+
+  public double getElevatorExtension() {
+    return elevator.getExtension();
   }
 }

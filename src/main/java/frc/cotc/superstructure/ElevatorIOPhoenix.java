@@ -36,7 +36,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private static final ElevatorIOConstantsAutoLogged constants;
 
   static {
-    gearRatio = (46.0 / 16.0) * (52.0 / 20.0);
+    gearRatio = (42.0 / 20.0) * (52.0 / 20.0);
 
     var pitch = 5.0 / 1000;
     var teeth = 36;
@@ -76,7 +76,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    config.Slot0.kG = .33;
+    config.Slot0.kG = .405;
     config.Slot0.kS = Robot.isReal() ? .03 : 0;
     config.Slot0.kV = 12.0 / ((5800 / 60.0) / gearRatio);
     config.Slot0.kA = config.Slot0.kG / 9.81 * metersPerRotation;
@@ -85,13 +85,13 @@ public class ElevatorIOPhoenix implements ElevatorIO {
             config.Slot0.kV,
             config.Slot0.kA,
             12 - config.Slot0.kG - config.Slot0.kS,
-            .02,
+            .01,
             .25,
             .001,
             .001);
     config.Slot0.kP = firstStageGains.kP();
     config.Slot0.kD = firstStageGains.kD();
-    config.Slot1.kG = .38;
+    config.Slot1.kG = .496;
     config.Slot1.kS = Robot.isReal() ? .03 : 0;
     config.Slot1.kV = config.Slot0.kV;
     config.Slot1.kA = config.Slot1.kG / 9.81 * metersPerRotation;
@@ -100,12 +100,26 @@ public class ElevatorIOPhoenix implements ElevatorIO {
             config.Slot1.kV,
             config.Slot1.kA,
             12 - config.Slot1.kG - config.Slot1.kS,
-            .02,
+            .01,
             .25,
             .001,
             .001);
     config.Slot1.kP = secondStageGains.kP();
     config.Slot1.kD = secondStageGains.kD();
+    config.Slot2.kG = config.Slot0.kG;
+    config.Slot2.kV = config.Slot0.kV;
+    config.Slot2.kA = config.Slot0.kA;
+    var slowGains =
+        GainsCalculator.getPositionGains(
+            config.Slot0.kV,
+            config.Slot0.kA,
+            3 - config.Slot0.kG - config.Slot0.kS,
+            .005,
+            .025,
+            .001,
+            .001);
+    config.Slot2.kP = slowGains.kP();
+    config.Slot2.kD = slowGains.kD();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     leftMotor.getConfigurator().apply(config);
@@ -147,10 +161,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     lastTriggeredState = triggeredState;
 
     inputs.posMeters =
-        triggeredState
-            ? 0
-            : BaseStatusSignal.getLatencyCompensatedValueAsDouble(posSignal, velSignal)
-                * metersPerRotation;
+        BaseStatusSignal.getLatencyCompensatedValueAsDouble(posSignal, velSignal)
+            * metersPerRotation;
     inputs.velMetersPerSec = velSignal.getValueAsDouble() * metersPerRotation;
     inputs.leftMotorCurrentDraws.mutateFromSignals(leftStator, leftSupply);
     inputs.rightMotorCurrentDraws.mutateFromSignals(rightStator, rightSupply);
@@ -167,14 +179,18 @@ public class ElevatorIOPhoenix implements ElevatorIO {
   private final PositionVoltage positionControl = new PositionVoltage(0);
 
   @Override
-  public void setTargetPos(double posMeters) {
+  public void setTargetPos(double targetPosMeters) {
+    double currentPosRot = posSignal.getValueAsDouble();
+    int slot;
+    if (targetPosMeters == 0 && currentPosRot < 1.0 / metersPerRotation) {
+      slot = 2;
+    } else if (currentPosRot > (constants.switchPointMeters / metersPerRotation)) {
+      slot = 1;
+    } else {
+      slot = 0;
+    }
     leftMotor.setControl(
-        positionControl
-            .withPosition(posMeters / metersPerRotation)
-            .withSlot(
-                posSignal.getValueAsDouble() < (constants.switchPointMeters / metersPerRotation)
-                    ? 0
-                    : 1));
+        positionControl.withPosition(targetPosMeters / metersPerRotation).withSlot(slot));
     rightMotor.setControl(positionControl);
   }
 

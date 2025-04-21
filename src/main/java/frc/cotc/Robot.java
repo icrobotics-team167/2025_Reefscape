@@ -12,6 +12,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -23,7 +24,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.cotc.algae.*;
 import frc.cotc.drive.Swerve;
 import frc.cotc.drive.SwerveIO;
 import frc.cotc.drive.SwerveIOPhoenix;
@@ -35,6 +35,7 @@ import frc.cotc.vision.FiducialPoseEstimator;
 import frc.cotc.vision.FiducialPoseEstimatorIO;
 import frc.cotc.vision.FiducialPoseEstimatorIOPhoton;
 import java.util.*;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.*;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -55,8 +56,6 @@ public class Robot extends LoggedRobot {
     REPLAY
   }
 
-  public static boolean isNewBot;
-
   @SuppressWarnings({"DataFlowIssue", "UnreachableCode", "ConstantValue"})
   public Robot() {
     // If this is erroring, hit build
@@ -72,18 +71,18 @@ public class Robot extends LoggedRobot {
     Mode mode = Robot.isReal() ? Mode.REAL : Mode.SIM;
     //    Mode mode = Robot.isReal() ? Mode.REAL : Mode.REPLAY;
 
-    var newBotLogger =
+    var isCompBot =
         new LoggableInputs() {
-          boolean isNewBot;
+          boolean isCompBot;
 
           @Override
           public void toLog(LogTable table) {
-            table.put("isNewBot", isNewBot);
+            table.put("isNewBot", isCompBot);
           }
 
           @Override
           public void fromLog(LogTable table) {
-            isNewBot = table.get("isNewBot", true);
+            isCompBot = table.get("isCompBot", true);
           }
         };
     switch (mode) {
@@ -96,14 +95,15 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("RoboRIO Serial number", serialNumber);
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
-        newBotLogger.isNewBot = serialNumber.equals("032BE4AB");
+
+        isCompBot.isCompBot = serialNumber.equals("032BE4AB");
       }
       case SIM -> {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to the project's logs folder
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
         SignalLogger.start(); // Start logging Phoenix CAN signals
-        newBotLogger.isNewBot = true;
+        isCompBot.isCompBot = true;
       }
       case REPLAY -> {
         setUseTiming(false); // Run as fast as possible
@@ -125,22 +125,17 @@ public class Robot extends LoggedRobot {
       }
     }
 
+    Logger.processInputs("Robot", isCompBot);
+
     Logger.start();
 
-    Logger.processInputs("Robot", newBotLogger);
-    isNewBot = newBotLogger.isNewBot;
+    DriverStation.silenceJoystickConnectionWarning(true);
 
     var primary = new CommandXboxControllerWithRumble(0);
     var secondary = new CommandXboxControllerWithRumble(1);
 
-    var swerve = getSwerve(mode);
     var superstructure = getSuperstructure(mode);
-    var algaePivot =
-        new AlgaePivot(
-            Robot.isReal() && isNewBot ? new AlgaePivotIOPhoenix() : new AlgaePivotIO() {});
-    var algaeIntake =
-        new AlgaeIntake(
-            Robot.isReal() && isNewBot ? new AlgaeIntakeIOPhoenix() : new AlgaeIntakeIO() {});
+    var swerve = getSwerve(mode, superstructure::getElevatorExtension, isCompBot.isCompBot);
 
     Supplier<Translation2d> driveTranslationalControlSupplier =
         () -> {
@@ -186,54 +181,80 @@ public class Robot extends LoggedRobot {
         .and(superstructure::isClimberDeployed)
         .whileTrue(superstructure.raiseClimber());
 
-    //        primary.b().whileTrue(swerve.testSlipCurrent());
-    //    primary.b().onTrue(swerve.lockForward()).onFalse(swerve.lockBackwards());
-
     secondary
         .y()
         .whileTrue(
-            superstructure.lvl4(
-                () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
+            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+                .andThen(
+                    superstructure.lvl4(
+                        () ->
+                            swerve.atTargetPoseTeleop()
+                                || secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L4"));
     secondary
         .x()
         .whileTrue(
-            superstructure.lvl3(
-                () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
+            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+                .andThen(
+                    superstructure.lvl3(
+                        () ->
+                            swerve.atTargetPoseTeleop()
+                                || secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L3"));
     secondary
         .b()
         .whileTrue(
-            superstructure.lvl2(
-                () -> swerve.atTargetPoseTeleop() || secondary.rightBumper().getAsBoolean()));
+            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+                .andThen(
+                    superstructure.lvl2(
+                        () ->
+                            swerve.atTargetPoseTeleop()
+                                || secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L2"));
+    secondary
+        .a()
+        .and(superstructure::hasAlgae)
+        .whileTrue(superstructure.processAlgae(() -> secondary.getHID().getRightBumperButton()));
+    secondary
+        .back()
+        .whileTrue(
+            waitUntil(() -> superstructure.hasCoral() || secondary.getHID().getRightBumperButton())
+                .andThen(superstructure.lvl1(() -> secondary.getHID().getRightBumperButton()))
+                .withName("Teleop L1"));
 
-    algaePivot.setDefaultCommand(algaePivot.manualControl(() -> -secondary.getLeftY()));
-    secondary.leftTrigger().or(algaeIntake::hasAlgae).whileTrue(algaeIntake.intake());
     secondary
         .leftTrigger()
         .whileTrue(
             either(
-                superstructure.highAlgae(),
-                none(),
-                () -> {
-                  var angle = swerve.getReefAlignPose().getRotation();
-                  if (Robot.isOnRed()) {
-                    return angle.equals(Rotation2d.kPi)
-                        || angle.equals(Rotation2d.fromDegrees(60))
-                        || angle.equals(Rotation2d.fromDegrees(-60));
-                  } else {
-                    return angle.equals(Rotation2d.kZero)
-                        || angle.equals(Rotation2d.fromDegrees(120))
-                        || angle.equals(Rotation2d.fromDegrees(-120));
-                  }
-                }));
-    secondary.leftBumper().whileTrue(algaeIntake.outtake());
-    secondary.rightTrigger().whileTrue(superstructure.net());
+                    superstructure.intakeHighAlgae(),
+                    superstructure.intakeLowAlgae(),
+                    swerve::isReefAlignHigh)
+                .withName("Teleop Algae Intake"));
+    secondary
+        .back()
+        .whileTrue(superstructure.lvl1(() -> secondary.getHID().getRightBumperButton()));
+    secondary.leftBumper().and(superstructure::hasAlgae).whileTrue(superstructure.ejectAlgae());
+    secondary
+        .rightTrigger()
+        .and(superstructure::hasAlgae)
+        .whileTrue(
+            superstructure.bargeScore(
+                () -> swerve.atNet() || secondary.getHID().getRightBumperButton()));
 
     SmartDashboard.putData("Turbo!", swerve.forceJIT());
 
-    superstructure.coralStuck().debounce(.25).onTrue(superstructure.ejectStuckCoral());
+    superstructure
+        .coralStuck()
+        .debounce(.25)
+        .or(secondary.povDown().debounce(.25))
+        .onTrue(superstructure.ejectStuckCoral());
 
-    new Trigger(superstructure::hasCoral).onChange(secondary.rumble(.35));
-    new Trigger(algaeIntake::hasAlgae).onChange(secondary.rumble(.35));
+    new Trigger(superstructure::hasCoral)
+        .and(RobotModeTriggers.teleop())
+        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
+    new Trigger(superstructure::hasAlgae)
+        .and(RobotModeTriggers.teleop())
+        .onChange(secondary.rumble(.35).withName("Rumble secondary controller"));
 
     autos = new Autos(swerve, superstructure);
     ReefLocations.log();
@@ -351,7 +372,7 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("CommandScheduler/Subsystems/infos", subsystems);
   }
 
-  private Swerve getSwerve(Mode mode) {
+  private Swerve getSwerve(Mode mode, DoubleSupplier elevatorExtensionSupplier, boolean isCompBot) {
     SwerveIO swerveIO;
     FiducialPoseEstimator.IO[] visionIOs;
 
@@ -372,57 +393,32 @@ public class Robot extends LoggedRobot {
 
     switch (mode) {
       case REAL, SIM -> {
-        swerveIO = new SwerveIOPhoenix();
+        swerveIO = new SwerveIOPhoenix(isCompBot);
 
-        if (isNewBot || Robot.isSimulation()) {
-          visionIOs =
-              new FiducialPoseEstimator.IO[] {
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "NewFrontLeft",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2 - 1.5),
-                            Units.inchesToMeters(22.75 / 2 + .125),
-                            Units.inchesToMeters(8.375),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
-                    "NewFrontLeft"),
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "NewFrontRight",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2 - 1.5),
-                            -Units.inchesToMeters(22.75 / 2 + .125),
-                            Units.inchesToMeters(8.375),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                    "NewFrontRight")
-              };
-        } else {
-          visionIOs =
-              new FiducialPoseEstimator.IO[] {
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "FrontLeft",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2),
-                            Units.inchesToMeters(22.75 / 2),
-                            Units.inchesToMeters(8.25),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
-                    "FrontLeft"),
-                new FiducialPoseEstimator.IO(
-                    new FiducialPoseEstimatorIOPhoton(
-                        "FrontRight",
-                        new Transform3d(
-                            Units.inchesToMeters(22.75 / 2),
-                            -Units.inchesToMeters(22.75 / 2),
-                            Units.inchesToMeters(8.25),
-                            new Rotation3d(
-                                0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
-                    "FrontRight")
-              };
-        }
+        String prefix = isCompBot ? "New" : "";
+        visionIOs =
+            new FiducialPoseEstimator.IO[] {
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      prefix + "FrontLeft",
+                      new Transform3d(
+                          Units.inchesToMeters(22.75 / 2 - 1.5),
+                          Units.inchesToMeters(22.75 / 2 + .125),
+                          Units.inchesToMeters(8.375),
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(-30)))),
+                  prefix + "FrontLeft"),
+              new FiducialPoseEstimator.IO(
+                  new FiducialPoseEstimatorIOPhoton(
+                      prefix + "FrontRight",
+                      new Transform3d(
+                          Units.inchesToMeters(22.75 / 2 - 1.5),
+                          -Units.inchesToMeters(22.75 / 2 + .125),
+                          Units.inchesToMeters(8.375),
+                          new Rotation3d(
+                              0, Units.degreesToRadians(-15), Units.degreesToRadians(30)))),
+                  prefix + "FrontRight")
+            };
 
         cameraNames.names = new String[visionIOs.length];
         for (int i = 0; i < visionIOs.length; i++) {
@@ -441,31 +437,37 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    return new Swerve(swerveIO, visionIOs);
+    return new Swerve(swerveIO, visionIOs, elevatorExtensionSupplier);
   }
 
   private Superstructure getSuperstructure(Mode mode) {
     switch (mode) {
       case REAL -> {
-        return isNewBot
-            ? new Superstructure(
-                new ElevatorIOPhoenix(),
-                new CoralOuttakeIOPhoenix(),
-                new RampIOPhoenix(),
-                new ClimberIOPhoenix())
-            : new Superstructure(
-                new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {}, new ClimberIO() {});
+        return new Superstructure(
+            new ElevatorIOPhoenix(),
+            new CoralOuttakeIOPhoenix(),
+            new AlgaePivotIOPhoenix(),
+            new AlgaeRollersIOPhoenix(),
+            new RampIOPhoenix(),
+            new ClimberIOPhoenix());
       }
       case SIM -> {
         return new Superstructure(
             new ElevatorIOPhoenix(),
             new CoralOuttakeIOSim(),
+            new AlgaePivotIOSim(),
+            new AlgaeRollersIOSim(),
             new RampIOPhoenix(),
             new ClimberIO() {});
       }
       default -> {
         return new Superstructure(
-            new ElevatorIO() {}, new CoralOuttakeIO() {}, new RampIO() {}, new ClimberIO() {});
+            new ElevatorIO() {},
+            new CoralOuttakeIO() {},
+            new AlgaePivotIO() {},
+            new AlgaeRollersIO() {},
+            new RampIO() {},
+            new ClimberIO() {});
       }
     }
   }
@@ -514,6 +516,7 @@ public class Robot extends LoggedRobot {
   public static volatile double simVoltage = 12;
 
   public static Supplier<Pose2d> groundTruthPoseSupplier;
+  public static Supplier<ChassisSpeeds> groundTruthSpeedSupplier;
 
   @Override
   public void simulationPeriodic() {

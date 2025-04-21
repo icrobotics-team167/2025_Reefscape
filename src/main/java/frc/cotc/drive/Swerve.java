@@ -11,7 +11,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import static frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import static java.lang.Math.PI;
 
-import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -48,12 +48,16 @@ public class Swerve extends SubsystemBase {
 
   private final SwerveSetpointGenerator setpointGenerator;
   private final Rotation2d[] stopAngles;
-  private final SwerveSetpoint stopInXSetpoint;
+  private final SwerveSetpoint stopSetpoint;
   private SwerveSetpoint lastSetpoint;
 
   private final double maxLinearSpeedMetersPerSec;
   private final double maxAngularSpeedRadPerSec;
   private final double angularSpeedFudgeFactor;
+  private final double maxLowElevatorAccel;
+  private final double maxHighElevatorAccelForwards;
+  private final double maxHighElevatorAccelSideways;
+  private final double maxHighElevatorAccelReverse;
 
   private final SwervePoseEstimator poseEstimator;
   private final TimeInterpolatableBuffer<Rotation2d> yawBuffer =
@@ -64,7 +68,12 @@ public class Swerve extends SubsystemBase {
 
   private final RepulsorFieldPlanner repulsorFieldPlanner = new RepulsorFieldPlanner();
 
-  public Swerve(SwerveIO driveIO, FiducialPoseEstimator.IO[] visionIOs) {
+  private final DoubleSupplier elevatorExtensionSupplier;
+
+  public Swerve(
+      SwerveIO driveIO,
+      FiducialPoseEstimator.IO[] visionIOs,
+      DoubleSupplier elevatorExtensionSupplier) {
     swerveIO = driveIO;
     var CONSTANTS = driveIO.getConstants();
     inputs = new SwerveIO.SwerveIOInputs();
@@ -78,6 +87,10 @@ public class Swerve extends SubsystemBase {
         maxLinearSpeedMetersPerSec
             / Math.hypot(CONSTANTS.TRACK_WIDTH_METERS / 2, CONSTANTS.TRACK_LENGTH_METERS / 2);
     angularSpeedFudgeFactor = CONSTANTS.ANGULAR_SPEED_FUDGING;
+    maxLowElevatorAccel = CONSTANTS.MAX_ACCEL_LOW;
+    maxHighElevatorAccelForwards = CONSTANTS.MAX_FWD_ACCEL_HIGH;
+    maxHighElevatorAccelSideways = CONSTANTS.MAX_SIDE_ACCEL_HIGH;
+    maxHighElevatorAccelReverse = CONSTANTS.MAX_BACK_ACCEL_HIGH;
 
     Logger.recordOutput("Swerve/Max Linear Speed", maxLinearSpeedMetersPerSec);
     Logger.recordOutput("Swerve/Max Angular Speed", maxAngularSpeedRadPerSec);
@@ -102,7 +115,7 @@ public class Swerve extends SubsystemBase {
             CONSTANTS.WHEEL_DIAMETER_METERS);
     stopAngles =
         new Rotation2d[] {Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero};
-    stopInXSetpoint =
+    stopSetpoint =
         new SwerveSetpoint(
             new ChassisSpeeds(),
             new SwerveModuleState[] {
@@ -135,8 +148,10 @@ public class Swerve extends SubsystemBase {
 
     xController = new PIDController(5, 0, 0);
     yController = new PIDController(5, 0, 0);
-    yawController = new PIDController(3, 0, .2);
+    yawController = new PIDController(5, 0, 0);
     yawController.enableContinuousInput(-PI, PI);
+
+    this.elevatorExtensionSupplier = elevatorExtensionSupplier;
   }
 
   private void resetLastSetpoint() {
@@ -285,13 +300,59 @@ public class Swerve extends SubsystemBase {
     };
   }
 
-  private void drive(ChassisSpeeds speeds) {
-    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, speeds);
+  private void drive(ChassisSpeeds desiredSpeeds) {
+    double elevatorHeight = elevatorExtensionSupplier.getAsDouble();
+
+    double maxForwardAccel =
+        MathUtil.interpolate(maxLowElevatorAccel, maxHighElevatorAccelForwards, elevatorHeight);
+    double maxReverseAccel =
+        MathUtil.interpolate(
+            maxLowElevatorAccel,
+            lastSetpoint.chassisSpeeds().vxMetersPerSecond > 0
+                ? maxHighElevatorAccelForwards
+                : maxHighElevatorAccelReverse,
+            elevatorHeight);
+    double maxSideAccel =
+        MathUtil.interpolate(maxLowElevatorAccel, maxHighElevatorAccelSideways, elevatorHeight);
+
+    Logger.recordOutput("Swerve/Accel Limits/Forward", maxForwardAccel);
+    Logger.recordOutput("Swerve/Accel Limits/Reverse", -maxReverseAccel);
+    Logger.recordOutput("Swerve/Accel Limits/Side", maxSideAccel);
+
+    var desiredXAccel =
+        (desiredSpeeds.vxMetersPerSecond - lastSetpoint.chassisSpeeds().vxMetersPerSecond)
+            / Robot.defaultPeriodSecs;
+    var desiredYAccel =
+        (desiredSpeeds.vyMetersPerSecond - lastSetpoint.chassisSpeeds().vyMetersPerSecond)
+            / Robot.defaultPeriodSecs;
+
+    double scalar = maxSideAccel / Math.max(Math.abs(desiredYAccel), maxSideAccel);
+    scalar =
+        Math.min(
+            scalar,
+            desiredXAccel > 0
+                ? maxForwardAccel / Math.max(desiredXAccel, maxForwardAccel)
+                : maxReverseAccel / Math.max(-desiredXAccel, maxReverseAccel));
+
+    ChassisSpeeds limitedSpeeds;
+    if (scalar == 1) {
+      limitedSpeeds = desiredSpeeds;
+    } else {
+      limitedSpeeds =
+          new ChassisSpeeds(
+              lastSetpoint.chassisSpeeds().vxMetersPerSecond
+                  + desiredXAccel * Robot.defaultPeriodSecs * scalar,
+              lastSetpoint.chassisSpeeds().vyMetersPerSecond
+                  + desiredYAccel * Robot.defaultPeriodSecs * scalar,
+              lastSetpoint.chassisSpeeds().omegaRadiansPerSecond
+                  + (desiredSpeeds.omegaRadiansPerSecond
+                          - lastSetpoint.chassisSpeeds().omegaRadiansPerSecond)
+                      * scalar);
+    }
+    var setpoint = setpointGenerator.generateSetpoint(lastSetpoint, limitedSpeeds);
     swerveIO.drive(setpoint);
     lastSetpoint = setpoint;
   }
-
-  private double accelLimitMpss = -1;
 
   public Command teleopDrive(
       Supplier<Translation2d> translationalControlSupplier,
@@ -323,7 +384,7 @@ public class Swerve extends SubsystemBase {
   public Command stop() {
     return run(() -> {
           swerveIO.stop(stopAngles);
-          lastSetpoint = stopInXSetpoint;
+          lastSetpoint = stopSetpoint;
         })
         .ignoringDisable(true)
         .withName("Stop");
@@ -343,27 +404,6 @@ public class Swerve extends SubsystemBase {
         .withName("Reset Gyro");
   }
 
-  public void followChoreoTrajectory(SwerveSample sample) {
-    Logger.recordOutput(
-        "Choreo/Target pose", new Pose2d(sample.x, sample.y, new Rotation2d(sample.heading)));
-
-    var feedforward = new ChassisSpeeds(sample.vx, sample.vy, sample.omega);
-    Logger.recordOutput("Choreo/Feedforward (Field)", feedforward);
-    var feedback =
-        new ChassisSpeeds(
-            xController.calculate(poseEstimator.getEstimatedPosition().getX(), sample.x),
-            yController.calculate(poseEstimator.getEstimatedPosition().getY(), sample.y),
-            yawController.calculate(
-                poseEstimator.getEstimatedPosition().getRotation().getRadians(), sample.heading));
-    Logger.recordOutput("Choreo/Feedback (Field)", feedback);
-
-    var outputFieldRelative = feedforward.plus(feedback);
-    var outputRobotRelative =
-        ChassisSpeeds.fromFieldRelativeSpeeds(outputFieldRelative, new Rotation2d(sample.heading));
-
-    drive(outputRobotRelative);
-  }
-
   private Pose2d targetPose;
 
   @AutoLogOutput
@@ -376,8 +416,8 @@ public class Swerve extends SubsystemBase {
     return error.getTranslation().getNorm() < .05
         && Math.abs(error.getRotation().getDegrees()) < 5
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
-            < .5
-        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 10;
+            < .25
+        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 5;
   }
 
   @AutoLogOutput
@@ -389,8 +429,8 @@ public class Swerve extends SubsystemBase {
     return error.getTranslation().getNorm() < .08
         && Math.abs(error.getRotation().getDegrees()) < 5
         && Math.hypot(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond)
-            < .5
-        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 10;
+            < .25
+        && Math.abs(Units.radiansToDegrees(fieldRelativeSpeeds.omegaRadiansPerSecond)) < 5;
   }
 
   @AutoLogOutput
@@ -399,8 +439,37 @@ public class Swerve extends SubsystemBase {
       return false;
     }
     var error = targetPose.minus(poseEstimator.getEstimatedPosition());
-    return error.getTranslation().getNorm() < 1.25
-        && Math.abs(error.getRotation().getDegrees()) < 20;
+    return error.getTranslation().getNorm() < 1 && Math.abs(error.getRotation().getDegrees()) < 20;
+  }
+
+  private final double blueNetTargetX = 7.8;
+  private final double redNetTargetX = Constants.FIELD_LENGTH_METERS - blueNetTargetX;
+
+  @AutoLogOutput
+  public boolean atNet() {
+    var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
+    var targetYaw = Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi;
+
+    return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < .05
+        && (Robot.isOnRed()
+            ? poseEstimator.getEstimatedPosition().getY() < Constants.FIELD_WIDTH_METERS / 2
+            : poseEstimator.getEstimatedPosition().getY() > Constants.FIELD_WIDTH_METERS / 2)
+        && Math.abs(fieldRelativeSpeeds.vxMetersPerSecond) < .25
+        && Math.abs(fieldRelativeSpeeds.vyMetersPerSecond) < .5
+        && Math.abs(
+                targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
+            < 10;
+  }
+
+  @AutoLogOutput
+  public boolean nearingNet() {
+    var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
+    var targetYaw = Robot.isOnRed() ? Rotation2d.kZero : Rotation2d.kPi;
+
+    return Math.abs(targetX - poseEstimator.getEstimatedPosition().getX()) < 2
+        && Math.abs(
+                targetYaw.minus(poseEstimator.getEstimatedPosition().getRotation()).getDegrees())
+            < 40;
   }
 
   public Command netAlign(Supplier<Translation2d> translationalControlSupplier) {
@@ -412,10 +481,7 @@ public class Swerve extends SubsystemBase {
         .andThen(
             run(
                 () -> {
-                  var targetX = 7.825;
-                  if (Robot.isOnRed()) {
-                    targetX = Constants.FIELD_LENGTH_METERS - targetX;
-                  }
+                  var targetX = Robot.isOnRed() ? redNetTargetX : blueNetTargetX;
 
                   var xOutput =
                       xController.calculate(poseEstimator.getEstimatedPosition().getX(), targetX);
@@ -442,6 +508,16 @@ public class Swerve extends SubsystemBase {
         .withName("Net Align");
   }
 
+  private final Pose2d blueProcessorPose = new Pose2d(6, .65, Rotation2d.kCW_90deg);
+  private final Pose2d redProcessorPose =
+      blueProcessorPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi);
+
+  public Command processorAlign(Supplier<Translation2d> nudgeSupplier) {
+    return followRepulsorField(
+            () -> Robot.isOnRed() ? redProcessorPose : blueProcessorPose, nudgeSupplier)
+        .withName("Processor Align");
+  }
+
   public Command followRepulsorField(Pose2d goal) {
     return followRepulsorField(() -> goal, null);
   }
@@ -465,7 +541,7 @@ public class Swerve extends SubsystemBase {
                       repulsorFieldPlanner.sampleField(
                           poseEstimator.getEstimatedPosition().getTranslation(),
                           maxLinearSpeedMetersPerSec * .8,
-                          1.25);
+                          1.5);
 
                   var feedforward = new ChassisSpeeds(sample.vx(), sample.vy(), 0);
                   var feedback =
@@ -556,13 +632,25 @@ public class Swerve extends SubsystemBase {
         .withName("Reef algae align");
   }
 
-  public Pose2d getReefAlignPose() {
+  public boolean isReefAlignHigh() {
+    Rotation2d angle;
     if (reefAlignPose == null) {
-      return selectPose(
-          Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES,
-          Translation2d.kZero);
+      angle =
+          selectPose(
+                  Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES,
+                  Translation2d.kZero)
+              .getRotation();
     } else {
-      return reefAlignPose;
+      angle = reefAlignPose.getRotation();
+    }
+    if (Robot.isOnRed()) {
+      return angle.equals(Rotation2d.kPi)
+          || angle.equals(Rotation2d.fromDegrees(60))
+          || angle.equals(Rotation2d.fromDegrees(-60));
+    } else {
+      return angle.equals(Rotation2d.kZero)
+          || angle.equals(Rotation2d.fromDegrees(120))
+          || angle.equals(Rotation2d.fromDegrees(-120));
     }
   }
 
@@ -599,6 +687,10 @@ public class Swerve extends SubsystemBase {
     }
 
     return poses[bestPose];
+  }
+
+  public Command driveStraight(double speedMetersPerSec) {
+    return run(() -> drive(new ChassisSpeeds(speedMetersPerSec, 0, 0)));
   }
 
   public Command testSlipCurrent() {

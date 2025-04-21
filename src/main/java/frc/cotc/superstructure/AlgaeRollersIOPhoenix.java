@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.cotc.algae;
+package frc.cotc.superstructure;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -15,21 +15,20 @@ import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import frc.cotc.Robot;
 import frc.cotc.util.PhoenixBatchRefresher;
 
-public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
+public class AlgaeRollersIOPhoenix implements AlgaeRollersIO {
   private final TalonFX motor;
 
   private final BaseStatusSignal statorSignal, supplySignal;
   private final StatusSignal<Boolean> detectedSignal;
 
-  public AlgaeIntakeIOPhoenix() {
-    motor = new TalonFX(Robot.isReal() ? 4 : 40);
+  public AlgaeRollersIOPhoenix() {
+    motor = new TalonFX(4);
     var motorConfig = new TalonFXConfiguration();
     motorConfig.CurrentLimits.StatorCurrentLimit = 60;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
-    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 20;
     motorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
     motor.getConfigurator().apply(motorConfig);
 
@@ -54,7 +53,7 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
   }
 
   @Override
-  public void updateInputs(AlgaeIntakeIOInputs inputs) {
+  public void updateInputs(AlgaeRollersIOInputs inputs) {
     inputs.currentDraws.mutateFromSignals(statorSignal, supplySignal);
     inputs.hasAlgae = detectedSignal.getValue();
   }
@@ -66,12 +65,12 @@ public class AlgaeIntakeIOPhoenix implements AlgaeIntakeIO {
 
   @Override
   public void hold() {
-    motor.setVoltage(2);
+    motor.setVoltage(3);
   }
 
   @Override
-  public void outtake() {
-    motor.setVoltage(-8);
+  public void eject() {
+    motor.setVoltage(-10);
   }
 
   @Override

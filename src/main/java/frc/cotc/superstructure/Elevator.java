@@ -8,12 +8,12 @@
 package frc.cotc.superstructure;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -75,6 +75,10 @@ class Elevator extends SubsystemBase {
     return goToPos(0).withName("Retract");
   }
 
+  Command lvl1() {
+    return goToPos(.325).withName("Lvl 2");
+  }
+
   Command lvl2() {
     return goToPos(.5).withName("Lvl 2");
   }
@@ -87,8 +91,12 @@ class Elevator extends SubsystemBase {
     return goToPos(1.515).withName("Lvl 4");
   }
 
+  Command lowAlgae() {
+    return goToPos(.29).withName("Low Algae");
+  }
+
   Command highAlgae() {
-    return goToPos(.58).withName("High Algae");
+    return goToPos(.675).withName("High Algae");
   }
 
   Command net() {
@@ -102,13 +110,15 @@ class Elevator extends SubsystemBase {
         && Math.abs(inputs.velMetersPerSec) < .25;
   }
 
-  private final PIDController feedbackController = new PIDController(0, 0, 0);
+  @AutoLogOutput(key = "Superstructure/Elevator/Extension")
+  double getExtension() {
+    return inputs.posMeters / maxHeight;
+  }
 
   private Command goToPos(double posMeters) {
     final double clampedPosMeters = MathUtil.clamp(posMeters, 0, maxHeight);
     return runOnce(
             () -> {
-              feedbackController.reset();
               targetHeight = clampedPosMeters;
               Logger.recordOutput("Superstructure/Elevator/Target height", targetHeight);
             })

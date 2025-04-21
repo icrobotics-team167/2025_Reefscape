@@ -9,23 +9,19 @@ package frc.cotc;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.cotc.drive.Swerve;
 import frc.cotc.superstructure.Superstructure;
 import frc.cotc.util.ReefLocations;
 import frc.cotc.util.ReefLocations.ReefBranch;
 import java.util.HashMap;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class Autos {
@@ -52,27 +48,6 @@ public class Autos {
     chooser.addDefaultOption(NONE_NAME, NONE_NAME);
     routines.put(NONE_NAME, Commands::none);
 
-    var factory =
-        new AutoFactory(
-            swerve::getPose,
-            swerve::resetForAuto,
-            swerve::followChoreoTrajectory,
-            true,
-            swerve,
-            (trajectory, starting) -> {
-              var poses = trajectory.getPoses();
-              if (Robot.isOnRed()) {
-                for (int i = 0; i < poses.length; i++) {
-                  poses[i] =
-                      new Pose2d(
-                          poses[i]
-                              .getTranslation()
-                              .rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi),
-                          poses[i].getRotation().rotateBy(Rotation2d.kPi));
-                }
-              }
-              Logger.recordOutput("Choreo/Trajectory", poses);
-            });
     reefPathfinding =
         branch ->
             swerve
@@ -87,43 +62,59 @@ public class Autos {
           return swerve.followRepulsorField(pose).withName("Source Align " + source.name());
         };
 
-    addRoutine("1AtG", () -> scoreAtG(factory, swerve, superstructure));
+    addRoutine("1AtG", () -> scoreAtG(swerve, superstructure));
+    addRoutine(
+        "GAnd2Barge",
+        () ->
+            generateAlgaeRoutine(
+                swerve,
+                superstructure,
+                ReefBranch.G,
+                new AlgaeHandling(3, AlgaeScoring.NET),
+                new AlgaeHandling(4, AlgaeScoring.NET)));
+    addRoutine(
+        "GAnd3Barge",
+        () ->
+            generateAlgaeRoutine(
+                swerve,
+                superstructure,
+                ReefBranch.G,
+                new AlgaeHandling(3, AlgaeScoring.NET),
+                new AlgaeHandling(2, AlgaeScoring.NET),
+                new AlgaeHandling(4, AlgaeScoring.NET)));
+    addRoutine(
+        "GAnd2Proc",
+        () ->
+            generateAlgaeRoutine(
+                swerve,
+                superstructure,
+                ReefBranch.G,
+                new AlgaeHandling(3, AlgaeScoring.PROCESS),
+                new AlgaeHandling(2, AlgaeScoring.PROCESS)));
+    addRoutine(
+        "GAnd2ProcAnd1Net",
+        () ->
+            generateAlgaeRoutine(
+                swerve,
+                superstructure,
+                ReefBranch.G,
+                new AlgaeHandling(3, AlgaeScoring.NET),
+                new AlgaeHandling(4, AlgaeScoring.PROCESS),
+                new AlgaeHandling(2, AlgaeScoring.PROCESS)));
     addRoutine(
         "3FromE",
         () ->
-            generateChoreoRoutine(
-                factory,
-                swerve,
-                superstructure,
-                Source.R,
-                ReefBranch.E,
-                ReefBranch.D,
-                ReefBranch.C));
+            generateCoralRoutine(
+                swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D, ReefBranch.C));
     addRoutine(
         "3FromJ",
         () ->
-            generateChoreoRoutine(
-                factory,
-                swerve,
-                superstructure,
-                Source.L,
-                ReefBranch.J,
-                ReefBranch.K,
-                ReefBranch.L));
-    addRoutine(
-        "Fast3FromE",
-        () ->
-            generateRepulsorRoutine(
-                swerve, superstructure, Source.R, ReefBranch.E, ReefBranch.D, ReefBranch.C));
-    addRoutine(
-        "Fast3FromJ",
-        () ->
-            generateRepulsorRoutine(
+            generateCoralRoutine(
                 swerve, superstructure, Source.L, ReefBranch.J, ReefBranch.K, ReefBranch.L));
     addRoutine(
         "4FromE",
         () ->
-            generateRepulsorRoutine(
+            generateCoralRoutine(
                 swerve,
                 superstructure,
                 Source.R,
@@ -134,7 +125,7 @@ public class Autos {
     addRoutine(
         "4FromJ",
         () ->
-            generateRepulsorRoutine(
+            generateCoralRoutine(
                 swerve,
                 superstructure,
                 Source.L,
@@ -151,84 +142,126 @@ public class Autos {
           Constants.FIELD_WIDTH_METERS - sourceRight.getY(),
           sourceRight.getRotation().unaryMinus());
 
-  private Command scoreAtG(AutoFactory factory, Swerve swerve, Superstructure superstructure) {
-    var routine = factory.newRoutine("ScoreAtG");
-
-    routine
-        .active()
-        .onTrue(
-            parallel(
-                reefPathfinding.goTo(ReefBranch.G),
-                waitUntil(swerve::nearingTargetPose)
-                    .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))));
-
-    return routine.cmd();
+  private Command scoreAtG(Swerve swerve, Superstructure superstructure) {
+    return parallel(
+        reefPathfinding.goTo(ReefBranch.G),
+        waitUntil(swerve::nearingTargetPose)
+            .andThen(superstructure.lvl4(swerve::atTargetPoseAuto)));
   }
 
-  private Command generateChoreoRoutine(
-      AutoFactory factory,
+  private final boolean[] highAlgae = new boolean[] {true, false, true, false, true, false};
+
+  private final Pose2d leftEndPose = new Pose2d(4, 7.25, sourceLeft.getRotation());
+  private final Pose2d rightEndPose =
+      new Pose2d(
+          leftEndPose.getX(),
+          Constants.FIELD_WIDTH_METERS - leftEndPose.getY(),
+          sourceRight.getRotation());
+
+  private enum AlgaeScoring {
+    PROCESS,
+    NET
+  }
+
+  private record AlgaeHandling(int face, AlgaeScoring scoring) {}
+
+  @SuppressWarnings("SameParameterValue")
+  private Command generateAlgaeRoutine(
       Swerve swerve,
       Superstructure superstructure,
-      Source source,
-      ReefBranch initialBranch,
-      ReefBranch... cyclingBranches) {
-    var routine = factory.newRoutine("Autogenerated Routine");
+      ReefBranch startingBranch,
+      AlgaeHandling... algaeHandling) {
+    var reefFaces =
+        Robot.isOnRed() ? ReefLocations.RED_ALGAE_POSES : ReefLocations.BLUE_ALGAE_POSES;
+    var targetY = Constants.FIELD_WIDTH_METERS / 2 + (Robot.isOnRed() ? -1 : 1);
 
-    var reefToSource = new AutoTrajectory[cyclingBranches.length];
-    var sourceToReef = new AutoTrajectory[cyclingBranches.length];
-    reefToSource[0] = getTrajectory(routine, initialBranch, source);
-    sourceToReef[0] = getTrajectory(routine, source, cyclingBranches[0]);
-    for (int i = 1; i < cyclingBranches.length; i++) {
-      reefToSource[i] = getTrajectory(routine, cyclingBranches[i - 1], source);
-      sourceToReef[i] = getTrajectory(routine, source, cyclingBranches[i]);
+    var commands = new Command[algaeHandling.length * 2 + 3];
+
+    commands[0] =
+        reefPathfinding
+            .goTo(startingBranch)
+            .withDeadline(
+                waitUntil(swerve::nearingTargetPose)
+                    .withName("Wait for drivebase")
+                    .andThen(superstructure.lvl4(swerve::atTargetPoseAuto))
+                    .withName("Score L4"))
+            .withName("Go to " + startingBranch.name())
+            .asProxy();
+    commands[1] = swerve.driveStraight(-1).withTimeout(.75).withName("Back Up").asProxy();
+
+    for (int i = 0; i < algaeHandling.length; i++) {
+      commands[i * 2 + 2] =
+          waitUntil(swerve::nearingTargetPose)
+              .andThen(
+                  highAlgae[algaeHandling[i].face]
+                      ? superstructure.intakeHighAlgae()
+                      : superstructure.intakeLowAlgae())
+              .withDeadline(
+                  swerve
+                      .followRepulsorField(reefFaces[algaeHandling[i].face])
+                      .until(superstructure::hasAlgae)
+                      .andThen(swerve.driveStraight(-1.25).withTimeout(.25)))
+              .withName("Intake Algae At " + algaeHandling[i].face)
+              .asProxy()
+              .raceWith(waitUntil(swerve::atTargetPoseAuto).andThen(waitSeconds(3)))
+              .withName("Intake Algae At " + algaeHandling[i].face);
+      commands[i * 2 + 3] =
+          switch (algaeHandling[i].scoring) {
+            case NET ->
+                swerve
+                    .netAlign(
+                        () ->
+                            new Translation2d(
+                                0,
+                                2
+                                    * (Robot.isOnRed()
+                                        ? swerve.getPose().getY() - targetY
+                                        : targetY - swerve.getPose().getY())))
+                    .withDeadline(
+                        waitUntil(swerve::nearingNet)
+                            .andThen(superstructure.bargeScore(swerve::atNet).asProxy()))
+                    .withName("Score in net")
+                    .asProxy()
+                    .onlyIf(superstructure::hasAlgae);
+            case PROCESS ->
+                swerve
+                    .processorAlign(() -> Translation2d.kZero)
+                    .withDeadline(superstructure.processAlgae(swerve::atTargetPoseAuto))
+                    .withName("Score in processor")
+                    .asProxy()
+                    .andThen(
+                        sequence(
+                                swerve.driveStraight(.9).withTimeout(.2),
+                                swerve.driveStraight(0).withTimeout(.3),
+                                swerve.driveStraight(-1).withTimeout(.3))
+                            .withName("Push in algae")
+                            .asProxy())
+                    .onlyIf(superstructure::hasAlgae);
+          };
     }
-    var nextCycleSpwnCmd = new Command[sourceToReef.length];
-    for (int i = 0; i < sourceToReef.length - 1; i++) {
-      nextCycleSpwnCmd[i] = reefToSource[i + 1].spawnCmd();
-    }
-    nextCycleSpwnCmd[sourceToReef.length - 1] =
-        new ScheduleCommand(
-            getTrajectory(routine, cyclingBranches[cyclingBranches.length - 1], source)
-                .cmd()
-                .andThen(sourcePathfinding.goTo(source)));
 
-    routine
-        .active()
-        .onTrue(
-            sequence(
-                    waitUntil(swerve::nearingTargetPose),
-                    superstructure.lvl4(swerve::atTargetPoseAuto))
-                .deadlineFor(reefPathfinding.goTo(initialBranch))
-                .withName("ScoreAt" + initialBranch.name())
-                .andThen(reefToSource[0].spawnCmd())
-                .withName("StartTo" + initialBranch.name()));
+    commands[algaeHandling.length * 2 + 2] =
+        either(
+                swerve.followRepulsorField(
+                    Robot.isOnRed()
+                        ? leftEndPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi)
+                        : leftEndPose),
+                swerve.followRepulsorField(
+                    Robot.isOnRed()
+                        ? rightEndPose.rotateAround(Constants.FIELD_CENTER, Rotation2d.kPi)
+                        : rightEndPose),
+                () ->
+                    Robot.isOnRed()
+                        ? swerve.getPose().getY() < Constants.FIELD_WIDTH_METERS / 2
+                        : swerve.getPose().getY() > Constants.FIELD_WIDTH_METERS / 2)
+            .until(swerve::atTargetPoseAuto)
+            .withName("Run to source")
+            .asProxy();
 
-    for (int i = 0; i < cyclingBranches.length; i++) {
-      reefToSource[i]
-          .done()
-          .onTrue(
-              waitUntil(superstructure::hasCoral)
-                  // .withTimeout(.5) // ONLY RUN IN SIM
-                  .deadlineFor(sourcePathfinding.goTo(source))
-                  .andThen(sourceToReef[i].spawnCmd())
-                  .withName("Source" + source.name()));
-
-      sourceToReef[i]
-          .atTimeBeforeEnd(.5)
-          .onTrue(
-              superstructure
-                  .lvl4(swerve::atTargetPoseAuto)
-                  .deadlineFor(
-                      waitUntil(sourceToReef[i].done())
-                          .andThen(reefPathfinding.goTo(cyclingBranches[i]).asProxy()))
-                  .andThen(nextCycleSpwnCmd[i])
-                  .withName("ScoreAt" + cyclingBranches[i].name()));
-    }
-
-    return routine.cmd();
+    return sequence(commands);
   }
 
-  private Command generateRepulsorRoutine(
+  private Command generateCoralRoutine(
       Swerve swerve, Superstructure superstructure, Source source, ReefBranch... reefBranches) {
     var commands = new Command[reefBranches.length * 2];
 
@@ -300,13 +333,5 @@ public class Autos {
   private enum Source {
     L,
     R
-  }
-
-  private AutoTrajectory getTrajectory(AutoRoutine routine, ReefBranch reefBranch, Source source) {
-    return routine.trajectory(reefBranch.name() + "~S" + source.name(), 0);
-  }
-
-  private AutoTrajectory getTrajectory(AutoRoutine routine, Source source, ReefBranch reefBranch) {
-    return routine.trajectory(reefBranch.name() + "~S" + source.name(), 1);
   }
 }

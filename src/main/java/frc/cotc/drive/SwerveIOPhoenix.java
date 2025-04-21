@@ -42,7 +42,6 @@ import frc.cotc.Constants;
 import frc.cotc.Robot;
 import frc.cotc.util.FOCMotorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
-import frc.cotc.util.ReefLocations;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -58,8 +57,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
 
-    DRIVE_GEAR_RATIO =
-        (50.0 / 16.0) * (Robot.isNewBot ? (19.0 / 25.0) : (17.0 / 27.0)) * (45.0 / 15.0);
+    DRIVE_GEAR_RATIO = (50.0 / 16.0) * (19.0 / 25.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
 
     var MK4N_STEER_GEAR_RATIO = 18.75;
@@ -79,17 +77,16 @@ public class SwerveIOPhoenix implements SwerveIO {
           STEER_MOTOR_MAX_SPEED / STEER_GEAR_RATIOS[3]
         };
 
-    CONSTANTS.MASS_KG =
-        Robot.isNewBot ? Units.lbsToKilograms(115 + 17 + 15) : Units.lbsToKilograms(141);
+    CONSTANTS.MASS_KG = Units.lbsToKilograms(115 + 17 + 15);
 
     CONSTANTS.MOI_KG_METERS_SQUARED =
         CONSTANTS.MASS_KG
             * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2)
             * Math.hypot(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2);
 
-    CONSTANTS.ANGULAR_SPEED_FUDGING = Robot.isNewBot ? .6 : .75;
+    CONSTANTS.ANGULAR_SPEED_FUDGING = .6;
 
-    CONSTANTS.SLIP_CURRENT_AMPS = Robot.isNewBot ? 90 : 80;
+    CONSTANTS.SLIP_CURRENT_AMPS = 90;
   }
 
   private final Module[] modules = new Module[4];
@@ -100,11 +97,11 @@ public class SwerveIOPhoenix implements SwerveIO {
 
   private SimThread simThread;
 
-  public SwerveIOPhoenix() {
+  public SwerveIOPhoenix(boolean isCompBot) {
     var devices = new ParentDevice[13];
     var lowFreqSignals = new BaseStatusSignal[20];
     for (int i = 0; i < 4; i++) {
-      modules[i] = new Module(i);
+      modules[i] = new Module(i, isCompBot);
       signals[i * 8] = modules[i].driveMotor.getVelocity(false);
       signals[i * 8 + 1] = modules[i].encoder.getAbsolutePosition(false);
       signals[i * 8 + 2] = modules[i].steerMotor.getVelocity(false);
@@ -228,7 +225,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     final CANcoder encoder;
 
     @SuppressWarnings("DuplicateBranchesInSwitch")
-    public Module(int id) {
+    public Module(int id, boolean isCompBot) {
       driveMotor = new TalonFX(id * 3, Robot.CANIVORE_NAME);
       steerMotor = new TalonFX(id * 3 + 1, Robot.CANIVORE_NAME);
       encoder = new CANcoder(id * 3 + 2, Robot.CANIVORE_NAME);
@@ -261,7 +258,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
       if (Robot.isReal()) {
-        if (Robot.isNewBot) {
+        if (isCompBot) {
           driveConfig.Slot0.kV = 2;
           driveConfig.Slot0.kP = 24;
           driveConfig.Slot0.kS = 1;
@@ -298,10 +295,9 @@ public class SwerveIOPhoenix implements SwerveIO {
           }
         }
       } else {
-        driveConfig.Slot0.kP = 10;
-
-        steerConfig.Slot0.kP = 350;
-        steerConfig.Slot0.kD = 2;
+        driveConfig.Slot0.kP = 15;
+        steerConfig.Slot0.kP = 80;
+        steerConfig.Slot0.kD = .1;
       }
 
       driveMotor.getConfigurator().apply(driveConfig);
@@ -470,9 +466,6 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       notifier = new Notifier(this::run);
       notifier.setName("Phoenix Sim Thread");
-
-      double startX = 7.62;
-      double startY = MathUtil.interpolate(2, Constants.FIELD_WIDTH_METERS - 2, Math.random());
       groundTruthOdometry =
           new SwerveDriveOdometry(
               kinematics,
@@ -483,17 +476,22 @@ public class SwerveIOPhoenix implements SwerveIO {
                 new SwerveModulePosition(),
                 new SwerveModulePosition()
               },
-              new Pose2d(
-                  startX,
-                  startY,
-                  new Rotation2d(
-                      ReefLocations.BLUE_REEF.getX() - startX,
-                      ReefLocations.BLUE_REEF.getY() - startY)));
+              new Pose2d(7, 2, Rotation2d.fromDegrees(120)));
 
       Robot.groundTruthPoseSupplier =
           () -> {
             synchronized (groundTruthOdometry) {
               return groundTruthOdometry.getPoseMeters();
+            }
+          };
+      Robot.groundTruthSpeedSupplier =
+          () -> {
+            synchronized (simModules) {
+              return kinematics.toChassisSpeeds(
+                  simModules[0].getModuleState(),
+                  simModules[1].getModuleState(),
+                  simModules[2].getModuleState(),
+                  simModules[3].getModuleState());
             }
           };
     }

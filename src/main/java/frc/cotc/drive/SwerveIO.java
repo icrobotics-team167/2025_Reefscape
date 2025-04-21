@@ -166,6 +166,11 @@ public interface SwerveIO {
     // when the bot is translating, but doesn't affect the limit when the bot isn't translating.
     // Scalar
     double ANGULAR_SPEED_FUDGING = .45;
+
+    double MAX_ACCEL_LOW = 14;
+    double MAX_FWD_ACCEL_HIGH = 12;
+    double MAX_SIDE_ACCEL_HIGH = 12;
+    double MAX_BACK_ACCEL_HIGH = 6;
   }
 
   /**

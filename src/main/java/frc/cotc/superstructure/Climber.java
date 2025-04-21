@@ -7,7 +7,6 @@
 
 package frc.cotc.superstructure;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
@@ -26,17 +25,11 @@ public class Climber extends SubsystemBase {
     Logger.processInputs("Superstructure/Climber", inputs);
   }
 
-  Command deployStart() {
-    return run(io::deploy)
-        .until(() -> inputs.posRad < Units.degreesToRadians(40))
-        .finallyDo(io::stop);
-  }
-
   Command deploy() {
-    return run(io::deploy).finallyDo(io::stop);
+    return run(io::deploy).finallyDo(io::stop).withName("Deploy");
   }
 
   Command climb() {
-    return run(io::climb).finallyDo(io::stop);
+    return run(io::climb).finallyDo(io::stop).withName("Climb");
   }
 }

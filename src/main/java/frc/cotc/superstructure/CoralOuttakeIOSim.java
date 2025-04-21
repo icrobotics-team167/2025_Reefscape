@@ -31,12 +31,12 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
 
   @Override
   public void outtakeFast() {
-    state = SimState.SCORING;
+    state = SimState.SCORING_SLOW;
   }
 
   @Override
   public void outtakeSlow() {
-    state = SimState.SCORING;
+    state = SimState.SCORING_SLOW;
   }
 
   @Override
@@ -53,25 +53,42 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
 
   private enum SimState {
     INTAKING,
-    SCORING,
+    SCORING_FAST,
+    SCORING_SLOW,
     AGITATING,
     BRAKE
   }
 
   private SimState state = SimState.BRAKE;
 
-  private final Debouncer debouncer = new Debouncer(.6);
+  private final Debouncer debouncer = new Debouncer(.5);
+
+  double timer = 0;
 
   private void update() {
     Logger.recordOutput("Superstructure/Coral Outtake (Sim)/State", state.name());
     switch (state) {
       case INTAKING -> {
+        timer = 0;
         if (!hasCoralSim) {
           hasCoralSim = debouncer.calculate(nearSource());
         }
       }
-      case SCORING, AGITATING -> hasCoralSim = false;
-      case BRAKE -> {}
+      case SCORING_SLOW -> {
+        if (timer >= .15) {
+          hasCoralSim = false;
+        } else {
+          timer += Robot.defaultPeriodSecs;
+        }
+      }
+      case SCORING_FAST, AGITATING -> {
+        if (timer >= .1) {
+          hasCoralSim = false;
+        } else {
+          timer += Robot.defaultPeriodSecs;
+        }
+      }
+      case BRAKE -> timer = 0;
     }
   }
 
