@@ -86,7 +86,7 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     CONSTANTS.ANGULAR_SPEED_FUDGING = .6;
 
-    CONSTANTS.SLIP_CURRENT_AMPS = 90;
+    CONSTANTS.SLIP_CURRENT_AMPS = 40;
   }
 
   private final Module[] modules = new Module[4];

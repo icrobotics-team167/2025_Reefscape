@@ -66,8 +66,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
 
     var config = new TalonFXConfiguration();
     config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.CurrentLimits.StatorCurrentLimit = 100;
-    config.CurrentLimits.SupplyCurrentLimit = 80;
+    config.CurrentLimits.StatorCurrentLimit = 40;
+    config.CurrentLimits.SupplyCurrentLimit = 40;
     config.CurrentLimits.SupplyCurrentLowerLimit = 15;
     config.CurrentLimits.SupplyCurrentLowerTime = 1.5;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
@@ -84,9 +84,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
         GainsCalculator.getPositionGains(
             config.Slot0.kV,
             config.Slot0.kA,
-            12 - config.Slot0.kG - config.Slot0.kS,
-            .01,
-            .25,
+            4 - config.Slot0.kG - config.Slot0.kS,
+            .005,
+            .025,
             .001,
             .001);
     config.Slot0.kP = firstStageGains.kP();
@@ -99,9 +99,9 @@ public class ElevatorIOPhoenix implements ElevatorIO {
         GainsCalculator.getPositionGains(
             config.Slot1.kV,
             config.Slot1.kA,
-            12 - config.Slot1.kG - config.Slot1.kS,
-            .01,
-            .25,
+            4 - config.Slot1.kG - config.Slot1.kS,
+            .005,
+            .025,
             .001,
             .001);
     config.Slot1.kP = secondStageGains.kP();
@@ -121,6 +121,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.Slot2.kP = slowGains.kP();
     config.Slot2.kD = slowGains.kD();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.Voltage.PeakForwardVoltage = 4;
+    config.Voltage.PeakReverseVoltage = -4;
 
     leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
