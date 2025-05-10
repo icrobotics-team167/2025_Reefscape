@@ -152,7 +152,7 @@ public class Robot extends LoggedRobot {
         };
 
     RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
-    RobotModeTriggers.disabled().whileTrue(swerve.stop());
+    RobotModeTriggers.disabled().or(() -> !DriverStation.isDSAttached()).whileTrue(swerve.stop());
 
     // Robot wants +X fwd, +Y left
     // Sticks are +X right +Y back
