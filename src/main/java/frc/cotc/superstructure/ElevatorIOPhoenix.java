@@ -66,7 +66,7 @@ public class ElevatorIOPhoenix implements ElevatorIO {
 
     var config = new TalonFXConfiguration();
     config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.CurrentLimits.StatorCurrentLimit = 40;
+    config.CurrentLimits.StatorCurrentLimit = 60;
     config.CurrentLimits.SupplyCurrentLimit = 40;
     config.CurrentLimits.SupplyCurrentLowerLimit = 15;
     config.CurrentLimits.SupplyCurrentLowerTime = 1.5;
@@ -121,8 +121,8 @@ public class ElevatorIOPhoenix implements ElevatorIO {
     config.Slot2.kP = slowGains.kP();
     config.Slot2.kD = slowGains.kD();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.Voltage.PeakForwardVoltage = 4;
-    config.Voltage.PeakReverseVoltage = -4;
+    config.Voltage.PeakForwardVoltage = 6;
+    config.Voltage.PeakReverseVoltage = -6;
 
     leftMotor.getConfigurator().apply(config);
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;

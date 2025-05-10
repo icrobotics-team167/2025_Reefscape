@@ -86,7 +86,10 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     CONSTANTS.ANGULAR_SPEED_FUDGING = .6;
 
-    CONSTANTS.SLIP_CURRENT_AMPS = 40;
+    CONSTANTS.SLIP_CURRENT_AMPS = 60;
+
+    CONSTANTS.MAX_FWD_ACCEL_HIGH = 8;
+    CONSTANTS.MAX_SIDE_ACCEL_HIGH = 6;
   }
 
   private final Module[] modules = new Module[4];

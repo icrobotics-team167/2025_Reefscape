@@ -368,9 +368,9 @@ public class Swerve extends SubsystemBase {
               1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
 
           if (slowMode.getAsBoolean()) {
-            commandedRobotSpeeds = commandedRobotSpeeds.times(.3);
+            commandedRobotSpeeds = commandedRobotSpeeds.times(.5);
           } else {
-            commandedRobotSpeeds = commandedRobotSpeeds.times(.15);
+            commandedRobotSpeeds = commandedRobotSpeeds.times(.25);
           }
 
           drive(commandedRobotSpeeds);
