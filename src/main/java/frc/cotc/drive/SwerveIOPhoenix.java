@@ -87,6 +87,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     CONSTANTS.ANGULAR_SPEED_FUDGING = .6;
 
     CONSTANTS.SLIP_CURRENT_AMPS = 90;
+    CONSTANTS.SUPPLY_CURRENT_AMPS = 40;
   }
 
   private final Module[] modules = new Module[4];
@@ -234,7 +235,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       driveConfig.Feedback.SensorToMechanismRatio = DRIVE_GEAR_RATIO;
       driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       driveConfig.CurrentLimits.StatorCurrentLimit = CONSTANTS.SLIP_CURRENT_AMPS + 10;
-      driveConfig.CurrentLimits.SupplyCurrentLimitEnable = false;
+      driveConfig.CurrentLimits.SupplyCurrentLimit = CONSTANTS.SUPPLY_CURRENT_AMPS;
       driveConfig.Audio.AllowMusicDurDisable = true;
 
       var steerConfig = new TalonFXConfiguration();
@@ -295,7 +296,7 @@ public class SwerveIOPhoenix implements SwerveIO {
           }
         }
       } else {
-        driveConfig.Slot0.kP = 15;
+        driveConfig.Slot0.kP = 120;
         steerConfig.Slot0.kP = 80;
         steerConfig.Slot0.kD = .1;
       }
@@ -535,7 +536,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       double currentTime = RobotController.getFPGATime() / 1e6;
       double dt = currentTime - lastTime;
 
-      double voltage = 12.3 - (.018 * filteredCurrentDraw);
+      double voltage = 12.3 - (.014 * filteredCurrentDraw);
       Robot.simVoltage = voltage;
       double instantaneousCurrentDraw = 0;
       SwerveModuleState[] moduleStates = new SwerveModuleState[4];
@@ -549,7 +550,7 @@ public class SwerveIOPhoenix implements SwerveIO {
       // but accurately simulating that is a PITA, so in order to simulate capacitance, the
       // current draw is run through a simple low pass filter to smooth out the current draw.
       // Without this, large current spikes can trigger the TalonFX over-voltage protection.
-      filteredCurrentDraw += (instantaneousCurrentDraw - filteredCurrentDraw) * (dt * 12.5);
+      filteredCurrentDraw += (instantaneousCurrentDraw - filteredCurrentDraw) * (dt * 27.5);
 
       yawDeg +=
           Units.radiansToDegrees(

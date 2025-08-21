@@ -41,6 +41,7 @@ class SwerveSetpointGenerator {
   private final Translation2d[] moduleLocations;
   private final DCMotor driveMotor;
   private final double statorCurrentLimitAmps,
+      supplyCurrentLimitAmps,
       maxDriveVelocity,
       massKg,
       moiKgMetersSquared,
@@ -52,6 +53,7 @@ class SwerveSetpointGenerator {
       final Translation2d[] moduleLocations,
       final DCMotor driveMotor,
       final double statorCurrentLimitAmps,
+      final double supplyCurrentLimitAmps,
       final double[] maxSteerSpeedRadPerSec,
       final double massKg,
       final double moiKgMetersSquared,
@@ -59,6 +61,7 @@ class SwerveSetpointGenerator {
 
     this.driveMotor = driveMotor;
     this.statorCurrentLimitAmps = statorCurrentLimitAmps;
+    this.supplyCurrentLimitAmps = supplyCurrentLimitAmps;
     this.maxSteerSpeedRadPerSec = maxSteerSpeedRadPerSec;
     kinematics = new SwerveDriveKinematics(moduleLocations);
     this.moduleLocations = moduleLocations;
@@ -268,7 +271,8 @@ class SwerveSetpointGenerator {
   private enum ActiveConstraint {
     STEER_VEL,
     MOTOR_DYNAMICS,
-    STATOR_CURRENT
+    STATOR_CURRENT,
+    SUPPLY_CURRENT
   }
 
   private final SimpleMatrix chassisForceMatrix = new SimpleMatrix(3, 1);
@@ -515,24 +519,46 @@ class SwerveSetpointGenerator {
       lastVelMagnitudes[i] = lastVelRadPerSec;
 
       double currentDraw;
+      double limitedStatorCurrent;
       if (epsilonEquals(prevSpeed, desiredSpeed)) {
         currentDraw = 0;
+        limitedStatorCurrent = -1;
       } else if (forceSign == 1) {
-        // Use the current battery voltage since we won't be able to supply
-        // 12v if the battery is sagging down to 11v, which will affect the max torque output
+        // Derivation for effective stator limit given a supply limit by rafi
+        // https://www.chiefdelphi.com/t/psa-your-motor-curves-are-still-wrong-a-correction-to-a-whitepaper-about-current-limits/504706
+        // Math in Java is hell.
+        limitedStatorCurrent =
+            (-(driveMotor.stallCurrentAmps - driveMotor.freeCurrentAmps)
+                        * (lastVelRadPerSec / driveMotor.freeSpeedRadPerSec)
+                    + Math.sqrt(
+                        Math.pow(
+                                (driveMotor.stallCurrentAmps - driveMotor.freeCurrentAmps)
+                                    * (lastVelRadPerSec / driveMotor.freeSpeedRadPerSec),
+                                2)
+                            + 4
+                                * (voltage / 12)
+                                * driveMotor.stallCurrentAmps
+                                * supplyCurrentLimitAmps))
+                / 2;
+
         currentDraw =
             Math.max(
                 Math.min(
                     driveMotor.getCurrent(Math.abs(lastVelRadPerSec), voltage),
-                    statorCurrentLimitAmps),
+                    Math.min(statorCurrentLimitAmps, limitedStatorCurrent)),
                 0);
       } else {
-        currentDraw = statorCurrentLimitAmps;
+        // If decelerating, assume lastVelRadPerSec = 0
+        limitedStatorCurrent =
+            Math.sqrt((voltage / 12) * driveMotor.stallCurrentAmps * supplyCurrentLimitAmps);
+        currentDraw = Math.min(statorCurrentLimitAmps, limitedStatorCurrent);
       }
       double moduleTorque = driveMotor.getTorque(currentDraw);
 
       if (currentDraw == statorCurrentLimitAmps) {
         activeConstraints[i] = ActiveConstraint.STATOR_CURRENT;
+      } else if (currentDraw == limitedStatorCurrent) {
+        activeConstraints[i] = ActiveConstraint.SUPPLY_CURRENT;
       } else if (!epsilonEquals(0, currentDraw)) {
         activeConstraints[i] = ActiveConstraint.MOTOR_DYNAMICS;
       }

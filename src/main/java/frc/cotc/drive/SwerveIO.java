@@ -148,6 +148,7 @@ public interface SwerveIO {
     // Should have a gear reduction applied with .withReduction()
     DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60(1).withReduction(6.75);
     int SLIP_CURRENT_AMPS = 80;
+    int SUPPLY_CURRENT_AMPS = 60;
 
     double MASS_KG = 40;
     double MOI_KG_METERS_SQUARED = 40;
