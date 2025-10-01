@@ -39,6 +39,7 @@ import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
+import org.ironmaple.simulation.motorsims.SimulatedBattery;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -449,8 +450,7 @@ public class SwerveIOPhoenix implements SwerveIO {
               (mechanismAngle, mechanismVelocity, encoderAngle, encoderVelocity) -> {
                 driveMotorSim.setRawRotorPosition(encoderAngle);
                 driveMotorSim.setRotorVelocity(encoderVelocity);
-                //
-                // driveMotorSim.setSupplyVoltage(SimulatedBattery.getBatteryVoltage());
+                driveMotorSim.setSupplyVoltage(SimulatedBattery.getBatteryVoltage());
                 return driveMotorSim.getMotorVoltageMeasure();
               });
           simModule.useSteerMotorController(
@@ -459,8 +459,7 @@ public class SwerveIOPhoenix implements SwerveIO {
                 steerEncoderSim.setVelocity(mechanismVelocity);
                 steerMotorSim.setRawRotorPosition(encoderAngle);
                 steerMotorSim.setRotorVelocity(encoderVelocity);
-                //
-                // steerMotorSim.setSupplyVoltage(SimulatedBattery.getBatteryVoltage());
+                steerMotorSim.setSupplyVoltage(SimulatedBattery.getBatteryVoltage());
                 return steerMotorSim.getMotorVoltageMeasure();
               });
         }
@@ -493,7 +492,7 @@ public class SwerveIOPhoenix implements SwerveIO {
             gyroSim.setRawYaw(sim.getGyroSimulation().getGyroReading().getDegrees());
             gyroSim.setAngularVelocityZ(sim.getGyroSimulation().getMeasuredAngularVelocity());
           }
-          //          Robot.simVoltage = SimulatedBattery.getBatteryVoltage().in(Volts);
+          Robot.simVoltage = SimulatedBattery.getBatteryVoltage().in(Volts);
         }
 
         if (BaseStatusSignal.waitForAll(2.0 / FREQUENCY, signals) != StatusCode.OK) {
