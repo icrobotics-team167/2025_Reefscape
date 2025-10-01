@@ -437,8 +437,8 @@ public class SwerveIOPhoenix implements SwerveIO {
               new Pose2d(7, 2, Rotation2d.fromDegrees(120)));
 
       if (Robot.isSimulation()) {
-        sim.setLinearDamping(0);
-        sim.setAngularDamping(0);
+        sim.setLinearDamping(0.25);
+        sim.setAngularDamping(0.25);
         for (int i = 0; i < 4; i++) {
           var steerEncoderSim = modules[i].encoder.getSimState();
           var driveMotorSim = modules[i].driveMotor.getSimState();
