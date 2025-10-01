@@ -152,7 +152,7 @@ class SwerveSetpointGenerator {
           @Override
           public String getSchema() {
             return "ChassisSpeeds chassisSpeeds;SwerveModuleState moduleStates[4];double "
-                + "steerFeedforwardsRadPerSec[4];double driveFeedforwardsAmps[4]";
+                + "steerFeedforwardsRadPerSec[4];double driveFeedforwardVolts[4]";
           }
 
           @Override

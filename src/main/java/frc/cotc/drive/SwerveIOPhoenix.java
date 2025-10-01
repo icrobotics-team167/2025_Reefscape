@@ -7,6 +7,7 @@
 
 package frc.cotc.drive;
 
+import static edu.wpi.first.units.Units.*;
 import static frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import static java.lang.Math.PI;
 
@@ -20,28 +21,24 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
-import com.ctre.phoenix6.sim.CANcoderSimState;
-import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.CircularBuffer;
 import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Constants;
 import frc.cotc.Robot;
-import frc.cotc.util.FOCMotorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -96,8 +93,6 @@ public class SwerveIOPhoenix implements SwerveIO {
   private final OdometryThread odometryThread;
   private final Pigeon2 gyro;
 
-  private SimThread simThread;
-
   public SwerveIOPhoenix(boolean isCompBot) {
     var devices = new ParentDevice[13];
     var lowFreqSignals = new BaseStatusSignal[20];
@@ -129,10 +124,6 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     ParentDevice.optimizeBusUtilizationForAll(5, devices);
 
-    if (Robot.isSimulation()) {
-      simThread = new SimThread(modules, gyro);
-      simThread.start();
-    }
     odometryThread.start();
   }
 
@@ -245,7 +236,10 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerConfig.Feedback.RotorToSensorRatio = STEER_GEAR_RATIOS[id];
       steerConfig.Feedback.SensorToMechanismRatio = 1;
       steerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-      steerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+      steerConfig.MotorOutput.Inverted =
+          Robot.isReal()
+              ? InvertedValue.Clockwise_Positive
+              : InvertedValue.CounterClockwise_Positive;
       steerConfig.ClosedLoopGeneral.ContinuousWrap = true;
       steerConfig.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
       steerConfig.CurrentLimits.SupplyCurrentLimit = 20;
@@ -355,6 +349,12 @@ public class SwerveIOPhoenix implements SwerveIO {
     }
   }
 
+  public void resetGroundTruth(Pose2d pose) {
+    synchronized (odometryThread.sim) {
+      odometryThread.sim.setSimulationWorldPose(pose);
+    }
+  }
+
   private static class OdometryThread extends Thread {
     final ModuleSignals[] moduleSignals = new ModuleSignals[4];
 
@@ -362,6 +362,8 @@ public class SwerveIOPhoenix implements SwerveIO {
 
     final CircularBuffer<OdometryFrame> frameBuffer;
     final double FREQUENCY;
+
+    final SwerveDriveSimulation sim;
 
     OdometryThread(Module[] modules, Pigeon2 gyro, double frequency) {
       for (int i = 0; i < 4; i++) {
@@ -380,12 +382,120 @@ public class SwerveIOPhoenix implements SwerveIO {
 
       FREQUENCY = frequency;
       frameBuffer = new CircularBuffer<>((int) Math.round(2 * FREQUENCY * Robot.defaultPeriodSecs));
+
+      SimulatedArena.overrideSimulationTimings(Seconds.of(1 / frequency), 1);
+      sim =
+          new SwerveDriveSimulation(
+              new DriveTrainSimulationConfig(
+                  Kilograms.of(CONSTANTS.MASS_KG),
+                  Meters.of(Constants.FRAME_LENGTH_METERS + 2 * Constants.BUMPER_THICKNESS_METERS),
+                  Meters.of(Constants.FRAME_LENGTH_METERS + 2 * Constants.BUMPER_THICKNESS_METERS),
+                  Meters.of(CONSTANTS.TRACK_LENGTH_METERS),
+                  Meters.of(CONSTANTS.TRACK_WIDTH_METERS),
+                  COTS.ofPigeon2(),
+                  new SwerveModuleSimulationConfig(
+                      DCMotor.getKrakenX60Foc(1),
+                      DCMotor.getKrakenX60(1),
+                      DRIVE_GEAR_RATIO,
+                      STEER_GEAR_RATIOS[0],
+                      Volts.of(0),
+                      Volts.of(0),
+                      Meters.of(CONSTANTS.WHEEL_DIAMETER_METERS / 2),
+                      KilogramSquareMeters.of(.025),
+                      1.5),
+                  new SwerveModuleSimulationConfig(
+                      DCMotor.getKrakenX60Foc(1),
+                      DCMotor.getKrakenX60(1),
+                      DRIVE_GEAR_RATIO,
+                      STEER_GEAR_RATIOS[1],
+                      Volts.of(0),
+                      Volts.of(0),
+                      Meters.of(CONSTANTS.WHEEL_DIAMETER_METERS / 2),
+                      KilogramSquareMeters.of(.025),
+                      1.5),
+                  new SwerveModuleSimulationConfig(
+                      DCMotor.getKrakenX60Foc(1),
+                      DCMotor.getKrakenX60(1),
+                      DRIVE_GEAR_RATIO,
+                      STEER_GEAR_RATIOS[2],
+                      Volts.of(0),
+                      Volts.of(0),
+                      Meters.of(CONSTANTS.WHEEL_DIAMETER_METERS / 2),
+                      KilogramSquareMeters.of(.025),
+                      1.5),
+                  new SwerveModuleSimulationConfig(
+                      DCMotor.getKrakenX60Foc(1),
+                      DCMotor.getKrakenX60(1),
+                      DRIVE_GEAR_RATIO,
+                      STEER_GEAR_RATIOS[3],
+                      Volts.of(0),
+                      Volts.of(0),
+                      Meters.of(CONSTANTS.WHEEL_DIAMETER_METERS / 2),
+                      KilogramSquareMeters.of(.025),
+                      1.5)),
+              new Pose2d(7, 2, Rotation2d.fromDegrees(120)));
+
+      if (Robot.isSimulation()) {
+        sim.setLinearDamping(0);
+        sim.setAngularDamping(0);
+        for (int i = 0; i < 4; i++) {
+          var steerEncoderSim = modules[i].encoder.getSimState();
+          var driveMotorSim = modules[i].driveMotor.getSimState();
+          var steerMotorSim = modules[i].steerMotor.getSimState();
+
+          var simModule = sim.getModules()[i];
+
+          simModule.useDriveMotorController(
+              (mechanismAngle, mechanismVelocity, encoderAngle, encoderVelocity) -> {
+                driveMotorSim.setRawRotorPosition(encoderAngle);
+                driveMotorSim.setRotorVelocity(encoderVelocity);
+                //
+                // driveMotorSim.setSupplyVoltage(SimulatedBattery.getBatteryVoltage());
+                return driveMotorSim.getMotorVoltageMeasure();
+              });
+          simModule.useSteerMotorController(
+              (mechanismAngle, mechanismVelocity, encoderAngle, encoderVelocity) -> {
+                steerEncoderSim.setRawPosition(mechanismAngle);
+                steerEncoderSim.setVelocity(mechanismVelocity);
+                steerMotorSim.setRawRotorPosition(encoderAngle);
+                steerMotorSim.setRotorVelocity(encoderVelocity);
+                //
+                // steerMotorSim.setSupplyVoltage(SimulatedBattery.getBatteryVoltage());
+                return steerMotorSim.getMotorVoltageMeasure();
+              });
+        }
+        gyroSim = gyro.getSimState();
+        SimulatedArena.getInstance().addDriveTrainSimulation(sim);
+        Robot.groundTruthPoseSupplier =
+            () -> {
+              synchronized (sim) {
+                return sim.getSimulatedDriveTrainPose();
+              }
+            };
+        Robot.groundTruthSpeedSupplier =
+            () -> {
+              synchronized (sim) {
+                return sim.getDriveTrainSimulatedChassisSpeedsRobotRelative();
+              }
+            };
+      }
     }
+
+    private Pigeon2SimState gyroSim;
 
     @Override
     public void run() {
       //noinspection InfiniteLoopStatement
       while (true) {
+        if (Robot.isSimulation()) {
+          synchronized (sim) {
+            SimulatedArena.getInstance().simulationPeriodic();
+            gyroSim.setRawYaw(sim.getGyroSimulation().getGyroReading().getDegrees());
+            gyroSim.setAngularVelocityZ(sim.getGyroSimulation().getMeasuredAngularVelocity());
+          }
+          //          Robot.simVoltage = SimulatedBattery.getBatteryVoltage().in(Volts);
+        }
+
         if (BaseStatusSignal.waitForAll(2.0 / FREQUENCY, signals) != StatusCode.OK) {
           continue;
         }
@@ -446,204 +556,6 @@ public class SwerveIOPhoenix implements SwerveIO {
             module.driveMotor.getVelocity(),
             module.encoder.getAbsolutePosition(),
             module.steerMotor.getVelocity());
-      }
-    }
-  }
-
-  protected void resetGroundTruth(Pose2d pose) {
-    simThread.resetGroundTruthPose(pose);
-  }
-
-  private static class SimThread {
-    final SimModule[] simModules = new SimModule[4];
-    final Pigeon2SimState gyroSimState;
-    final Notifier notifier;
-
-    SimThread(Module[] modules, Pigeon2 gyro) {
-      for (int i = 0; i < 4; i++) {
-        simModules[i] = new SimModule(modules[i], STEER_GEAR_RATIOS[i]);
-      }
-      gyroSimState = gyro.getSimState();
-
-      notifier = new Notifier(this::run);
-      notifier.setName("Phoenix Sim Thread");
-      groundTruthOdometry =
-          new SwerveDriveOdometry(
-              kinematics,
-              new Rotation2d(),
-              new SwerveModulePosition[] {
-                new SwerveModulePosition(),
-                new SwerveModulePosition(),
-                new SwerveModulePosition(),
-                new SwerveModulePosition()
-              },
-              new Pose2d(7, 2, Rotation2d.fromDegrees(120)));
-
-      Robot.groundTruthPoseSupplier =
-          () -> {
-            synchronized (groundTruthOdometry) {
-              return groundTruthOdometry.getPoseMeters();
-            }
-          };
-      Robot.groundTruthSpeedSupplier =
-          () -> {
-            synchronized (simModules) {
-              return kinematics.toChassisSpeeds(
-                  simModules[0].getModuleState(),
-                  simModules[1].getModuleState(),
-                  simModules[2].getModuleState(),
-                  simModules[3].getModuleState());
-            }
-          };
-    }
-
-    void start() {
-      for (int i = 0; i < 4; i++) {
-        var module = simModules[i];
-        module.steerSim.setState((Math.random() * 2 - 1) * PI, 0);
-        module.steerMotorSim.setRawRotorPosition(
-            module.steerSim.getAngularPositionRotations() * STEER_GEAR_RATIOS[i]);
-        module.encoderSim.setRawPosition(module.steerSim.getAngularPositionRotations());
-      }
-
-      double frequencySeconds = 1.0 / 1000;
-
-      // Minus one iteration to prevent divide by 0 errors later
-      lastTime = (RobotController.getFPGATime() / 1e6) - frequencySeconds;
-
-      notifier.startPeriodic(frequencySeconds);
-    }
-
-    void resetGroundTruthPose(Pose2d pose) {
-      synchronized (groundTruthOdometry) {
-        groundTruthOdometry.resetPose(pose);
-      }
-    }
-
-    private final SwerveDriveKinematics kinematics =
-        new SwerveDriveKinematics(
-            new Translation2d(CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2),
-            new Translation2d(CONSTANTS.TRACK_LENGTH_METERS / 2, -CONSTANTS.TRACK_WIDTH_METERS / 2),
-            new Translation2d(-CONSTANTS.TRACK_LENGTH_METERS / 2, CONSTANTS.TRACK_WIDTH_METERS / 2),
-            new Translation2d(
-                -CONSTANTS.TRACK_LENGTH_METERS / 2, -CONSTANTS.TRACK_WIDTH_METERS / 2));
-    private final SwerveDriveOdometry groundTruthOdometry;
-    private double yawDeg = 0;
-    private double filteredCurrentDraw = 0;
-    private double lastTime;
-
-    private void run() {
-      double currentTime = RobotController.getFPGATime() / 1e6;
-      double dt = currentTime - lastTime;
-
-      double voltage = 12.3 - (.014 * filteredCurrentDraw);
-      Robot.simVoltage = voltage;
-      double instantaneousCurrentDraw = 0;
-      SwerveModuleState[] moduleStates = new SwerveModuleState[4];
-      SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-      for (int i = 0; i < 4; i++) {
-        instantaneousCurrentDraw += simModules[i].run(dt, voltage);
-        moduleStates[i] = simModules[i].getModuleState();
-        modulePositions[i] = simModules[i].getModulePosition();
-      }
-      // On a real battery, the battery's internal capacitance absorbs large spikes in current,
-      // but accurately simulating that is a PITA, so in order to simulate capacitance, the
-      // current draw is run through a simple low pass filter to smooth out the current draw.
-      // Without this, large current spikes can trigger the TalonFX over-voltage protection.
-      filteredCurrentDraw += (instantaneousCurrentDraw - filteredCurrentDraw) * (dt * 27.5);
-
-      yawDeg +=
-          Units.radiansToDegrees(
-              kinematics.toChassisSpeeds(moduleStates).omegaRadiansPerSecond * dt);
-      gyroSimState.setRawYaw(yawDeg);
-
-      synchronized (groundTruthOdometry) {
-        groundTruthOdometry.update(Rotation2d.fromDegrees(yawDeg), modulePositions);
-      }
-
-      lastTime = currentTime;
-
-      Thread.yield();
-    }
-
-    private static class SimModule {
-      final TalonFXSimState driveMotorSim;
-      final TalonFXSimState steerMotorSim;
-      final CANcoderSimState encoderSim;
-
-      final FOCMotorSim driveWheelSim;
-      final DCMotorSim steerSim;
-
-      final double STEER_GEAR_RATIO;
-
-      SimModule(Module module, double STEER_GEAR_RATIO) {
-        driveMotorSim = module.driveMotor.getSimState();
-        steerMotorSim = module.steerMotor.getSimState();
-        encoderSim = module.encoder.getSimState();
-
-        steerMotorSim.Orientation = ChassisReference.Clockwise_Positive;
-        encoderSim.Orientation = ChassisReference.CounterClockwise_Positive;
-
-        driveWheelSim =
-            new FOCMotorSim(
-                CONSTANTS.DRIVE_MOTOR,
-                CONSTANTS.MASS_KG
-                    * (CONSTANTS.WHEEL_DIAMETER_METERS / 2)
-                    * (CONSTANTS.WHEEL_DIAMETER_METERS / 2)
-                    / 4);
-        this.STEER_GEAR_RATIO = STEER_GEAR_RATIO;
-        steerSim =
-            new DCMotorSim(
-                LinearSystemId.createDCMotorSystem(
-                    DCMotor.getKrakenX60(1), .0025, STEER_GEAR_RATIO),
-                DCMotor.getKrakenX60(1));
-      }
-
-      private double lastSteerRotorVel = 0;
-
-      double run(double dt, double voltage) {
-        driveMotorSim.setSupplyVoltage(voltage);
-        steerMotorSim.setSupplyVoltage(voltage);
-
-        // Update drive sim
-        driveWheelSim.tick(driveMotorSim.getTorqueCurrent(), dt);
-
-        driveMotorSim.setRawRotorPosition(
-            Units.radiansToRotations(driveWheelSim.getPos()) * DRIVE_GEAR_RATIO);
-        driveMotorSim.setRotorVelocity(
-            Units.radiansToRotations(driveWheelSim.getVel()) * DRIVE_GEAR_RATIO);
-        driveMotorSim.setRotorAcceleration(
-            Units.radiansToRotations(driveWheelSim.getAccel()) * DRIVE_GEAR_RATIO);
-
-        // Update steer sim
-        steerSim.setInputVoltage(steerMotorSim.getMotorVoltage());
-        steerSim.update(dt);
-
-        double steerRotorVel = steerSim.getAngularVelocityRPM() / 60.0 * STEER_GEAR_RATIO;
-
-        steerMotorSim.setRawRotorPosition(
-            steerSim.getAngularPositionRotations() * STEER_GEAR_RATIO);
-        steerMotorSim.setRotorVelocity(steerRotorVel);
-        encoderSim.setRawPosition(steerSim.getAngularPositionRotations());
-        encoderSim.setVelocity(steerSim.getAngularVelocityRPM() / 60.0);
-
-        steerMotorSim.setRotorAcceleration((lastSteerRotorVel - steerRotorVel) / dt);
-
-        lastSteerRotorVel = steerRotorVel;
-
-        return driveMotorSim.getSupplyCurrent() + steerMotorSim.getSupplyCurrent();
-      }
-
-      SwerveModuleState getModuleState() {
-        return new SwerveModuleState(
-            driveWheelSim.getVel() * CONSTANTS.WHEEL_DIAMETER_METERS / 2,
-            new Rotation2d(steerSim.getAngularPositionRad()));
-      }
-
-      SwerveModulePosition getModulePosition() {
-        return new SwerveModulePosition(
-            driveWheelSim.getPos() * CONSTANTS.WHEEL_DIAMETER_METERS / 2,
-            new Rotation2d(steerSim.getAngularPositionRad()));
       }
     }
   }
