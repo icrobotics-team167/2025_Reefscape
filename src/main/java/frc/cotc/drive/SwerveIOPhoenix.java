@@ -203,11 +203,6 @@ public class SwerveIOPhoenix implements SwerveIO {
   }
 
   @Override
-  public void resetGyro(Rotation2d newYaw) {
-    gyro.setYaw(newYaw.getDegrees());
-  }
-
-  @Override
   public SwerveModuleConstantsAutoLogged getConstants() {
     return CONSTANTS;
   }

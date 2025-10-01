@@ -153,7 +153,6 @@ public class Robot extends LoggedRobot {
           return new Translation2d(xControl, yControl);
         };
 
-    RobotModeTriggers.teleop().onTrue(swerve.resetGyro());
     RobotModeTriggers.disabled().whileTrue(swerve.stop());
 
     // Robot wants +X fwd, +Y left

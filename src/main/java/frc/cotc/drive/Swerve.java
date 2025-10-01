@@ -363,7 +363,7 @@ public class Swerve extends SubsystemBase {
                       translationalControl.getX() * maxLinearSpeedMetersPerSec,
                       translationalControl.getY() * maxLinearSpeedMetersPerSec,
                       omegaSupplier.getAsDouble() * maxAngularSpeedRadPerSec),
-                  inputs.gyroYaw);
+                  poseEstimator.getEstimatedPosition().getRotation());
 
           commandedRobotSpeeds.omegaRadiansPerSecond *=
               1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
@@ -384,20 +384,6 @@ public class Swerve extends SubsystemBase {
         })
         .ignoringDisable(true)
         .withName("Stop");
-  }
-
-  public Command resetGyro() {
-    return runOnce(
-            () -> {
-              var gyroAngle =
-                  Robot.isOnRed()
-                      ? poseEstimator.getEstimatedPosition().getRotation().rotateBy(Rotation2d.kPi)
-                      : poseEstimator.getEstimatedPosition().getRotation();
-              swerveIO.resetGyro(gyroAngle);
-              poseEstimator.resetPosition(
-                  gyroAngle, getLatestModulePositions(), poseEstimator.getEstimatedPosition());
-            })
-        .withName("Reset Gyro");
   }
 
   private Pose2d targetPose;
@@ -757,13 +743,10 @@ public class Swerve extends SubsystemBase {
         phoenix.resetGroundTruth(pose);
       }
     }
-    var gyroAngle =
-        Robot.isOnRed() ? pose.getRotation().rotateBy(Rotation2d.kPi) : pose.getRotation();
-    swerveIO.resetGyro(gyroAngle);
     xController.reset();
     yController.reset();
     yawController.reset();
-    poseEstimator.resetPosition(gyroAngle, getLatestModulePositions(), pose);
+    poseEstimator.resetPosition(inputs.gyroYaw, getLatestModulePositions(), pose);
     swerveIO.updateInputs(inputs);
     Logger.processInputs("Swerve", inputs);
     poseReset = true;

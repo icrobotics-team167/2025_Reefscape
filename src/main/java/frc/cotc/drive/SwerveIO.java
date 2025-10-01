@@ -194,7 +194,5 @@ public interface SwerveIO {
 
   default void stop(Rotation2d[] angles) {}
 
-  default void resetGyro(Rotation2d newYaw) {}
-
   default void testSlipCurrent(double amps) {}
 }
