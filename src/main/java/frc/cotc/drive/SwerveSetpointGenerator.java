@@ -528,11 +528,10 @@ class SwerveSetpointGenerator {
         // https://www.chiefdelphi.com/t/psa-your-motor-curves-are-still-wrong-a-correction-to-a-whitepaper-about-current-limits/504706
         // Math in Java is hell.
         limitedStatorCurrent =
-            (-(driveMotor.stallCurrentAmps - driveMotor.freeCurrentAmps)
-                        * (lastVelRadPerSec / driveMotor.freeSpeedRadPerSec)
+            (-(driveMotor.stallCurrentAmps * (lastVelRadPerSec / driveMotor.freeSpeedRadPerSec))
                     + Math.sqrt(
                         Math.pow(
-                                (driveMotor.stallCurrentAmps - driveMotor.freeCurrentAmps)
+                                driveMotor.stallCurrentAmps
                                     * (lastVelRadPerSec / driveMotor.freeSpeedRadPerSec),
                                 2)
                             + 4
