@@ -233,8 +233,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerConfig.Feedback.SensorToMechanismRatio = 1;
       steerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       steerConfig.MotorOutput.Inverted =
-        // On the real robot, the steer motor is inverted, but MapleSim broke when I did that, so
-        // we make it not inverted in sim.
+          // On the real robot, the steer motor is inverted, but MapleSim broke when I did that, so
+          // we make it not inverted in sim.
           Robot.isReal()
               ? InvertedValue.Clockwise_Positive
               : InvertedValue.CounterClockwise_Positive;
