@@ -40,6 +40,7 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.ironmaple.simulation.motorsims.SimulatedBattery;
+import org.littletonrobotics.junction.Logger;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -233,6 +234,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       steerConfig.Feedback.SensorToMechanismRatio = 1;
       steerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
       steerConfig.MotorOutput.Inverted =
+          // On the real robot, the steer motor is inverted, but MapleSim broke when I did that, so
+          // we make it not inverted in sim.
           Robot.isReal()
               ? InvertedValue.Clockwise_Positive
               : InvertedValue.CounterClockwise_Positive;
@@ -348,6 +351,7 @@ public class SwerveIOPhoenix implements SwerveIO {
   public void resetGroundTruth(Pose2d pose) {
     synchronized (odometryThread.sim) {
       odometryThread.sim.setSimulationWorldPose(pose);
+      SimulatedArena.getInstance().resetFieldForAuto();
     }
   }
 
@@ -379,26 +383,33 @@ public class SwerveIOPhoenix implements SwerveIO {
       FREQUENCY = frequency;
       frameBuffer = new CircularBuffer<>((int) Math.round(2 * FREQUENCY * Robot.defaultPeriodSecs));
 
+      // By default MapleSim uses a 50hz timing with 5 sub-ticks per period.
+      // However we want a 250hz timing with 1 sub-tick per period.
       SimulatedArena.overrideSimulationTimings(Seconds.of(1 / frequency), 1);
+      // Instantiate config object for the simulation.
       sim =
           new SwerveDriveSimulation(
               new DriveTrainSimulationConfig(
                   Kilograms.of(CONSTANTS.MASS_KG),
+                  // Bumper length
                   Meters.of(Constants.FRAME_LENGTH_METERS + 2 * Constants.BUMPER_THICKNESS_METERS),
-                  Meters.of(Constants.FRAME_LENGTH_METERS + 2 * Constants.BUMPER_THICKNESS_METERS),
+                  // Bumper width
+                  Meters.of(Constants.FRAME_WIDTH_METERS + 2 * Constants.BUMPER_THICKNESS_METERS),
+                  // Track length
                   Meters.of(CONSTANTS.TRACK_LENGTH_METERS),
+                  // Track width
                   Meters.of(CONSTANTS.TRACK_WIDTH_METERS),
                   COTS.ofPigeon2(),
                   new SwerveModuleSimulationConfig(
-                      DCMotor.getKrakenX60Foc(1),
-                      DCMotor.getKrakenX60(1),
+                      DCMotor.getKrakenX60Foc(1), // Drive motor model
+                      DCMotor.getKrakenX60(1), // Steer motor model
                       DRIVE_GEAR_RATIO,
                       STEER_GEAR_RATIOS[0],
-                      Volts.of(0),
-                      Volts.of(0),
-                      Meters.of(CONSTANTS.WHEEL_DIAMETER_METERS / 2),
-                      KilogramSquareMeters.of(.025),
-                      1.5),
+                      Volts.of(0), // Static friction voltage for drive
+                      Volts.of(0), // Static friction voltage for steer
+                      Meters.of(CONSTANTS.WHEEL_DIAMETER_METERS / 2), // Wheel radius
+                      KilogramSquareMeters.of(.025), // MOI for steer
+                      1.5), // Wheel CoF
                   new SwerveModuleSimulationConfig(
                       DCMotor.getKrakenX60Foc(1),
                       DCMotor.getKrakenX60(1),
@@ -432,15 +443,17 @@ public class SwerveIOPhoenix implements SwerveIO {
               new Pose2d(7, 2, Rotation2d.fromDegrees(120)));
 
       if (Robot.isSimulation()) {
+        // The default friction forces applied by MapleSim is horrendously huge and not realistic.
         sim.setLinearDamping(0.25);
         sim.setAngularDamping(0.25);
         for (int i = 0; i < 4; i++) {
+          // Initialize the simulations for the module hardware.
           var steerEncoderSim = modules[i].encoder.getSimState();
           var driveMotorSim = modules[i].driveMotor.getSimState();
           var steerMotorSim = modules[i].steerMotor.getSimState();
 
+          // Tell MapleSim that we want to use these motor controllers for motor simulation.
           var simModule = sim.getModules()[i];
-
           simModule.useDriveMotorController(
               (mechanismAngle, mechanismVelocity, encoderAngle, encoderVelocity) -> {
                 driveMotorSim.setRawRotorPosition(encoderAngle);
@@ -458,8 +471,14 @@ public class SwerveIOPhoenix implements SwerveIO {
                 return steerMotorSim.getMotorVoltageMeasure();
               });
         }
+
+        // Initialize the simulation for the gyro.
         gyroSim = gyro.getSimState();
+
         SimulatedArena.getInstance().addDriveTrainSimulation(sim);
+        SimulatedArena.getInstance().resetFieldForAuto();
+
+        // Make the ground truth pose and velocities use MapleSim.
         Robot.groundTruthPoseSupplier =
             () -> {
               synchronized (sim) {
@@ -483,7 +502,9 @@ public class SwerveIOPhoenix implements SwerveIO {
       while (true) {
         if (Robot.isSimulation()) {
           synchronized (sim) {
+            // Update the drivetrain sim.
             SimulatedArena.getInstance().simulationPeriodic();
+            // Update the gyro sim.
             gyroSim.setRawYaw(sim.getGyroSimulation().getGyroReading().getDegrees());
             gyroSim.setAngularVelocityZ(sim.getGyroSimulation().getMeasuredAngularVelocity());
           }
@@ -523,6 +544,14 @@ public class SwerveIOPhoenix implements SwerveIO {
           retFrames[i] = frameBuffer.get(i);
         }
         frameBuffer.clear();
+      }
+      if (Robot.isSimulation()) {
+        synchronized (sim) {
+          Logger.recordOutput(
+              "Sim/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+          Logger.recordOutput(
+              "Sim/Ground Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+        }
       }
       return retFrames;
     }

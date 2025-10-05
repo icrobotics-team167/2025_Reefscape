@@ -44,6 +44,7 @@ public class Superstructure extends Mechanism {
 
     if (algaeRollersIO instanceof AlgaeRollersIOSim simRollers) {
       simRollers.atTargetHeight = elevator::atTargetPos;
+      simRollers.elevatorHeight = elevator::getHeight;
     }
   }
 
@@ -177,6 +178,6 @@ public class Superstructure extends Mechanism {
   }
 
   public double getElevatorExtension() {
-    return elevator.getExtension();
+    return elevator.getExtensionFraction();
   }
 }
