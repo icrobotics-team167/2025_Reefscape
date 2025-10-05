@@ -33,9 +33,11 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
   public void updateInputs(AlgaeRollersIOInputs inputs) {
     inputs.hasAlgae = hasAlgae;
 
+    // Visualize reef algae
     var reefAlgae = new ArrayList<Pose3d>();
     for (int i = 0; i < 12; i++) {
       if (reefHasAlgae[i]) {
+        // Select the base pose (high or low)
         Pose3d baseAlgaePose;
         if (i % 2 == 0) {
           baseAlgaePose = lowAlgaeBasePose;
@@ -43,6 +45,8 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
           baseAlgaePose = highAlgaeBasePose;
         }
 
+        // If the algae is on red, transform the base pose to the red side
+        // Also select the reef center
         Translation2d reefCenter;
         if (i < 6) {
           reefCenter = ReefLocations.BLUE_REEF;
@@ -53,6 +57,8 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
           reefCenter = ReefLocations.RED_REEF;
         }
 
+        // Transform the base pose around the reef center and add it to the list of algae to be
+        // visualized
         reefAlgae.add(
             baseAlgaePose.rotateAround(
                 new Translation3d(reefCenter), new Rotation3d(0, 0, i * Math.PI / 3)));
@@ -60,6 +66,7 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
     }
     Logger.recordOutput("Sim/Reef Algae", reefAlgae.toArray(new Pose3d[0]));
 
+    // Count the number of barge algae on each net and add a visualization for each algae in the net
     var bargeAlgae = new ArrayList<Pose3d>();
     for (int i = 0; i < blueBargeAlgaeCount; i++) {
       bargeAlgae.add(
@@ -78,6 +85,7 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
     }
     Logger.recordOutput("Sim/Barge Algae", bargeAlgae.toArray(new Pose3d[0]));
 
+    // Add a visualization for the algae that the robot is holding
     if (hasAlgae) {
       Logger.recordOutput(
           "Sim/Robot Algae",
@@ -87,6 +95,7 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
                       new Translation3d(-.15, 0, 1.2 + elevatorHeight.getAsDouble()),
                       Rotation3d.kZero)));
     } else {
+      // If the robot isn't holding one, set the visualization to be way below the field
       Logger.recordOutput("Sim/Robot Algae", new Pose3d(0, 0, -100, Rotation3d.kZero));
     }
   }
@@ -96,6 +105,7 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
 
   Debouncer debouncer = new Debouncer(.2);
 
+  // A boolean array for each algae on the reefs (First 6 are blue, last 6 are red)
   private final boolean[] reefHasAlgae =
       new boolean[] {true, true, true, true, true, true, true, true, true, true, true, true};
 
@@ -105,6 +115,7 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
       var groundTruthPose = Robot.groundTruthPoseSupplier.get();
       var groundTruthSpeed = Robot.groundTruthSpeedSupplier.get();
 
+      // Check which algae spot the robot is closest to by iterating over all the algae spots
       int closestReefAlgaeSpot = -1;
       double closestReefAlgaeDistance = Double.POSITIVE_INFINITY;
       for (int i = 0; i < 6; i++) {
@@ -126,16 +137,20 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
         }
       }
 
+      // Skip if the spot doesn't have an algae
       if (!reefHasAlgae[closestReefAlgaeSpot]) {
         return;
       }
 
+      // Get the position to grab the algae from, and the delta between the robot pose and that
+      // ideal grab pose
       var algaePosition =
           closestReefAlgaeSpot < 6
               ? ReefLocations.BLUE_ALGAE_POSES[closestReefAlgaeSpot]
               : ReefLocations.RED_ALGAE_POSES[closestReefAlgaeSpot - 6];
       var positionDelta = algaePosition.minus(groundTruthPose);
 
+      // If the robot is close enough and slow enough, grab the algae
       hasAlgae =
           debouncer.calculate(
               positionDelta.getTranslation().getNorm() < .25
@@ -146,6 +161,7 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
                   && atTargetAngle.getAsBoolean()
                   && atTargetHeight.getAsBoolean());
       if (hasAlgae) {
+        // Set the algae to no longer be there if the grab was successful
         reefHasAlgae[closestReefAlgaeSpot] = false;
       }
     }
@@ -158,8 +174,11 @@ public class AlgaeRollersIOSim implements AlgaeRollersIO {
   public void eject() {
     hasAlgae = false;
     var robotPose = Robot.groundTruthPoseSupplier.get();
+    // If the robot is near the barge and has the elevator extended, score the algae in the net
     if (MathUtil.isNear(robotPose.getX(), 7.8, .5)
-        || MathUtil.isNear(robotPose.getX(), Constants.FIELD_LENGTH_METERS - 7.8, .5)) {
+        || MathUtil.isNear(robotPose.getX(), Constants.FIELD_LENGTH_METERS - 7.8, .5)
+            && elevatorHeight.getAsDouble() > 1) {
+      // Check which barge to score it in, and increment the counter for that barge
       if (robotPose.getY() > Constants.FIELD_WIDTH_METERS / 2) {
         blueBargeAlgaeCount++;
       } else {
