@@ -110,8 +110,12 @@ class Elevator extends SubsystemBase {
         && Math.abs(inputs.velMetersPerSec) < .25;
   }
 
+  double getHeight() {
+    return inputs.posMeters;
+  }
+
   @AutoLogOutput(key = "Superstructure/Elevator/Extension")
-  double getExtension() {
+  double getExtensionFraction() {
     return inputs.posMeters / maxHeight;
   }
 

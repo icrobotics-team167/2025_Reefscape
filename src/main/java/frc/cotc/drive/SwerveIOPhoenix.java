@@ -40,6 +40,7 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.ironmaple.simulation.motorsims.SimulatedBattery;
+import org.littletonrobotics.junction.Logger;
 
 public class SwerveIOPhoenix implements SwerveIO {
   private static final SwerveModuleConstantsAutoLogged CONSTANTS;
@@ -350,6 +351,7 @@ public class SwerveIOPhoenix implements SwerveIO {
   public void resetGroundTruth(Pose2d pose) {
     synchronized (odometryThread.sim) {
       odometryThread.sim.setSimulationWorldPose(pose);
+      SimulatedArena.getInstance().resetFieldForAuto();
     }
   }
 
@@ -474,6 +476,7 @@ public class SwerveIOPhoenix implements SwerveIO {
         gyroSim = gyro.getSimState();
 
         SimulatedArena.getInstance().addDriveTrainSimulation(sim);
+        SimulatedArena.getInstance().resetFieldForAuto();
 
         // Make the ground truth pose and velocities use MapleSim.
         Robot.groundTruthPoseSupplier =
@@ -541,6 +544,14 @@ public class SwerveIOPhoenix implements SwerveIO {
           retFrames[i] = frameBuffer.get(i);
         }
         frameBuffer.clear();
+      }
+      if (Robot.isSimulation()) {
+        synchronized (sim) {
+          Logger.recordOutput(
+              "Sim/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+          Logger.recordOutput(
+              "Sim/Ground Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+        }
       }
       return retFrames;
     }
