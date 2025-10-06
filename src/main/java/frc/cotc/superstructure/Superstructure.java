@@ -46,6 +46,9 @@ public class Superstructure extends Mechanism {
       simRollers.atTargetHeight = elevator::atTargetPos;
       simRollers.elevatorHeight = elevator::getHeight;
     }
+    if (coralOuttakeIO instanceof CoralOuttakeIOSim simCoralOuttake) {
+      simCoralOuttake.elevatorHeight = elevator::getHeight;
+    }
   }
 
   public Command lvl1(BooleanSupplier eject) {

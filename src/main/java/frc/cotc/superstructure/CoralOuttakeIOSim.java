@@ -9,19 +9,124 @@ package frc.cotc.superstructure;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rectangle2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.util.Units;
 import frc.cotc.Constants;
 import frc.cotc.Robot;
+import frc.cotc.util.ReefLocations;
+import java.util.ArrayList;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class CoralOuttakeIOSim implements CoralOuttakeIO {
+  DoubleSupplier elevatorHeight;
+
+  private final Pose3d[] l2BluePoses = new Pose3d[12];
+  private final Pose3d[] l3BluePoses = new Pose3d[12];
+  private final Pose3d[] l4BluePoses = new Pose3d[12];
+  private final Pose3d[] l2RedPoses = new Pose3d[12];
+  private final Pose3d[] l3RedPoses = new Pose3d[12];
+  private final Pose3d[] l4RedPoses = new Pose3d[12];
+
+  public CoralOuttakeIOSim() {
+    double basePosSideAdjust = .165;
+    var l2BaseCoralPos =
+        new Pose3d(
+            3.8,
+            Constants.FIELD_WIDTH_METERS / 2,
+            0.7,
+            new Rotation3d(0, Units.degreesToRadians(35), 0));
+    var l3BaseCoralPos =
+        new Pose3d(
+            3.8,
+            Constants.FIELD_WIDTH_METERS / 2,
+            1.1,
+            new Rotation3d(0, Units.degreesToRadians(35), 0));
+    var l4BaseCoralPos =
+        new Pose3d(
+            3.705, Constants.FIELD_WIDTH_METERS / 2, 1.75, new Rotation3d(0, Math.PI / 2, 0));
+
+    l2BluePoses[0] =
+        l2BaseCoralPos.plus(new Transform3d(0, basePosSideAdjust, 0, Rotation3d.kZero));
+    l2BluePoses[1] =
+        l2BaseCoralPos.plus(new Transform3d(0, -basePosSideAdjust, 0, Rotation3d.kZero));
+    l3BluePoses[0] =
+        l3BaseCoralPos.plus(new Transform3d(0, basePosSideAdjust, 0, Rotation3d.kZero));
+    l3BluePoses[1] =
+        l3BaseCoralPos.plus(new Transform3d(0, -basePosSideAdjust, 0, Rotation3d.kZero));
+    l4BluePoses[0] =
+        l4BaseCoralPos.plus(new Transform3d(0, basePosSideAdjust, 0, Rotation3d.kZero));
+    l4BluePoses[1] =
+        l4BaseCoralPos.plus(new Transform3d(0, -basePosSideAdjust, 0, Rotation3d.kZero));
+    for (int i = 1; i < 6; i++) {
+      var rotation = new Rotation3d(0, 0, i * Math.PI / 3);
+      l2BluePoses[i * 2] =
+          l2BluePoses[0].rotateAround(new Translation3d(ReefLocations.BLUE_REEF), rotation);
+      l2BluePoses[i * 2 + 1] =
+          l2BluePoses[1].rotateAround(new Translation3d(ReefLocations.BLUE_REEF), rotation);
+      l3BluePoses[i * 2] =
+          l3BluePoses[0].rotateAround(new Translation3d(ReefLocations.BLUE_REEF), rotation);
+      l3BluePoses[i * 2 + 1] =
+          l3BluePoses[1].rotateAround(new Translation3d(ReefLocations.BLUE_REEF), rotation);
+      l4BluePoses[i * 2] =
+          l4BluePoses[0].rotateAround(new Translation3d(ReefLocations.BLUE_REEF), rotation);
+      l4BluePoses[i * 2 + 1] =
+          l4BluePoses[1].rotateAround(new Translation3d(ReefLocations.BLUE_REEF), rotation);
+    }
+    for (int i = 0; i < 12; i++) {
+      l2RedPoses[i] =
+          l2BluePoses[i].rotateAround(
+              new Translation3d(Constants.FIELD_CENTER), new Rotation3d(0, 0, Math.PI));
+      l3RedPoses[i] =
+          l3BluePoses[i].rotateAround(
+              new Translation3d(Constants.FIELD_CENTER), new Rotation3d(0, 0, Math.PI));
+      l4RedPoses[i] =
+          l4BluePoses[i].rotateAround(
+              new Translation3d(Constants.FIELD_CENTER), new Rotation3d(0, 0, Math.PI));
+    }
+  }
+
   @Override
   public void updateInputs(CoralOuttakeIOInputs inputs) {
     update();
 
     inputs.hasCoral = hasCoralSim;
+    if (hasCoralSim) {
+      Logger.recordOutput(
+          "Sim/Robot Coral",
+          new Pose3d(Robot.groundTruthPoseSupplier.get())
+              .plus(
+                  new Transform3d(
+                      Units.inchesToMeters(9),
+                      0,
+                      elevatorHeight.getAsDouble() + .5,
+                      new Rotation3d(0, Units.degreesToRadians(30), 0))));
+    } else {
+      Logger.recordOutput("Sim/Robot Coral", new Pose3d(0, 0, -100, Rotation3d.kZero));
+    }
+
+    var coralList = new ArrayList<Pose3d>();
+    for (int i = 0; i < 12; i++) {
+      if (l2OnBlue[i]) {
+        coralList.add(l2BluePoses[i]);
+      }
+      if (l3OnBlue[i]) {
+        coralList.add(l3BluePoses[i]);
+      }
+      if (l4OnBlue[i]) {
+        coralList.add(l4BluePoses[i]);
+      }
+      if (l2OnRed[i]) {
+        coralList.add(l2RedPoses[i]);
+      }
+      if (l3OnRed[i]) {
+        coralList.add(l3RedPoses[i]);
+      }
+      if (l4OnRed[i]) {
+        coralList.add(l4RedPoses[i]);
+      }
+    }
+    Logger.recordOutput("Sim/Reef coral", coralList.toArray(new Pose3d[0]));
   }
 
   @Override
@@ -77,6 +182,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
       case SCORING_SLOW -> {
         if (timer >= .15) {
           hasCoralSim = false;
+          addCoralToReef();
         } else {
           timer += Robot.defaultPeriodSecs;
         }
@@ -84,11 +190,60 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
       case SCORING_FAST, AGITATING -> {
         if (timer >= .1) {
           hasCoralSim = false;
+          addCoralToReef();
         } else {
           timer += Robot.defaultPeriodSecs;
         }
       }
       case BRAKE -> timer = 0;
+    }
+  }
+
+  private final boolean[] l2OnBlue = new boolean[12];
+  private final boolean[] l3OnBlue = new boolean[12];
+  private final boolean[] l4OnBlue = new boolean[12];
+  private final boolean[] l2OnRed = new boolean[12];
+  private final boolean[] l3OnRed = new boolean[12];
+  private final boolean[] l4OnRed = new boolean[12];
+
+  private void addCoralToReef() {
+    var robotPose = Robot.groundTruthPoseSupplier.get();
+    var height = elevatorHeight.getAsDouble();
+
+    boolean[] branches;
+    Pose2d[] branchPoses;
+    if (robotPose.getX() < Constants.FIELD_LENGTH_METERS / 2) {
+      branchPoses = ReefLocations.BLUE_BRANCH_POSES;
+      if (height < .7) {
+        branches = l2OnBlue;
+      } else if (height < 1.2) {
+        branches = l3OnBlue;
+      } else {
+        branches = l4OnBlue;
+      }
+    } else {
+      branchPoses = ReefLocations.RED_BRANCH_POSES;
+      if (height < .7) {
+        branches = l2OnRed;
+      } else if (height < 1.2) {
+        branches = l3OnRed;
+      } else {
+        branches = l4OnRed;
+      }
+    }
+
+    int closestBranchIndex = 0;
+    double closestBranchDistance = Double.POSITIVE_INFINITY;
+    for (int i = 0; i < 12; i++) {
+      var dist = branchPoses[i].minus(robotPose).getTranslation().getNorm();
+      if (dist < closestBranchDistance) {
+        closestBranchIndex = i;
+        closestBranchDistance = dist;
+      }
+    }
+
+    if (closestBranchDistance < .1) {
+      branches[closestBranchIndex] = true;
     }
   }
 
