@@ -29,7 +29,8 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
   private final Pose3d[] l4RedPoses = new Pose3d[12];
 
   public CoralOuttakeIOSim() {
-    double basePosSideAdjust = .165;
+    // Base positions have the right z and x for a blue A and B branch, but y is in the center of
+    // the field.
     var l2BaseCoralPos =
         new Pose3d(
             3.8,
@@ -45,7 +46,10 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
     var l4BaseCoralPos =
         new Pose3d(
             3.705, Constants.FIELD_WIDTH_METERS / 2, 1.75, new Rotation3d(0, Math.PI / 2, 0));
+    // How far to adjust the y by to align the side-to-side correct
+    double basePosSideAdjust = .165;
 
+    // Define the poses for each level on the A and B branches
     l2BluePoses[0] =
         l2BaseCoralPos.plus(new Transform3d(0, basePosSideAdjust, 0, Rotation3d.kZero));
     l2BluePoses[1] =
@@ -58,6 +62,8 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
         l4BaseCoralPos.plus(new Transform3d(0, basePosSideAdjust, 0, Rotation3d.kZero));
     l4BluePoses[1] =
         l4BaseCoralPos.plus(new Transform3d(0, -basePosSideAdjust, 0, Rotation3d.kZero));
+    // The rest of the branches are a transformation of the A and B poses around the center of
+    // the reef
     for (int i = 1; i < 6; i++) {
       var rotation = new Rotation3d(0, 0, i * Math.PI / 3);
       l2BluePoses[i * 2] =
@@ -73,6 +79,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
       l4BluePoses[i * 2 + 1] =
           l4BluePoses[1].rotateAround(new Translation3d(ReefLocations.BLUE_REEF), rotation);
     }
+    // The red reef poses are a transformation around the center of the field
     for (int i = 0; i < 12; i++) {
       l2RedPoses[i] =
           l2BluePoses[i].rotateAround(
@@ -92,6 +99,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
 
     inputs.hasCoral = hasCoralSim;
     if (hasCoralSim) {
+      // Visualize the coral in the rollers
       Logger.recordOutput(
           "Sim/Robot Coral",
           new Pose3d(Robot.groundTruthPoseSupplier.get())
@@ -105,6 +113,8 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
       Logger.recordOutput("Sim/Robot Coral", new Pose3d(0, 0, -100, Rotation3d.kZero));
     }
 
+    // Go through all the coral scored flags and add the corresponding pose to the list if
+    // there's a score.
     var coralList = new ArrayList<Pose3d>();
     for (int i = 0; i < 12; i++) {
       if (l2OnBlue[i]) {
@@ -126,6 +136,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
         coralList.add(l4RedPoses[i]);
       }
     }
+    // Visualize the list
     Logger.recordOutput("Sim/Reef coral", coralList.toArray(new Pose3d[0]));
   }
 
@@ -210,6 +221,8 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
     var robotPose = Robot.groundTruthPoseSupplier.get();
     var height = elevatorHeight.getAsDouble();
 
+    // Select which set of branches to choose from
+    // Blue or red, l2-l4
     boolean[] branches;
     Pose2d[] branchPoses;
     if (robotPose.getX() < Constants.FIELD_LENGTH_METERS / 2) {
@@ -232,6 +245,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
       }
     }
 
+    // Search through all the scoring locations and pick the closest one
     int closestBranchIndex = 0;
     double closestBranchDistance = Double.POSITIVE_INFINITY;
     for (int i = 0; i < 12; i++) {
@@ -242,6 +256,7 @@ public class CoralOuttakeIOSim implements CoralOuttakeIO {
       }
     }
 
+    // If the robot is close enough, flag it to be scored.
     if (closestBranchDistance < .1) {
       branches[closestBranchIndex] = true;
     }
