@@ -384,7 +384,8 @@ public class SwerveIOPhoenix implements SwerveIO {
       frameBuffer = new CircularBuffer<>((int) Math.round(2 * FREQUENCY * Robot.defaultPeriodSecs));
 
       // By default MapleSim uses a 50hz timing with 5 sub-ticks per period.
-      // However we want a 250hz timing with 1 sub-tick per period.
+      // However we want a 250hz timing with 1 sub-tick per period, as the simulation uses the
+      // Odometry thread which runs on the sim thread.
       SimulatedArena.overrideSimulationTimings(Seconds.of(1 / frequency), 1);
       // Instantiate config object for the simulation.
       sim =
@@ -395,9 +396,9 @@ public class SwerveIOPhoenix implements SwerveIO {
                   Meters.of(Constants.FRAME_LENGTH_METERS + 2 * Constants.BUMPER_THICKNESS_METERS),
                   // Bumper width
                   Meters.of(Constants.FRAME_WIDTH_METERS + 2 * Constants.BUMPER_THICKNESS_METERS),
-                  // Track length
+                  // Wheel base length
                   Meters.of(CONSTANTS.TRACK_LENGTH_METERS),
-                  // Track width
+                  // Wheel base width
                   Meters.of(CONSTANTS.TRACK_WIDTH_METERS),
                   COTS.ofPigeon2(),
                   new SwerveModuleSimulationConfig(
@@ -405,11 +406,12 @@ public class SwerveIOPhoenix implements SwerveIO {
                       DCMotor.getKrakenX60(1), // Steer motor model
                       DRIVE_GEAR_RATIO,
                       STEER_GEAR_RATIOS[0],
+                      // These are usually negligible unless build team screws up badly.
                       Volts.of(0), // Static friction voltage for drive
                       Volts.of(0), // Static friction voltage for steer
                       Meters.of(CONSTANTS.WHEEL_DIAMETER_METERS / 2), // Wheel radius
-                      KilogramSquareMeters.of(.025), // MOI for steer
-                      1.5), // Wheel CoF
+                      KilogramSquareMeters.of(.025), // Moment of inertia for module steering
+                      1.5), // Wheel CoF against the carpet
                   new SwerveModuleSimulationConfig(
                       DCMotor.getKrakenX60Foc(1),
                       DCMotor.getKrakenX60(1),
@@ -447,7 +449,7 @@ public class SwerveIOPhoenix implements SwerveIO {
         sim.setLinearDamping(0.25);
         sim.setAngularDamping(0.25);
         for (int i = 0; i < 4; i++) {
-          // Initialize the simulations for the module hardware.
+          // Initialize the simulations for each of the module hardware.
           var steerEncoderSim = modules[i].encoder.getSimState();
           var driveMotorSim = modules[i].driveMotor.getSimState();
           var steerMotorSim = modules[i].steerMotor.getSimState();
