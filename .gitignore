@@ -188,3 +188,4 @@ compile_commands.json
 
 # AdvantageKit git metadata file
 src/main/java/frc/cotc/BuildConstants.java
+simgui-ds.json
