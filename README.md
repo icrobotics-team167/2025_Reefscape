@@ -52,7 +52,7 @@ After cloning the repository, open the project folder in 2025 WPILib VS Code to 
 Below is a description of the different joystick options available.
    * `Joystick[0]` controls the drivetrain.
    * `Joystick[1]` controls the elevator and game piece mechanisms.
-To fully operate the robot, you will need an additional controller for `Joystick[1]`.
+> **Note**: To fully operate the robot, you will need an additional controller for `Joystick[1]`.
 
 ---
 
