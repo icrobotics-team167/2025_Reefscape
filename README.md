@@ -48,8 +48,11 @@ After cloning the repository, open the project folder in 2025 WPILib VS Code to 
 
 1.  Connect an Xbox One controller to your computer.
 2.  In the Sim GUI window, locate the **System Joysticks** list.
-3.  Drag your controller from the **System Joysticks** list and drop it onto the **`Joystick[0]`** entry in the **Joystick** panel below. `Joystick[0]` is assigned to the drivetrain.
-4.  `Joystick[1]`, which controls the elevator and game piece mechanisms, will be configured automatically. This procedure maps the controller axes to the configuration used on the competition robot.
+3.  Drag your controller from the **System Joysticks** list and drop it onto the **`Joystick[0]`** entry in the **Joystick** panel.
+Below is a description of the different joystick options available.
+   * `Joystick[0]` controls the drivetrain.
+   * `Joystick[1]` controls the elevator and game piece mechanisms.
+To fully operate the robot, you will need an additional controller for `Joystick[1]`.
 
 ---
 
@@ -68,8 +71,10 @@ AdvantageScope is used for 3D visualization of data. Here we will use ot to visa
     * **Driver Station**: Offers views from specific driver station locations (e.g., `Red1`).
     * **Set FOV**: I like to set this to 90 or 100. I think 90deg is the closest to realistic.
 
-> **Note**: The robot's starting position is configured within the Sim GUI, not through AdvantageScope.
+> **Note**: The robot's starting location is always on the blue side.
+> The red/blue relative controls are configured within the Sim GUI, not through AdvantageScope.
     - The Sim GUI defaults to Red1, so you can set your driver station to here if you like.
+    - If you want to change this, you can do so from the FMS tab in the Sim GUI.
     - Otherwise, orient the camera to your liking via the Orbit Field tool.
 
 ### Add Simulation Objects to the 3D View
@@ -87,6 +92,11 @@ To render the robot and game pieces, their poses must be added to the 3D view.
     * `Robot Algae`
     * `Robot Coral`
 
+### Add the Elevator Visualization
+
+1.  In the left-hand sidebar, navigate to `RealOutputs` -> `SuperStructure` -> `Elevator`.
+2.  Drag the `Visualization` object from this location and drop it directly onto the `Ground Truth Pose` entry in the **Poses** list. This attaches the elevator mechanism to the robot's chassis in the 3D view.
+
 ### Define Game Piece Models
 
 Assign the correct 3D models to the objects added in the previous step.
@@ -100,11 +110,6 @@ Assign the correct 3D models to the objects added in the previous step.
     * `RealOutputs/Sim/Coral`
     * `RealOutputs/Sim/Robot Coral`
     * `RealOutputs/Sim/Reef Coral`
-
-### Add the Elevator Visualization
-
-1.  In the left-hand sidebar, navigate to `RealOutputs` -> `SuperStructure` -> `Elevator`.
-2.  Drag the `Visualization` object from this location and drop it directly onto the `Ground Truth Pose` entry in the **Poses** list. This attaches the elevator mechanism to the robot's chassis in the 3D view.
 
 ---
 
