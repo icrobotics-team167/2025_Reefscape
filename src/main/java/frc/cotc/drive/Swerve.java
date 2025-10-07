@@ -276,9 +276,11 @@ public class Swerve extends SubsystemBase {
                 scalar * (Math.sqrt(xSquaredSum) / 4), scalar * (Math.sqrt(ySquaredSum) / 4))
             .rotateBy(inputs.gyroYaw);
 
-    // If translating and rotating at the same time, odometry drifts pretty badly in the
+    // If translating and rotating at the same time, odometry drifts pretty badly in
+    // the
     // direction perpendicular to the direction of translational travel.
-    // This factor massively distrusts odometry in that direction when translating and rotating
+    // This factor massively distrusts odometry in that direction when translating
+    // and rotating
     // at the same time.
     var scaledSpeed =
         new Translation2d(
@@ -288,7 +290,8 @@ public class Swerve extends SubsystemBase {
             .times(
                 1 * Math.abs(fieldRelativeSpeeds.omegaRadiansPerSecond / maxAngularSpeedRadPerSec));
 
-    // Add a minimum to account for mechanical slop and to prevent divide by 0 errors
+    // Add a minimum to account for mechanical slop and to prevent divide by 0
+    // errors
     return new double[] {
       Math.abs(stdDevs.getX()) + Math.abs(scaledSpeed.getX()) + .1,
       Math.abs(stdDevs.getY()) + Math.abs(scaledSpeed.getY()) + .1,
@@ -363,7 +366,9 @@ public class Swerve extends SubsystemBase {
                       translationalControl.getX() * maxLinearSpeedMetersPerSec,
                       translationalControl.getY() * maxLinearSpeedMetersPerSec,
                       omegaSupplier.getAsDouble() * maxAngularSpeedRadPerSec),
-                  poseEstimator.getEstimatedPosition().getRotation());
+                  Robot.isOnRed()
+                      ? poseEstimator.getEstimatedPosition().getRotation().plus(Rotation2d.k180deg)
+                      : poseEstimator.getEstimatedPosition().getRotation());
 
           commandedRobotSpeeds.omegaRadiansPerSecond *=
               1 - translationalControl.getNorm() * angularSpeedFudgeFactor;
@@ -543,7 +548,7 @@ public class Swerve extends SubsystemBase {
                   Logger.recordOutput("Repulsor/Feedforward", feedforward);
                   Logger.recordOutput("Repulsor/Feedback", feedback);
 
-                  //                  Logger.recordOutput("Repulsor/Vector field",
+                  // Logger.recordOutput("Repulsor/Vector field",
                   // repulsorFieldPlanner.getArrows());
 
                   var outputFieldRelative = feedforward.plus(feedback);
