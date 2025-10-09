@@ -40,7 +40,7 @@ After cloning the repository, open the project folder in 2025 WPILib VS Code to 
 
 1.  In VSCode, open the command palette using the shortcut `Ctrl+Shift+P`.
 2.  Type `>Simulate Robot Code` into the command palette and press **Enter**.
-3.  In the confirmation pop-up, check the box labeled **Sim GUI**, then click **OK**. 
+3.  In the confirmation pop-up, check the box labeled **Sim GUI**, then click **OK**.
     - Note, it may take a bit for this popup to appear. It will appear at the top of the window.
 4.  The simulation GUI will launch, providing an interface to control the robot's state and monitor data.
 
@@ -124,4 +124,5 @@ Follow these steps to replace the default robot model with the team's custom ass
 5.  Click the robot icon next to its name and select `Kernel Overflow` from the dropdown list of models.
 
 The simulation setup is now complete.
-To drive the robot, enable it in the Sim GUI by selecting `Teleop` from the box at the top right. Make sure the Sim GUI is the active window as well.
+To drive the robot, enable it in the Sim GUI by selecting `Teleop` from the box at the top left. Make sure the Sim GUI is the active window as well.
+Additionally, all the control configurations are stored in `simgui-ds.json`. There is an example config in `simgui-ds.json.example` but it is not required for use.
