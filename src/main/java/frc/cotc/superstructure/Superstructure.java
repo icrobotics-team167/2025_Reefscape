@@ -20,20 +20,20 @@ public class Superstructure extends Mechanism {
   private final CoralOuttake coralOuttake;
   private final AlgaeClaw algaeClaw;
   private final Ramp ramp;
-  private final Climber climber;
+
+  // private final Climber climber;
 
   public Superstructure(
       ElevatorIO elevatorIO,
       CoralOuttakeIO coralOuttakeIO,
       AlgaePivotIO algaePivotIO,
       AlgaeRollersIO algaeRollersIO,
-      RampIO rampIO,
-      ClimberIO climberIO) {
+      RampIO rampIO) {
     elevator = new Elevator(elevatorIO);
     coralOuttake = new CoralOuttake(coralOuttakeIO);
     algaeClaw = new AlgaeClaw(algaePivotIO, algaeRollersIO);
     ramp = new Ramp(rampIO);
-    climber = new Climber(climberIO);
+    // climber = new Climber(climberIO);
 
     elevator.setDefaultCommand(elevator.retract());
     coralOuttake.setDefaultCommand(coralOuttake.intake());
@@ -141,28 +141,28 @@ public class Superstructure extends Mechanism {
     return expose(algaeClaw.process(eject)).withName("Process Algae");
   }
 
-  private boolean climberDeployed = false;
+  // private boolean climberDeployed = false;
 
-  public boolean isClimberDeployed() {
-    return climberDeployed;
-  }
+  // public boolean isClimberDeployed() {
+  //   return climberDeployed;
+  // }
 
-  public Command readyClimb() {
-    return expose(
-            runOnce(() -> climberDeployed = true)
-                .andThen(parallel(ramp.raise(), climber.deploy()))
-                .withTimeout(3)
-                .withName("Ready Climb"))
-        .withName("Ready Climb");
-  }
+  // public Command readyClimb() {
+  //   return expose(
+  //           runOnce(() -> climberDeployed = true)
+  //               .andThen(parallel(ramp.raise(), climber.deploy()))
+  //               .withTimeout(3)
+  //               .withName("Ready Climb"))
+  //       .withName("Ready Climb");
+  // }
 
-  public Command climb() {
-    return expose(climber.climb().withName("Climb")).withName("Climb");
-  }
+  // public Command climb() {
+  //   return expose(climber.climb().withName("Climb")).withName("Climb");
+  // }
 
-  public Command raiseClimber() {
-    return expose(climber.deploy()).withName("Raise Climber");
-  }
+  // public Command raiseClimber() {
+  //   return expose(climber.deploy()).withName("Raise Climber");
+  // }
 
   public Trigger coralStuck() {
     return new Trigger(coralOuttake::coralStuck);

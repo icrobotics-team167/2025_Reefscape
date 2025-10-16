@@ -174,12 +174,12 @@ public class Robot extends LoggedRobot {
         .whileTrue(swerve.reefBranchAlign(false, driveTranslationalControlSupplier));
     primary.a().whileTrue(swerve.reefAlgaeAlign(driveTranslationalControlSupplier));
     primary.b().whileTrue(swerve.netAlign(driveTranslationalControlSupplier));
-    primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
-    primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
-    primary
-        .povDown()
-        .and(superstructure::isClimberDeployed)
-        .whileTrue(superstructure.raiseClimber());
+    // primary.povLeft().debounce(.5).onTrue(superstructure.readyClimb());
+    // primary.povUp().and(superstructure::isClimberDeployed).whileTrue(superstructure.climb());
+    // primary
+    //     .povDown()
+    //     .and(superstructure::isClimberDeployed)
+    //     .whileTrue(superstructure.raiseClimber());
 
     secondary
         .y()
@@ -446,8 +446,7 @@ public class Robot extends LoggedRobot {
             new CoralOuttakeIOPhoenix(),
             new AlgaePivotIOPhoenix(),
             new AlgaeRollersIOPhoenix(),
-            new RampIOPhoenix(),
-            new ClimberIOPhoenix());
+            new RampIOPhoenix());
       }
       case SIM -> {
         return new Superstructure(
@@ -455,8 +454,7 @@ public class Robot extends LoggedRobot {
             new CoralOuttakeIOSim(),
             new AlgaePivotIOSim(),
             new AlgaeRollersIOSim(),
-            new RampIOPhoenix(),
-            new ClimberIO() {});
+            new RampIOPhoenix());
       }
       default -> {
         return new Superstructure(
@@ -464,8 +462,7 @@ public class Robot extends LoggedRobot {
             new CoralOuttakeIO() {},
             new AlgaePivotIO() {},
             new AlgaeRollersIO() {},
-            new RampIO() {},
-            new ClimberIO() {});
+            new RampIO() {});
       }
     }
   }
