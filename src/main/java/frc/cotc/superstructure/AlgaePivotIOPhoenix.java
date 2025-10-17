@@ -30,7 +30,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     var motorConfig = new TalonFXConfiguration();
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    motorConfig.Feedback.RotorToSensorRatio = (46.0 / 42.0) * 81;
+    motorConfig.Feedback.RotorToSensorRatio = (46.0 / 42.0) * 80;
     motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
     motorConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
     motorConfig.CurrentLimits.StatorCurrentLimit = 40;
@@ -47,7 +47,7 @@ public class AlgaePivotIOPhoenix implements AlgaePivotIO {
     motor.getConfigurator().apply(motorConfig);
 
     var encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.MagnetOffset = -0.156494140625;
+    encoderConfig.MagnetSensor.MagnetOffset = -0.287109375;
     encoder.getConfigurator().apply(encoderConfig);
 
     posSignal = encoder.getAbsolutePosition(false);

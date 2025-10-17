@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.cotc.Constants;
 import frc.cotc.Robot;
+import frc.cotc.drive.SwerveSetpointGenerator.SwerveSetpoint;
 import frc.cotc.util.FOCMotorSim;
 import frc.cotc.util.PhoenixBatchRefresher;
 
@@ -57,7 +58,7 @@ public class SwerveIOPhoenix implements SwerveIO {
     CONSTANTS.WHEEL_DIAMETER_METERS = Units.inchesToMeters(4);
     WHEEL_CIRCUMFERENCE_METERS = CONSTANTS.WHEEL_DIAMETER_METERS * PI;
 
-    DRIVE_GEAR_RATIO = (50.0 / 16.0) * (19.0 / 25.0) * (45.0 / 15.0);
+    DRIVE_GEAR_RATIO = (50.0 / 16.0) * (17.0 / 27.0) * (45.0 / 15.0);
     CONSTANTS.DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1).withReduction(DRIVE_GEAR_RATIO);
 
     var MK4N_STEER_GEAR_RATIO = 18.75;
@@ -288,9 +289,9 @@ public class SwerveIOPhoenix implements SwerveIO {
           steerConfig.Slot0.kD = 0.1;
 
           switch (id) {
-            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = 0.295166015625;
-            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.204345703125;
-            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.2734375;
+            case 0 -> encoderConfig.MagnetSensor.MagnetOffset = -0.347412109375;
+            case 1 -> encoderConfig.MagnetSensor.MagnetOffset = 0.201416015625;
+            case 2 -> encoderConfig.MagnetSensor.MagnetOffset = -0.44970703125;
             case 3 -> encoderConfig.MagnetSensor.MagnetOffset = -0.08984375;
           }
         }
