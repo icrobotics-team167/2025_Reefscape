@@ -164,7 +164,7 @@ public class Robot extends LoggedRobot {
               var rawInput = MathUtil.applyDeadband(-primary.getRightX(), .06);
               return Math.copySign(rawInput * rawInput, rawInput);
             },
-            primary.leftBumper()));
+            primary.leftBumper().or(primary.rightBumper())));
     primary
         .leftTrigger()
         .whileTrue(swerve.reefBranchAlign(true, driveTranslationalControlSupplier));
