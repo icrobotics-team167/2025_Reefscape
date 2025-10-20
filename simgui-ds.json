@@ -1,23 +1,7 @@
 {
-  "Keyboard 0 Settings": {
-    "window": {
-      "visible": true
-    }
-  },
-  "Keyboard 1 Settings": {
-    "window": {
-      "visible": true
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
-        {
-          "decKey": 65,
-          "decayRate": 1.0,
-          "incKey": 68,
-          "keyRate": 1.0
-        },
         {
           "decKey": 87,
           "decayRate": 1.0,
@@ -25,13 +9,17 @@
           "keyRate": 1.0
         },
         {
+          "decKey": 68,
           "decayRate": 1.0,
-          "incKey": 70,
+          "incKey": 65,
           "keyRate": 1.0
         },
         {
           "decayRate": 1.0,
-          "incKey": 71,
+          "keyRate": 1.0
+        },
+        {
+          "decayRate": 1.0,
           "keyRate": 1.0
         },
         {
@@ -70,13 +58,8 @@
       "povConfig": [
         {
           "key0": 328,
-          "key135": 323,
-          "key180": 322,
-          "key225": 321,
-          "key270": 324,
           "key315": 327,
-          "key45": 329,
-          "key90": 326
+          "key45": 329
         }
       ],
       "povCount": 1
@@ -93,30 +76,25 @@
         },
         {
           "decayRate": 1.0,
-          "incKey": 85,
+          "incKey": 324,
           "keyRate": 1.0
         },
         {
           "decayRate": 1.0,
-          "incKey": 79,
+          "incKey": 326,
           "keyRate": 1.0
         }
       ],
-      "axisCount": 6,
-      "buttonCount": 10,
+      "axisCount": 4,
+      "buttonCount": 5,
       "buttonKeys": [
-        75,
-        76,
-        74,
-        73,
-        55,
-        57,
         -1,
-        -1,
-        -1,
-        -1
+        321,
+        322,
+        323,
+        330
       ],
-      "povCount": 1
+      "povCount": 0
     },
     {
       "axisConfig": [
@@ -149,7 +127,8 @@
   ],
   "robotJoysticks": [
     {
-      "guid": "Keyboard0"
+      "guid": "78696e70757401000000000000000000",
+      "useGamepad": true
     },
     {
       "guid": "Keyboard1"
