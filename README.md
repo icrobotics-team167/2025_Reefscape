@@ -1,128 +1,131 @@
-# Reefscape 2025 Robot Code with MapleSim Physics Simulation
+# Reefscape 2025 - FRC 167 Robot Code with MapleSim integration
 
-## 1. Intro
+This repository contains the complete Java codebase for FRC Team 167, Children of the Corn, for the 2025 Reefscape competition.
 
-This document provides instructions for the `maplesim` branch of the 2025 Reefscape robot code for FRC 167 Children of the Corn. This version integrates the MapleSim physics engine to make the simulations more realistic to real world robot behavior.
+This project features the physics simulation, **[MapleSim](https://shenzhen-robotics-alliance.github.io/maple-sim/)**, which we used to provide a realistic environment for driver practice.
+As this was an offseason project, MapleSim was not used to develop auto routines.
 
-The primary purpose of this simulation setup is to provide a realistic practice environment for the drive team, by using physics-based simulations that arent in the standard simulation available on the `main` branch.
+## Documentation
 
----
-
-## 2. Prerequisites
-
-The following software must be installed on your system before proceeding:
-
-* **GitHub Desktop**: For cloning and managing the source code repository.
-* **WPILib 2025 for VSCode**: The FRC-specific integrated development environment.
+* **[Setup Guide](MAPLESIM_SETUP.md):** Step-by-step instructions for installing and running the simulation.
+* **[MapleSim Integration Details](MAPLESIM_INTEGRATION.md):** A technical breakdown of how the MapleSim physics engine is integrated into the codebase.
 
 ---
 
-## 3. Installation Instructions
+## Key Features
 
-### Clone the Repository
+This codebase is built around modern FRC best practices. Here are some of the key features and where to find them:
 
-1.  Navigate to the team's 2025 Reefscape GitHub repository.
-2.  Ensure the `maplesim` branch is selected from the branch dropdown menu.
-3.  Click the **`< > Code`** button and copy the HTTPS URL from this popup.
-4.  Open GitHub Desktop.
-5.  From the menu bar, select **File** > **Clone Repository...**.
-6.  In the clone dialog, select the **URL** tab, paste the repository link, choose a local directory for the project, and click **Clone**.
+* **MapleSim Integration:** The drivetrain and mechanisms are simulated with the MapleSim physics engine.
+    * *Location:* The core logic is in `src/main/java/frc/cotc/drive/SwerveIOPhoenix.java` within the `OdometryThread` inner class.
 
-The project source code will be downloaded to the specified local path.
+* **IO Abstraction Layer:** The robot's control logic is cleanly separated from its hardware implementation. This allows the same logic to run on both the real robot and in simulation without any changes.
+    * *Example:* The elevator's logic is in `Elevator.java`, its "contract" is in `ElevatorIO.java`, and its hardware-specific code is in `ElevatorIOPhoenix.java`.
 
----
+* **Advanced Drivetrain Control:** The swerve drive uses a custom `SwerveSetpointGenerator` to ensure smooth, kinematically-valid movement, preventing wheel slip. It also uses a "Repulsor Field" algorithm for object avoidance.
+    * *Location:* `src/main/java/frc/cotc/drive/SwerveSetpointGenerator.java` and `src/main/java/frc/cotc/drive/RepulsorFieldPlanner.java`.
 
-## 4. Running the Simulation
-
-After cloning the repository, open the project folder in 2025 WPILib VS Code to begin.
-
-### Launch the Simulator
-
-1.  In VSCode, open the command palette using the shortcut `Ctrl+Shift+P`.
-2.  Type `>Simulate Robot Code` into the command palette and press **Enter**.
-3.  In the confirmation pop-up, check the box labeled **Sim GUI**, then click **OK**.
-    - Note, it may take a bit for this popup to appear. It will appear at the top of the window.
-4.  The simulation GUI will launch, providing an interface to control the robot's state and monitor data.
-
-### Configure Controller
-
-1.  Connect an Xbox One controller to your computer.
-2.  In the Sim GUI window, locate the **System Joysticks** list.
-3.  Drag your controller from the **System Joysticks** list and drop it onto the **`Joystick[0]`** entry in the **Joystick** panel.
-Below is a description of the different joystick options available.
-   * `Joystick[0]` controls the drivetrain.
-   * `Joystick[1]` controls the elevator and game piece mechanisms.
-> **Note**: To fully operate the robot, you will need an additional controller for `Joystick[1]`.
+* **Vision-Based Pose Estimation:** The robot uses AprilTag fiducial markers on the field to accurately determine its position at all times.
+    * *Location:* `src/main/java/frc/cotc/vision/FiducialPoseEstimator.java`.
 
 ---
 
-## 5. AdvantageScope Configuration
+## Project File Structure
 
-AdvantageScope is used for 3D visualization of data. Here we will use ot to visalize the robot and the field.
+Here is a complete breakdown of the project's file structure.
 
-### Connect to the Simulator
+<details>
+<summary>Click to expand the full file tree</summary>
 
-1.  Launch AdvantageScope.
-2.  From the menu bar, select **File** -> **Connect to Simulator**.
-3.  In the bottom-right corner of the window, use the dropdown menu to select the **2025 Reefscape Field**.
-4.  To adjust the camera perspective, right-click within the 3D field view. Available options include:
-    * **Orbit Field**: Provides a comprehensive view of the entire field.
-    * **Orbit Robot**: The camera follows the robot's position.
-    * **Driver Station**: Offers views from specific driver station locations (e.g., `Red1`).
-    * **Set FOV**: I like to set this to 90 or 100. I think 90deg is the closest to realistic.
+```
+📁 2025_Reefscape-MapleSim/
+│
+├── 📁 ascope_assets/
+│   └── 📁 Robot_KernelOverflow/
+│       └── 📄 config.json        # Configuration for a custom 3D robot model used in AdvantageScope, defining its appearance and camera positions.
+│
+├── 📁 gradle/
+│   └── 📁 wrapper/
+│       ├── 📄 gradle-wrapper.jar  # The actual Gradle Wrapper executable. This allows everyone to use the same version of Gradle to build the code without installing it manually.
+│       └── 📄 gradle-wrapper.properties # Configuration for the Gradle Wrapper, specifying which version of Gradle to download and use.
+│
+├── 📁 src/main/
+│   ├── 📁 deploy/
+│   │   ├── 📄 2025-reefscape-welded-reefonly.json # A map of all the AprilTag locations on the 2025 FRC field, used by the vision system to determine the robot's position.
+│   │   └── 📄 example.txt         # A placeholder file demonstrating that any files in this directory will be copied to the RoboRIO during deployment.
+│   │
+│   └── 📁 java/frc/cotc/
+│       ├── 📄 Main.java           # The main entry point for the Java program. Its sole responsibility is to start the `Robot` class.
+│       ├── 📄 Robot.java          # The central hub of the entire robot program. It initializes all subsystems, sets up controller bindings, and manages the overall robot state (teleop, auto, etc.).
+│       ├── 📄 Constants.java      # A collection of important, robot-wide numerical constants, such as the robot's physical dimensions and field measurements.
+│       ├── 📄 Autos.java          # This class defines all the autonomous routines. It uses a chooser to select which auto to run based on Driver Station input.
+│       │
+│       ├── 📁 drive/             # Contains all code related to the swerve drivetrain.
+│       │   ├── 📄 Swerve.java             # High-level control logic for the swerve drive. It translates driver inputs or auto paths into chassis speeds and manages pose estimation, but does not directly interface with motors.
+│       │   ├── 📄 SwerveIO.java           # The "contract" or interface for the swerve drive. It defines the required methods and data structures that any specific hardware implementation must provide.
+│       │   ├── 📄 SwerveIOPhoenix.java    # The hardware-specific implementation of `SwerveIO` using CTRE Phoenix 6 libraries to control the Kraken motors and Pigeon 2 gyro.
+│       │   ├── 📄 SwervePoseEstimator.java # A custom version of WPILib's pose estimator, which fuses sensor data from the gyro and wheel encoders to track the robot's position on the field.
+│       │   ├── 📄 SwerveSetpointGenerator.java # A sophisticated class that ensures smooth and kinematically possible transitions between swerve drive states, preventing wheel slip and instability.
+│       │   └── 📄 RepulsorFieldPlanner.java # Implements a pathfinding algorithm that uses "repulsor fields" to navigate around obstacles on the field, like the Reef.
+│       │
+│       ├── 📁 superstructure/     # Contains code for all robot mechanisms other than the drivetrain.
+│       │   ├── 📄 Superstructure.java     # Acts as a coordinator for all the other subsystems in this package, creating commands that involve multiple mechanisms working together.
+│       │   ├── 📄 AlgaeClaw.java          # Logic for the Algae Claw, combining the pivot and rollers into a single functional unit.
+│       │   ├── 📄 AlgaePivot.java         # Logic for the pivoting motion of the Algae Claw.
+│       │   ├── 📄 AlgaePivotIO.java       # Interface for the Algae Pivot.
+│       │   ├── 📄 AlgaePivotIOPhoenix.java # Phoenix implementation for the Algae Pivot.
+│       │   ├── 📄 AlgaePivotIOSim.java    # Simulation implementation for the Algae Pivot.
+│       │   ├── 📄 AlgaeRollers.java       # Logic for the rollers that intake and eject Algae.
+│       │   ├── 📄 AlgaeRollersIO.java     # Interface for the Algae Rollers.
+│       │   ├── 📄 AlgaeRollersIOPhoenix.java # Phoenix implementation for the Algae Rollers.
+│       │   ├── 📄 AlgaeRollersIOSim.java  # Simulation implementation for the Algae Rollers.
+│       │   ├── 📄 Climber.java            # Logic for the climbing mechanism.
+│       │   ├── 📄 ClimberIO.java          # Interface for the Climber.
+│       │   ├── 📄 ClimberIOPhoenix.java   # Phoenix implementation for the Climber.
+│       │   ├── 📄 CoralOuttake.java       # Logic for the Coral scoring mechanism.
+│       │   ├── 📄 CoralOuttakeIO.java     # Interface for the Coral Outtake.
+│       │   ├── 📄 CoralOuttakeIOPhoenix.java # Phoenix implementation for the Coral Outtake.
+│       │   ├── 📄 CoralOuttakeIOSim.java  # Simulation implementation for the Coral Outtake.
+│       │   ├── 📄 Elevator.java           # Logic for the elevator mechanism.
+│       │   ├── 📄 ElevatorIO.java         # Interface for the Elevator.
+│       │   ├── 📄 ElevatorIOPhoenix.java  # Phoenix implementation for the Elevator.
+│       │   ├── 📄 Ramp.java               # Logic for the deployable ramp.
+│       │   ├── 📄 RampIO.java             # Interface for the Ramp.
+│       │   └── 📄 RampIOPhoenix.java      # Phoenix implementation for the Ramp.
+│       │
+│       ├── 📁 util/               # A collection of helper classes and utilities.
+│       │   ├── 📄 CommandXboxControllerWithRumble.java # An extension of the standard Xbox controller class that adds a convenient command for rumbling the controller.
+│       │   ├── 📄 ContinuousElevatorSim.java # A simulation class specifically for a continuous-style elevator with multiple stages.
+│       │   ├── 📄 FOCMotorSim.java         # A physics simulation class for FOC (Field-Oriented Control) motors, which models current instead of voltage.
+│       │   ├── 📄 GainsCalculator.java     # A utility to calculate optimal P and D gains for a PID controller based on motor characteristics.
+│       │   ├── 📄 Mechanism.java         # A base class that allows multiple subsystems to be grouped and treated as a single unit, simplifying command requirements.
+│       │   ├── 📄 MotorCurrentDraws.java  # A simple data structure for holding the stator and supply current of a motor.
+│       │   ├── 📄 PhoenixBatchRefresher.java # An optimization class that batches calls to Phoenix devices to improve performance on the RoboRIO by reducing overhead.
+│       │   └── 📄 ReefLocations.java     # A utility class that defines the precise 2D coordinates of all scoring locations and other key points on the Reef structure.
+│       │
+│       └── 📁 vision/             # Code related to the robot's vision system.
+│           ├── 📄 FiducialPoseEstimator.java      # The main logic for estimating the robot's pose using AprilTag fiducials, combining data from multiple cameras.
+│           ├── 📄 FiducialPoseEstimatorIO.java    # The "contract" or interface for a fiducial-based pose estimation system, defining what data it must provide.
+│           └── 📄 FiducialPoseEstimatorIOPhoton.java # An implementation of the vision IO interface using the PhotonVision library to get data from the cameras.
+│
+└── 📁 vendordeps/             # Vendor-supplied libraries.
+    ├── 📄 AdvantageKit.json     # Configuration for AdvantageKit, a logging and data visualization framework.
+    ├── 📄 maple-sim.json        # Configuration for MapleSim, a physics simulation engine.
+    ├── 📄 Phoenix6-25.3.1.json  # Configuration for the CTRE Phoenix 6 library, which is used to control modern CTRE hardware like Kraken motors.
+    ├── 📄 photonlib-v2025.3.1-rc1.json # Configuration for PhotonVision, the library used for AprilTag detection.
+    └── 📄 WPILibNewCommands.json # Configuration for the WPILib command-based framework.
+│
+├── 📄 .gitattributes          # A Git configuration file that ensures consistent line endings across different operating systems.
+├── 📄 .gitignore              # A list of files and folders that Git should ignore and not track (e.g., build artifacts, user settings).
+├── 📄 build.gradle            # The master script for Gradle, the build system. It defines dependencies, plugins, and tasks for building, testing, and deploying the code.
+├── 📄 gradlew                 # A shell script for executing Gradle tasks on Linux and macOS.
+├── 📄 gradlew.bat             # A batch script for executing Gradle tasks on Windows.
+├── 📄 LICENSE                 # The MIT License file, which specifies the permissions and limitations for using this software.
+├── 📄 README.md               # The main documentation for this project, explaining how to set up and run the simulation.
+├── 📄 settings.gradle         # Configuration settings for the Gradle build, such as defining where to find plugins.
+├── 📄 simgui-ds.json          # Stores the configuration for the simulation GUI's virtual joysticks and driver station layout.
+├── 📄 simgui-ds.json.example  # An example configuration file for the simulation GUI.
+└── 📄 WPILib-License.md       # The license specific to the WPILib libraries used in the project.
+```
 
-> **Note**: The robot's starting location is always on the blue side.
-> The red/blue relative controls are configured within the Sim GUI, not through AdvantageScope.
-    - The Sim GUI defaults to Red1, so you can set your driver station to here if you like.
-    - If you want to change this, you can do so from the FMS tab in the Sim GUI.
-    - Otherwise, orient the camera to your liking via the Orbit Field tool.
-
-### Add Simulation Objects to the 3D View
-
-To render the robot and game pieces, their poses must be added to the 3D view.
-
-1.  In the left-hand sidebar, expand the tree: `AdvantageScope` -> `RealOutputs` -> `Sim`.
-2.  Drag each object from the `Sim` sub-tab and drop it into the poses area of the main 3D view.. This will populate the field with our gamepieces and robot. The required objects are:
-    * `Barge Algae`
-    * `Coral`
-    * `Ground Algae`
-    * `Ground Truth Pose` (This represents the robot's chassis)
-    * `Reef Algae`
-    * `Reef Coral`
-    * `Robot Algae`
-    * `Robot Coral`
-
-### Add the Elevator Visualization
-
-1.  In the left-hand sidebar, navigate to `RealOutputs` -> `SuperStructure` -> `Elevator`.
-2.  Drag the `Visualization` object from this location and drop it directly onto the `Ground Truth Pose` entry in the **Poses** list. This attaches the elevator mechanism to the robot's chassis in the 3D view.
-
-### Define Game Piece Models
-
-Assign the correct 3D models to the objects added in the previous step.
-
-1.  For each of the following poses, click the green cube icon next to its name in the **Poses** list, then select **Game Piece** -> **Algae**:
-    * `RealOutputs/Sim/Ground Algae`
-    * `RealOutputs/Sim/Barge Algae`
-    * `RealOutputs/Sim/Reef Algae`
-    * `RealOutputs/Sim/Robot Algae`
-2.  For each of the following poses, use the same method to select **Game Piece** -> **Coral**:
-    * `RealOutputs/Sim/Coral`
-    * `RealOutputs/Sim/Robot Coral`
-    * `RealOutputs/Sim/Reef Coral`
-
----
-
-## 6. Importing the Custom Robot Model
-
-Follow these steps to replace the default robot model with the team's custom asset.
-
-1.  In AdvantageScope, open the application's assets folder by navigating to **Help** -> **Show Assets Folder**.
-2.  From your local repository folder, locate the `ascope_assets` directory.
-3.  Copy the `Robot_KernelOverflow` folder from `ascope_assets` and paste it into the `userAssets` folder you opened in the previous step.
-4.  Return to AdvantageScope. In the **Poses** list, find the `Ground Truth Pose` entry.
-5.  Click the robot icon next to its name and select `Kernel Overflow` from the dropdown list of models.
-
-The simulation setup is now complete.
-To drive the robot, enable it in the Sim GUI by selecting `Teleop` from the box at the top left. Make sure the Sim GUI is the active window as well.
-Additionally, all the control configurations are stored in `simgui-ds.json`. There is an example config in `simgui-ds.json.example` but it is not required for use.
+</details>
