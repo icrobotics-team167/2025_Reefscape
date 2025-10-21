@@ -111,12 +111,12 @@ Here is a complete breakdown of the project's file structure.
 │           ├── 📄 FiducialPoseEstimatorIO.java    # The "contract" or interface for a fiducial-based pose estimation system, defining what data it must provide.
 │           └── 📄 FiducialPoseEstimatorIOPhoton.java # An implementation of the vision IO interface using the PhotonVision library to get data from the cameras.
 │
-└── 📁 vendordeps/             # Vendor-supplied libraries.
-    ├── 📄 AdvantageKit.json     # Configuration for AdvantageKit, a logging and data visualization framework.
-    ├── 📄 maple-sim.json        # Configuration for MapleSim, a physics simulation engine.
-    ├── 📄 Phoenix6-25.3.1.json  # Configuration for the CTRE Phoenix 6 library, which is used to control modern CTRE hardware like Kraken motors.
-    ├── 📄 photonlib-v2025.3.1-rc1.json # Configuration for PhotonVision, the library used for AprilTag detection.
-    └── 📄 WPILibNewCommands.json # Configuration for the WPILib command-based framework.
+├── 📁 vendordeps/             # Vendor-supplied libraries.
+│   ├── 📄 AdvantageKit.json     # Configuration for AdvantageKit, a logging and data visualization framework.
+│   ├── 📄 maple-sim.json        # Configuration for MapleSim, a physics simulation engine.
+│   ├── 📄 Phoenix6-25.3.1.json  # Configuration for the CTRE Phoenix 6 library, which is used to control modern CTRE hardware like Kraken motors.
+│   ├── 📄 photonlib-v2025.3.1-rc1.json # Configuration for PhotonVision, the library used for AprilTag detection.
+│   └── 📄 WPILibNewCommands.json # Configuration for the WPILib command-based framework.
 │
 ├── 📄 .gitattributes          # A Git configuration file that ensures consistent line endings across different operating systems.
 ├── 📄 .gitignore              # A list of files and folders that Git should ignore and not track (e.g., build artifacts, user settings).
