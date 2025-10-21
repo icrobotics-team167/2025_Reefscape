@@ -22,8 +22,11 @@ This codebase is built around modern FRC best practices. Here are some of the ke
 * **IO Abstraction Layer:** The robot's control logic is cleanly separated from its hardware implementation. This allows the same logic to run on both the real robot and in simulation without any changes.
     * *Example:* The elevator's logic is in `Elevator.java`, its "contract" is in `ElevatorIO.java`, and its hardware-specific code is in `ElevatorIOPhoenix.java`.
 
-* **Advanced Drivetrain Control:** The swerve drive uses a custom `SwerveSetpointGenerator` to ensure smooth, kinematically-valid movement, preventing wheel slip. Our custom version is an attempt at preventing "control weirdness". It also uses a potential field pathing algorithm for object avoidance, nicknamed the "repulsor field." 
-    * *Location:* `src/main/java/frc/cotc/drive/SwerveSetpointGenerator.java` and `src/main/java/frc/cotc/drive/RepulsorFieldPlanner.java`.
+* **Advanced Drivetrain Control:** The swerve drive uses a custom `SwerveSetpointGenerator` to ensure smooth, kinematically-valid movement, preventing infeasible commanded accelerations and minimizing wheel slip/wear. Originally by 254, modified by mjansen, further modified by 167.
+    * *Location:* `src/main/java/frc/cotc/drive/SwerveSetpointGenerator.java`
+
+* **Potential Field Pathing:** A potential field pathing algorithm is implemented in `RepulsorFieldPlanner.java`, allowing the robot to dynamically avoid obstacles when pathing to a point. In an electron potential field analogy, the target pose is an attracting force, and obstacles are repelling forces, with the sum of forces being the direction the robot should move towards.
+    * *Location:* `src/main/java/frc/cotc/drive/RepulsorFieldPlanner.java`
 
 * **Vision-Based Pose Estimation:** The robot uses AprilTag fiducial markers on the field to accurately determine its position at all times.
     * *Location:* `src/main/java/frc/cotc/vision/FiducialPoseEstimator.java`.
